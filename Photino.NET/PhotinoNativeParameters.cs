@@ -129,7 +129,7 @@ internal struct PhotinoNativeParameters
     ///<summary>OPTIONAL: If true, user can access the browser control's context menu. Default is true.</summary>
     [MarshalAs(UnmanagedType.I1)] internal bool ContextMenuEnabled;
 
-    ///<summary>OPTIONAL: If true, user can zoom. Default is true.</summary>
+    ///<summary>OPTIONAL: If true, user can zoom the browser control. Default is true.</summary>
     [MarshalAs(UnmanagedType.I1)] internal bool ZoomEnabled;
 
     ///<summary>OPTIONAL: If true, user can access the browser control's dev tools. Default is true.</summary>
