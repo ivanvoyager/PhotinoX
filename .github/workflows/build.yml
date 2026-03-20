@@ -1,0 +1,39 @@
+name: build
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: setup dotnet
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: 10.0.x
+
+      - name: restore
+        run: dotnet restore Photino.NET/PhotinoX.csproj --nologo
+
+      - name: build
+        run: dotnet build Photino.NET/PhotinoX.csproj -c Release --no-restore --nologo -warnaserror
+
+      - name: pack (nupkg + snupkg)
+        run: dotnet pack Photino.NET/PhotinoX.csproj -c Release -o artifacts --nologo /p:IncludeSymbols=true /p:SymbolPackageFormat=snupkg
+
+      - name: upload nupkg
+        uses: actions/upload-artifact@v6
+        with:
+          name: photinox-nupkg
+          path: artifacts/*.nupkg
+
+      - name: upload snupkg
+        uses: actions/upload-artifact@v6
+        with:
+          name: photinox-snupkg
+          path: artifacts/*.snupkg

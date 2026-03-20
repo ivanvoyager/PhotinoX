@@ -7,7 +7,7 @@ namespace Photino.NET;
 /// </summary>
 public partial class PhotinoWindow
 {
-    private const string DLL_NAME = "Photino.Native";
+    private const string DLL_NAME = "PhotinoX.Native";
 
     //REGISTER
     [LibraryImport(DLL_NAME, SetLastError = true)]
