@@ -10,12 +10,22 @@ Lightweight **.NET wrapper** for native OS WebView windows:
 - **macOS**: WKWebView
 - **Linux**: WebKitGTK 4.1
 
-`PhotinoX` is a maintained fork of Photino.NET. It keeps the original spirit (small, fast, no bundled Chromium) and works with **PhotinoX.Native**.
+`PhotinoX` is a maintained fork of Photino.NET focused on stability, compatibility, and predictable cross‑platform behavior.
 
-> **What is PhotinoX?**  
-> PhotinoX is a lightweight cross‑platform framework for building native desktop apps using **Web UI technologies** (Blazor, React, Vue, Angular, etc.). It uses **OS‑native WebView implementations**, ensuring minimal footprint and maximum compatibility.  
+## What is PhotinoX?
+
+PhotinoX builds on the original Photino design: native desktop windows hosted by modern **Web UI technologies** (Blazor, React, Vue, Angular, etc.), without bundling a full Chromium runtime.  
+It relies entirely on **OS‑native WebView engines**, keeping apps small and efficient.
+
 > **Note:** PhotinoX is an independent fork of [tryphotino/photino.NET](https://github.com/tryphotino/photino.NET) under the Apache‑2.0 license and is **not affiliated** with the original project or organization.
- 
+
+## Core (ecosystem)
+
+- [**PhotinoX.Native**](https://github.com/ivanvoyager/PhotinoX.Native) - native binaries for Windows/macOS/Linux.
+- [**PhotinoX.Blazor**](https://github.com/ivanvoyager/PhotinoX.Blazor) - Blazor integration for native desktop apps.
+- [**PhotinoX.Server**](https://github.com/ivanvoyager/PhotinoX.Server) - optional static-file server (avoids CORS/ESM issues).
+- [**PhotinoX.Samples**](https://github.com/ivanvoyager/PhotinoX.Samples) - sample projects showcasing common scenarios.
+
 ---
 
 ## Install
@@ -38,9 +48,14 @@ Docs (original Photino concepts): https://docs.tryphotino.io/
 
 - **.NET 10 SDK** (build)
 - **Target frameworks:** `net8.0; net9.0; net10.0` (package supports all three)
-- **Windows:** WebView2 Runtime
-- **macOS:** WKWebView (system)
-- **Linux:** WebKitGTK 4.1 development/runtime packages
+- Runtime deps: see [**PhotinoX.Native**](https://www.nuget.org/packages/PhotinoX.Native) (`runtimes/<rid>/native/`)
+- **Windows:** WebView2 Runtime  
+  Required component: **Microsoft.Web.WebView2** (Edge WebView2)  
+  https://learn.microsoft.com/microsoft-edge/webview2/
+- **macOS**: WKWebView (system WebKit)  
+  https://developer.apple.com/documentation/webkit/wkwebview/
+- **Linux:** WebKitGTK 4.1 development/runtime packages  
+  https://webkitgtk.org/
 
 ## Build from source
 
@@ -49,16 +64,12 @@ dotnet restore Photino.NET/PhotinoX.csproj
 dotnet build   Photino.NET/PhotinoX.csproj -c Release
 dotnet pack    Photino.NET/PhotinoX.csproj -c Release -o artifacts
 ```
-> CI: see `.github/workflows/build.yml` (build + pack + upload `.nupkg`/`.snupkg`).
-
-## Related packages
-
-[`PhotinoX.Native`](https://www.nuget.org/packages/PhotinoX.Native) — native binaries (`runtimes/<rid>/native/`)
+> CI: see [`.github/workflows/build.yml`](https://github.com/ivanvoyager/PhotinoX/blob/master/.github/workflows/build.yml) (build + pack + upload `.nupkg`/`.snupkg`).
 
 ## Contributing
 
-Issues and PRs are welcome. Keep changes minimal and performance-conscious.
+Issues and PRs are welcome. Keep PRs focused, minimal, and consistent with the rest of PhotinoX.
 
 ## License
 
-PhotinoX is licensed under **Apache‑2.0**.  
+PhotinoX is licensed under **Apache‑2.0**.

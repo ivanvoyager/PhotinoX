@@ -1,16 +1,17 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-	<PropertyGroup>
-		<TargetFrameworks>net8.0;net9.0;net10.0</TargetFrameworks>
-		<ImplicitUsings>enable</ImplicitUsings>
-		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-		<Description>Lightweight .NET wrapper for native OS WebView windows (Windows/WebView2, macOS/WKWebView, Linux/WebKitGTK 4.1). Maintained fork of Photino.NET.</Description>
-		<RootNamespace>Photino.NET</RootNamespace>
-		<Version>4.1.0</Version>
-	</PropertyGroup>
+  <PropertyGroup>
+    <TargetFrameworks>net8.0;net9.0;net10.0</TargetFrameworks>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <Description>Lightweight .NET wrapper for native OS WebView windows (Windows/WebView2, macOS/WKWebView, Linux/WebKitGTK 4.1). 
+Maintained fork of Photino.NET.</Description>
+    <RootNamespace>Photino.NET</RootNamespace>
+    <VersionPrefix>4.1.1</VersionPrefix>
+  </PropertyGroup>
 
-	<ItemGroup>
-	  <PackageReference Include="PhotinoX.Native" Version="4.1.0" />
-	</ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="PhotinoX.Native" Version="4.1.1" />
+  </ItemGroup>
 
 </Project>
