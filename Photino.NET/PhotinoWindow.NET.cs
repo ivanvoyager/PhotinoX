@@ -1,7 +1,6 @@
 using System.Drawing;
-using System.Runtime.InteropServices;
 using System.Reflection;
-using System.Threading.Tasks;
+using System.Runtime.InteropServices;
 
 namespace Photino.NET;
 
@@ -104,8 +103,8 @@ public partial class PhotinoWindow
                 Invoke(() => handle = Photino_getHwnd_win32(_nativeInstance));
                 return handle;
             }
-            else
-                throw new PlatformNotSupportedException($"{nameof(WindowHandle)} is only supported on Windows.");
+
+            throw new PlatformNotSupportedException($"{nameof(WindowHandle)} is only supported on Windows.");
         }
     }
 
@@ -129,13 +128,13 @@ public partial class PhotinoWindow
 
             List<Monitor> monitors = [];
 
-            int callback(in NativeMonitor monitor)
+            int Callback(in NativeMonitor monitor)
             {
                 monitors.Add(new Monitor(monitor));
                 return 1;
             }
 
-            Invoke(() => Photino_GetAllMonitors(_nativeInstance, callback));
+            Invoke(() => Photino_GetAllMonitors(_nativeInstance, Callback));
 
             return monitors;
         }
@@ -191,7 +190,7 @@ public partial class PhotinoWindow
     /// When true, the native window will appear centered on the screen. By default, this is set to false.
     /// </summary>
     /// <exception cref="ApplicationException">
-    /// Thrown if trying to set value after native window is initalized.
+    /// Thrown if trying to set value after native window is initialized.
     /// </exception>
     public bool Centered
     {
@@ -205,8 +204,7 @@ public partial class PhotinoWindow
         {
             if (_nativeInstance == IntPtr.Zero)
             {
-                if (_startupParameters.CenterOnInitialize != value)
-                    _startupParameters.CenterOnInitialize = value;
+                _startupParameters.CenterOnInitialize = value;
             }
             else
                 Invoke(() => Photino_Center(_nativeInstance));
@@ -219,7 +217,7 @@ public partial class PhotinoWindow
     /// By default, this is set to false.
     /// </summary>
     /// <exception cref="ApplicationException">
-    /// Thrown if trying to set value after native window is initalized.
+    /// Thrown if trying to set value after native window is initialized.
     /// </exception>
     /// <remarks>
     /// The user has to supply titlebar, border, dragging and resizing manually.
@@ -233,10 +231,7 @@ public partial class PhotinoWindow
         set
         {
             if (_nativeInstance == IntPtr.Zero)
-            {
-                if (_startupParameters.Chromeless != value)
-                    _startupParameters.Chromeless = value;
-            }
+                _startupParameters.Chromeless = value;
             else
                 throw new ApplicationException("Chromeless can only be set before the native window is instantiated.");
         }
@@ -249,7 +244,7 @@ public partial class PhotinoWindow
     /// By default, this is set to false.
     /// </summary>
     /// <exception cref="ApplicationException">
-    /// On Windows, thrown if trying to set value after native window is initalized.
+    /// On Windows, thrown if trying to set value after native window is initialized.
     /// </exception>
     public bool Transparent
     {
@@ -645,7 +640,7 @@ public partial class PhotinoWindow
         {
             var currentSize = Size;
             if (currentSize.Height != value)
-                Size = new Size(currentSize.Width, value);
+                Size = currentSize with { Height = value };
         }
     }
 
@@ -729,7 +724,7 @@ public partial class PhotinoWindow
         set
         {
             if (Location.X != value)
-                Location = new Point(value, Location.Y);
+                Location = Location with { X = value };
         }
     }
 
@@ -788,7 +783,7 @@ public partial class PhotinoWindow
         {
             if (_maxHeight != value)
             {
-                MaxSize = new Point(MaxSize.X, value);
+                MaxSize = MaxSize with { Y = value };
                 _maxHeight = value;
             }
         }
@@ -803,7 +798,7 @@ public partial class PhotinoWindow
         {
             if (_maxWidth != value)
             {
-                MaxSize = new Point(value, MaxSize.Y);
+                MaxSize = MaxSize with { X = value };
                 _maxWidth = value;
             }
         }
@@ -864,7 +859,7 @@ public partial class PhotinoWindow
         {
             if (_minHeight != value)
             {
-                MinSize = new Point(MinSize.X, value);
+                MinSize = MinSize with { Y = value };
                 _minHeight = value;
             }
         }
@@ -879,7 +874,7 @@ public partial class PhotinoWindow
         {
             if (_minWidth != value)
             {
-                MinSize = new Point(value, MinSize.Y);
+                MinSize = MinSize with { X = value };
                 _minWidth = value;
             }
         }
@@ -998,7 +993,7 @@ public partial class PhotinoWindow
     /// </remarks>
     /// <seealso cref="StartUrl" />
     /// <exception cref="ApplicationException">
-    /// Thrown if trying to set value after native window is initalized.
+    /// Thrown if trying to set value after native window is initialized.
     /// </exception>
     public string StartString
     {
@@ -1009,7 +1004,7 @@ public partial class PhotinoWindow
         set
         {
             var ss = _startupParameters.StartString;
-            if (string.Compare(ss, value, true) != 0)
+            if (string.Compare(ss, value, StringComparison.OrdinalIgnoreCase) != 0)
             {
                 if (_nativeInstance != IntPtr.Zero)
                     throw new ApplicationException($"{nameof(ss)} cannot be changed after Photino Window is initialized");
@@ -1027,7 +1022,7 @@ public partial class PhotinoWindow
     /// </remarks>
     /// <seealso cref="StartString" />
     /// <exception cref="ApplicationException">
-    /// Thrown if trying to set value after native window is initalized.
+    /// Thrown if trying to set value after native window is initialized.
     /// </exception>
     public string StartUrl
     {
@@ -1038,7 +1033,7 @@ public partial class PhotinoWindow
         set
         {
             var su = _startupParameters.StartUrl;
-            if (string.Compare(su, value, true) != 0)
+            if (string.Compare(su, value, StringComparison.OrdinalIgnoreCase) != 0)
             {
                 if (_nativeInstance != IntPtr.Zero)
                     throw new ApplicationException($"{nameof(su)} cannot be changed after Photino Window is initialized");
@@ -1149,7 +1144,7 @@ public partial class PhotinoWindow
         set
         {
             if (Location.Y != value)
-                Location = new Point(Location.X, value);
+                Location = Location with { Y = value };
         }
     }
 
@@ -1188,7 +1183,7 @@ public partial class PhotinoWindow
     /// Overrides Left (X) and Top (Y) properties.
     /// </remarks>
     /// <exception cref="ApplicationException">
-    /// Thrown if trying to set value after native window is initalized.
+    /// Thrown if trying to set value after native window is initialized.
     /// </exception>
     public bool UseOsDefaultLocation
     {
@@ -1216,7 +1211,7 @@ public partial class PhotinoWindow
     /// Overrides Height and Width properties.
     /// </remarks>
     /// <exception cref="ApplicationException">
-    /// Thrown if trying to set value after native window is initalized.
+    /// Thrown if trying to set value after native window is initialized.
     /// </exception>
     public bool UseOsDefaultSize
     {
@@ -1265,7 +1260,7 @@ public partial class PhotinoWindow
         {
             var currentSize = Size;
             if (currentSize.Width != value)
-                Size = new Size(value, currentSize.Height);
+                Size = currentSize with { Width = value };
         }
     }
 
@@ -1559,7 +1554,7 @@ public partial class PhotinoWindow
     /// <remarks>
     /// Load() or LoadString() must be called before native window is initialized.
     /// </remarks>
-    /// <param name="path">A path pointing to the ressource to load.</param>
+    /// <param name="path">A path pointing to the resource to load.</param>
     public PhotinoWindow Load(string path)
     {
         Log($".Load({path})");
@@ -1648,7 +1643,7 @@ public partial class PhotinoWindow
             Log($"  New location: {location}");
         }
 
-        // If the window is outside of the work area,
+        // If the window is outside the work area,
         // recalculate the position and continue.
         //When window isn't initialized yet, cannot determine screen size.
         if (allowOutsideWorkArea == false && _nativeInstance != IntPtr.Zero)
@@ -1679,11 +1674,11 @@ public partial class PhotinoWindow
         // Note:
         // This behavior seems to be a macOS thing. In the Photino.Native
         // project files it is commented to be expected behavior for macOS.
-        // There is some code trying to mitigate this problem but it might
+        // There is some code trying to mitigate this problem, but it might
         // not work as expected. Further investigation is necessary.
         // Update:
         // This behavior seems to have changed with macOS Sonoma.
-        // Therefore we determine the version of macOS and only apply the
+        // Therefore, we determine the version of macOS and only apply the
         // workaround for older versions.
         if (IsMacOsPlatform && MacOsVersion?.Major < 23)
         {
@@ -2347,7 +2342,7 @@ public partial class PhotinoWindow
     /// <returns>
     /// Returns the current <see cref="PhotinoWindow"/> instance.
     /// </returns>
-    /// <param name="zoom">Zoomlevel as integer</param>
+    /// <param name="zoom">Zoom level (in percent).</param>
     /// <example>100 = 100%, 50 = 50%</example>
     public PhotinoWindow SetZoom(int zoom)
     {
@@ -2786,22 +2781,18 @@ public partial class PhotinoWindow
 
         Assembly assembly = Assembly.GetExecutingAssembly();
 
-        using (var resourceStream = assembly.GetManifestResourceStream(resourceName))
+        using var resourceStream = assembly.GetManifestResourceStream(resourceName);
+        if (resourceStream == null)
         {
-            if (resourceStream == null)
-            {
-                Log($"Resource '{fileName}' couldn't be found in namespace '{resourceNamespace}'");
-                return null;
-            }
-
-            string tempFile = Path.Combine(Path.GetTempPath(), fileName);
-
-            using (FileStream fileStream = new FileStream(tempFile, FileMode.Create, FileAccess.Write))
-            {
-                resourceStream.CopyTo(fileStream);
-            }
-
-            return tempFile;
+            Log($"Resource '{fileName}' couldn't be found in namespace '{resourceNamespace}'");
+            return null;
         }
+
+        string tempFile = Path.Combine(Path.GetTempPath(), fileName);
+
+        using FileStream fileStream = new FileStream(tempFile, FileMode.Create, FileAccess.Write);
+        resourceStream.CopyTo(fileStream);
+
+        return tempFile;
     }
 }
