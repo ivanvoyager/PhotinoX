@@ -2,11 +2,14 @@
 
   <PropertyGroup>
     <TargetFrameworks>net8.0;net9.0;net10.0</TargetFrameworks>
+    <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <Description>Lightweight .NET wrapper for native OS WebView windows (Windows/WebView2, macOS/WKWebView, Linux/WebKitGTK 4.1). 
 Maintained fork of Photino.NET.</Description>
     <RootNamespace>Photino.NET</RootNamespace>
+    <GenerateDocumentationFile>True</GenerateDocumentationFile>
+    <NoWarn>$(NoWarn);1591;NETSDK1233</NoWarn>
     <VersionPrefix>4.1.1</VersionPrefix>
   </PropertyGroup>
 

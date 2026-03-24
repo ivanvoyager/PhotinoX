@@ -37,7 +37,7 @@ namespace Photino.NET
         public readonly Rectangle MonitorArea;
 
         /// <summary>
-        /// The working area of the monitor excluding taskbars, docked windows, and docked tool bars.
+        /// The working area of the monitor excluding taskbars, docked windows, and docked toolbars.
         /// </summary>
         public readonly Rectangle WorkArea;
 
@@ -51,6 +51,7 @@ namespace Photino.NET
         /// </summary>
         /// <param name="monitor">The area of monitor.</param>
         /// <param name="work">The working area of the monitor.</param>
+        /// <param name="scale">The scale factor of the monitor.</param>
         public Monitor(Rectangle monitor, Rectangle work, double scale)
         {
             MonitorArea = monitor;
@@ -63,6 +64,7 @@ namespace Photino.NET
         /// </summary>
         /// <param name="monitor">The area of monitor as <see cref="NativeRect"/></param>
         /// <param name="work">The working area as <see cref="NativeRect"/></param>
+        /// <param name="scale">The scale factor of the monitor. Standard value is 1.0.</param>
         internal Monitor(NativeRect monitor, NativeRect work, double scale)
             : this(new Rectangle(monitor.x, monitor.y, monitor.width, monitor.height), new Rectangle(work.x, work.y, work.width, work.height), scale)
         { }

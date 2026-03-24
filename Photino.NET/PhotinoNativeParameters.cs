@@ -19,11 +19,11 @@ internal struct PhotinoNativeParameters
 
     ///<summary>WINDOWS AND LINUX ONLY: OPTIONAL: Path to a local file or a URL. Icon appears on the title bar of the native window (if supported). Default is none.</summary>
     [MarshalAs(UnmanagedType.LPUTF8Str)]
-    internal string WindowIconFile;
+    internal string? WindowIconFile;
 
     ///<summary>WINDOWS: OPTIONAL: Path to store temp files for browser control. Defaults is user's AppDataLocal folder.</summary>
     [MarshalAs(UnmanagedType.LPUTF8Str)]
-    internal string TemporaryFilesPath;
+    internal string? TemporaryFilesPath;
 
     ///<summary>OPTIONAL: Changes the user agent on the browser control at initialiation.</summary>
     [MarshalAs(UnmanagedType.LPUTF8Str)]
@@ -32,8 +32,8 @@ internal struct PhotinoNativeParameters
     ///<summary>OPTIONAL: 
     ///WINDOWS: WebView2 specific string.
     ///https://peter.sh/experiments/chromium-command-line-switches/
-    ///https://learn.microsoft.com/en-us/dotnet/api/microsoft.web.webview2.core.corewebview2environmentoptions.additionalbrowserarguments?view=webview2-dotnet-1.0.1938.49&viewFallbackFrom=webview2-dotnet-1.0.1901.177view%3Dwebview2-1.0.1901.177
-    ///https://www.chromium.org/developers/how-tos/run-chromium-with-flags/        
+    ///https://learn.microsoft.com/en-us/dotnet/api/microsoft.web.webview2.core.corewebview2environmentoptions.additionalbrowserarguments
+    ///https://www.chromium.org/developers/how-tos/run-chromium-with-flags/
     ///LINUX: Webkit2Gtk specific string.
     ///https://webkitgtk.org/reference/webkit2gtk/2.5.1/WebKitSettings.html
     ///https://lazka.github.io/pgi-docs/WebKit2-4.0/classes/Settings.html
@@ -213,7 +213,7 @@ internal struct PhotinoNativeParameters
         if (isWindows && Chromeless && (UseOsDefaultLocation || UseOsDefaultSize))
             response.Add($"Chromeless cannot be used with UseOsDefaultLocation or UseOsDefaultSize on Windows. Size and location must be specified.");
 
-        Size = Marshal.SizeOf(typeof(PhotinoNativeParameters));
+        Size = Marshal.SizeOf<PhotinoNativeParameters>();
 
         return response;
     }

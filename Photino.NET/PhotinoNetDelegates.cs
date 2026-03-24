@@ -6,7 +6,7 @@ namespace Photino.NET;
 public partial class PhotinoWindow
 {
     //FLUENT EVENT HANDLER REGISTRATION
-    public event EventHandler<Point> WindowLocationChanged;
+    public event EventHandler<Point>? WindowLocationChanged;
 
     /// <summary>
     /// Registers user-defined handler methods to receive callbacks from the native window when its location changes.
@@ -32,7 +32,7 @@ public partial class PhotinoWindow
         WindowLocationChanged?.Invoke(this, location);
     }
 
-    public event EventHandler<Size> WindowSizeChanged;
+    public event EventHandler<Size>? WindowSizeChanged;
     /// <summary>
     /// Registers user-defined handler methods to receive callbacks from the native window when its size changes.
     /// </summary>
@@ -55,7 +55,7 @@ public partial class PhotinoWindow
         WindowSizeChanged?.Invoke(this, size);
     }
 
-    public event EventHandler WindowFocusIn;
+    public event EventHandler? WindowFocusIn;
 
     /// <summary>
     /// Registers registered user-defined handler methods to receive callbacks from the native window when it is focused in.
@@ -78,7 +78,7 @@ public partial class PhotinoWindow
         WindowFocusIn?.Invoke(this, EventArgs.Empty);
     }
 
-    public event EventHandler WindowMaximized;
+    public event EventHandler? WindowMaximized;
 
     /// <summary>
     /// Registers user-defined handler methods to receive callbacks from the native window when it is maximized.
@@ -101,7 +101,7 @@ public partial class PhotinoWindow
         WindowMaximized?.Invoke(this, EventArgs.Empty);
     }
 
-    public event EventHandler WindowRestored;
+    public event EventHandler? WindowRestored;
     /// <summary>
     /// Registers user-defined handler methods to receive callbacks from the native window when it is restored.
     /// </summary>
@@ -123,7 +123,7 @@ public partial class PhotinoWindow
         WindowRestored?.Invoke(this, EventArgs.Empty);
     }
 
-    public event EventHandler WindowFocusOut;
+    public event EventHandler? WindowFocusOut;
 
     /// <summary>
     /// Registers registered user-defined handler methods to receive callbacks from the native window when it is focused out.
@@ -146,7 +146,7 @@ public partial class PhotinoWindow
         WindowFocusOut?.Invoke(this, EventArgs.Empty);
     }
 
-    public event EventHandler WindowMinimized;
+    public event EventHandler? WindowMinimized;
 
     /// <summary>
     /// Registers user-defined handler methods to receive callbacks from the native window when it is minimized.
@@ -169,7 +169,7 @@ public partial class PhotinoWindow
         WindowMinimized?.Invoke(this, EventArgs.Empty);
     }
 
-    public event EventHandler<string> WebMessageReceived;
+    public event EventHandler<string>? WebMessageReceived;
 
     /// <summary>
     /// Registers user-defined handler methods to receive callbacks from the native window when it sends a message.
@@ -195,9 +195,9 @@ public partial class PhotinoWindow
         WebMessageReceived?.Invoke(this, message);
     }
 
-    public delegate bool NetClosingDelegate(object sender, EventArgs e);
+    public delegate bool NetClosingDelegate(object? sender, EventArgs e);
 
-    public event NetClosingDelegate WindowClosing;
+    public event NetClosingDelegate? WindowClosing;
 
     /// <summary>
     /// Registers user-defined handler methods to receive callbacks from the native window when the window is about to close.
@@ -220,14 +220,14 @@ public partial class PhotinoWindow
     {
         //C++ handles bool values as a single byte, C# uses 4 bytes
         byte noClose = 0;
-        var doNotClose = WindowClosing?.Invoke(this, null);
+        var doNotClose = WindowClosing?.Invoke(this, null!);
         if (doNotClose ?? false)
             noClose = 1;
 
         return noClose;
     }
 
-    public event EventHandler WindowCreating;
+    public event EventHandler? WindowCreating;
 
     /// <summary>
     /// Registers user-defined handler methods to receive callbacks before the native window is created.
@@ -236,7 +236,7 @@ public partial class PhotinoWindow
     /// Returns the current <see cref="PhotinoWindow"/> instance.
     /// </returns>
     /// <param name="handler"><see cref="EventHandler"/></param>
-    public PhotinoWindow RegisterWindowCreatingHandler(EventHandler handler)
+    public PhotinoWindow RegisterWindowCreatingHandler(EventHandler? handler)
     {
         WindowCreating += handler;
         return this;
@@ -247,10 +247,10 @@ public partial class PhotinoWindow
     /// </summary>
     internal void OnWindowCreating()
     {
-        WindowCreating?.Invoke(this, null);
+        WindowCreating?.Invoke(this, EventArgs.Empty);
     }
 
-    public event EventHandler WindowCreated;
+    public event EventHandler? WindowCreated;
 
     /// <summary>
     /// Registers user-defined handler methods to receive callbacks after the native window is created.
@@ -270,14 +270,14 @@ public partial class PhotinoWindow
     /// </summary>
     internal void OnWindowCreated()
     {
-        WindowCreated?.Invoke(this, null);
+        WindowCreated?.Invoke(this, EventArgs.Empty);
     }
 
 
     //NOTE: There is 1 callback from C++ to C# which is automatically registered. The .NET callback appropriate for the custom scheme is handled in OnCustomScheme().
 
-    public delegate Stream NetCustomSchemeDelegate(object sender, string scheme, string url, out string contentType);
-    internal Dictionary<string, NetCustomSchemeDelegate> CustomSchemes = new Dictionary<string, NetCustomSchemeDelegate>();
+    public delegate Stream? NetCustomSchemeDelegate(object? sender, string scheme, string url, out string contentType);
+    internal Dictionary<string, NetCustomSchemeDelegate> CustomSchemes = [];
 
     /// <summary>
     /// Registers user-defined custom schemes (other than 'http', 'https' and 'file') and handler methods to receive callbacks
@@ -295,30 +295,35 @@ public partial class PhotinoWindow
     /// <exception cref="ApplicationException">Thrown if more than 16 custom schemes were set</exception>
     public PhotinoWindow RegisterCustomSchemeHandler(string scheme, NetCustomSchemeDelegate handler)
     {
-        if (string.IsNullOrWhiteSpace(scheme))
-            throw new ArgumentException("A scheme must be provided. (for example 'app' or 'custom'");
+        if (string.IsNullOrWhiteSpace(scheme)) throw new ArgumentException("A scheme must be provided (for example 'app' or 'custom').", nameof(scheme));
 
-        if (handler == null)
-            throw new ArgumentException("A handler (method) with a signature matching NetCustomSchemeDelegate must be supplied.");
+        _ = handler ?? throw new ArgumentException("A handler (method) with a signature matching NetCustomSchemeDelegate must be supplied.", nameof(handler));
 
-        scheme = scheme.ToLower();
+        scheme = scheme.ToLowerInvariant();
 
         if (_nativeInstance == IntPtr.Zero)
         {
-            if (CustomSchemes.Count > 15 && !CustomSchemes.ContainsKey(scheme))
-                throw new ApplicationException($"No more than 16 custom schemes can be set prior to initialization. Additional handlers can be added after initialization.");
+            if (!CustomSchemes.TryGetValue(scheme, out var existing))
+            {
+                if (CustomSchemes.Count >= 16)
+                    throw new ApplicationException($"No more than 16 custom schemes can be set prior to initialization. Additional handlers can be added after initialization.");
+
+                CustomSchemes[scheme] = handler;
+            }
             else
             {
-                if (!CustomSchemes.ContainsKey(scheme))
-                    CustomSchemes.Add(scheme, null);
+                CustomSchemes[scheme] = existing + handler;
             }
         }
         else
         {
             Photino_AddCustomSchemeName(_nativeInstance, scheme);
-        }
 
-        CustomSchemes[scheme] += handler;
+            if (CustomSchemes.TryGetValue(scheme, out var existing))
+                CustomSchemes[scheme] = existing + handler;
+            else
+                CustomSchemes[scheme] = handler;
+        }
 
         return this;
     }
@@ -337,26 +342,26 @@ public partial class PhotinoWindow
     /// <exception cref="ApplicationException">
     /// Thrown when no handler is registered.
     /// </exception>
-    public IntPtr OnCustomScheme(string url, out int numBytes, out string contentType)
+    public IntPtr OnCustomScheme(string url, out int numBytes, out string? contentType)
     {
         var colonPos = url.IndexOf(':');
 
         if (colonPos < 0)
             throw new ApplicationException($"URL: '{url}' does not contain a colon.");
 
-        var scheme = url.Substring(0, colonPos).ToLower();
+        var scheme = url.Substring(0, colonPos).ToLowerInvariant();
 
-        if (!CustomSchemes.ContainsKey(scheme))
+        if (!CustomSchemes.TryGetValue(scheme, out NetCustomSchemeDelegate? handler))
             throw new ApplicationException($"A handler for the custom scheme '{scheme}' has not been registered.");
 
-        var responseStream = CustomSchemes[scheme].Invoke(this, scheme, url, out contentType);
+        var responseStream = handler.Invoke(this, scheme, url, out contentType);
 
         if (responseStream == null)
         {
             // Webview should pass through request to normal handlers (e.g., network)
             // or handle as 404 otherwise
             numBytes = 0;
-            return default;
+            return IntPtr.Zero;
         }
 
         // Read the stream into memory and serve the bytes
