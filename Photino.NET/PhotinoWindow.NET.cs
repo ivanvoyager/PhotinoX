@@ -1,6 +1,7 @@
 using System.Drawing;
 using System.Reflection;
 using System.Runtime.InteropServices;
+using Photino.NET.Utils;
 
 namespace Photino.NET;
 
@@ -28,7 +29,7 @@ public partial class PhotinoWindow
         SmoothScrollingEnabled = true,
         IgnoreCertificateErrorsEnabled = false,
         NotificationsEnabled = true,
-        TemporaryFilesPath = IsWindowsPlatform
+        TemporaryFilesPath = Platform.IsWindows
             ? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Photino")
             : null,
         Title = "Photino",
@@ -48,34 +49,6 @@ public partial class PhotinoWindow
     private static bool s_messageLoopIsStarted;
 
     //READ ONLY PROPERTIES
-    /// <summary>
-    /// Indicates whether the current platform is Windows.
-    /// </summary>
-    /// <value>
-    /// <c>true</c> if the current platform is Windows; otherwise, <c>false</c>.
-    /// </value>
-    public static bool IsWindowsPlatform => RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
-
-    /// <summary>
-    /// Indicates whether the current platform is MacOS.
-    /// </summary>
-    /// <value>
-    /// <c>true</c> if the current platform is MacOS; otherwise, <c>false</c>.
-    /// </value>
-    public static bool IsMacOsPlatform => RuntimeInformation.IsOSPlatform(OSPlatform.OSX);
-
-    /// <summary>
-    /// Indicates the version of MacOS
-    /// </summary>
-    public static Version? MacOsVersion => IsMacOsPlatform ? Version.Parse(RuntimeInformation.OSDescription.Split(' ')[1]) : null;
-
-    /// <summary>
-    /// Indicates whether the current platform is Linux.
-    /// </summary>
-    /// <value>
-    /// <c>true</c> if the current platform is Linux; otherwise, <c>false</c>.
-    /// </value>
-    public static bool IsLinuxPlatform => RuntimeInformation.IsOSPlatform(OSPlatform.Linux);
 
     /// <summary>
     /// Represents a property that gets the handle of the native window on a Windows platform. 
@@ -94,7 +67,7 @@ public partial class PhotinoWindow
     {
         get
         {
-            if (IsWindowsPlatform)
+            if (Platform.IsWindows)
             {
                 if (_nativeInstance == IntPtr.Zero)
                     throw new ApplicationException("The Photino window is not initialized yet");
@@ -265,7 +238,7 @@ public partial class PhotinoWindow
                     _startupParameters.Transparent = value;
                 else
                 {
-                    if (IsWindowsPlatform)
+                    if (Platform.IsWindows)
                         throw new ApplicationException("Transparent can only be set on Windows before the native window is instantiated.");
                     else
                     {
@@ -1122,7 +1095,7 @@ public partial class PhotinoWindow
             if (Title != value)
             {
                 // Due to Linux/Gtk platform limitations, the window title has to be no more than 31 chars
-                if (value.Length > 31 && IsLinuxPlatform)
+                if (value.Length > 31 && Platform.IsLinux)
                     value = value[..31];
 
                 if (_nativeInstance == IntPtr.Zero)
@@ -1493,7 +1466,7 @@ public partial class PhotinoWindow
         // This behavior seems to have changed with macOS Sonoma.
         // Therefore, we determine the version of macOS and only apply the
         // workaround for older versions.
-        if (IsMacOsPlatform && MacOsVersion?.Major < 23)
+        if (Platform.IsMacOS && Platform.MacOS.IsPreSonoma)
         {
             var workArea = MainMonitor.WorkArea.Size;
             location.Y = location.Y >= 0
@@ -2213,7 +2186,7 @@ public partial class PhotinoWindow
     /// <param name="data">Runtime path for WebView2</param>
     public PhotinoWindow Win32SetWebView2Path(string data)
     {
-        if (IsWindowsPlatform)
+        if (Platform.IsWindows)
             Invoke(() => Photino_setWebView2RuntimePath_win32(s_nativeType, data));
         else
             Log("Win32SetWebView2Path is only supported on the Windows platform");
@@ -2222,7 +2195,7 @@ public partial class PhotinoWindow
     }
 
     /// <summary>
-    /// Clears the auto-fill data in the browser control.
+    /// Clears the autofill data in the browser control.
     /// </summary>
     /// <remarks>
     /// This method is only supported on the Windows platform.
@@ -2232,7 +2205,7 @@ public partial class PhotinoWindow
     /// </returns>
     public PhotinoWindow ClearBrowserAutoFill()
     {
-        if (IsWindowsPlatform)
+        if (Platform.IsWindows)
             Invoke(() => Photino_ClearBrowserAutoFill(_nativeInstance));
         else
             Log("ClearBrowserAutoFill is only supported on the Windows platform");
@@ -2270,9 +2243,9 @@ public partial class PhotinoWindow
             {
                 s_nativeType = NativeLibrary.GetMainProgramHandle();
 
-                if (IsWindowsPlatform)
+                if (Platform.IsWindows)
                     Invoke(() => Photino_register_win32(s_nativeType));
-                else if (IsMacOsPlatform)
+                else if (Platform.IsMacOS)
                     Invoke(() => Photino_register_mac());
 
                 Invoke(() => _nativeInstance = Photino_ctor(ref _startupParameters));
@@ -2280,7 +2253,7 @@ public partial class PhotinoWindow
             catch (Exception ex)
             {
                 int lastError = 0;
-                if (IsWindowsPlatform)
+                if (Platform.IsWindows)
                     lastError = Marshal.GetLastWin32Error();
 
                 Log($"***\n{ex.Message}\n{ex.StackTrace}\nError #{lastError}");
@@ -2298,7 +2271,7 @@ public partial class PhotinoWindow
                 catch (Exception ex)
                 {
                     int lastError = 0;
-                    if (IsWindowsPlatform)
+                    if (Platform.IsWindows)
                         lastError = Marshal.GetLastWin32Error();
 
                     Log($"***\n{ex.Message}\n{ex.StackTrace}\nError #{lastError}");
@@ -2565,7 +2538,7 @@ public partial class PhotinoWindow
         var nativeFilters = Array.Empty<string>();
         if (!empty && filters is { Length: > 0 })
         {
-            nativeFilters = IsMacOsPlatform ?
+            nativeFilters = Platform.IsMacOS ?
                 [.. filters.SelectMany(t => t.Extensions.Select(s => s == "*" ? s : s.TrimStart('*', '.')))] :
                 [.. filters.Select(t => $"{t.Name}|{t.Extensions.Select(s => s.StartsWith('.') ? $"*{s}" : !s.StartsWith("*.") ? $"*.{s}" : s).Aggregate((e1, e2) => $"{e1};{e2}")}")];
         }

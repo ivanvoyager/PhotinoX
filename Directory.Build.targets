@@ -1,0 +1,10 @@
+<Project>
+  <ItemGroup>
+    <CsFiles Include="**\*.*.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Update="@(CsFiles)">
+      <DependentUpon>$([System.Text.RegularExpressions.Regex]::Replace('%(Filename)', '\..*$', '.cs'))</DependentUpon>
+    </Compile>
+  </ItemGroup>
+</Project>
