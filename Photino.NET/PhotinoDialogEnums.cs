@@ -78,17 +78,17 @@ public enum PhotinoDialogOptions : byte
     /// <summary>
     /// Enables multi-selection in the dialog.
     /// </summary>
-    MultiSelect = 0x1,
+    MultiSelect = 1 << 0,
 
     /// <summary>
     /// Forces an overwrite of existing files without prompting the user in the dialog.
     /// </summary>
-    ForceOverwrite = 0x2,
+    ForceOverwrite = 1 << 1,
 
     /// <summary>
     /// Disables the capability of creating folders via the dialog.
     /// </summary>
-    DisableCreateFolder = 0x4
+    DisableCreateFolder = 1 << 2
 }
 
 /// <summary>
