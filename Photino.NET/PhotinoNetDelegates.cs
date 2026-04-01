@@ -266,6 +266,32 @@ public partial class PhotinoWindow
     }
 
     /// <summary>
+    /// Occurs when the native window is about to close.
+    /// </summary>
+    public event EventHandler? WindowClosed;
+
+    /// <summary>
+    /// Registers user-defined handler methods to receive callbacks after the native window is closed.
+    /// </summary>
+    /// <returns>
+    /// Returns the current <see cref="PhotinoWindow"/> instance.
+    /// </returns>
+    /// <param name="handler"><see cref="EventHandler"/></param>
+    public PhotinoWindow RegisterWindowClosedHandler(EventHandler? handler)
+    {
+        WindowClosed += handler;
+        return this;
+    }
+
+    /// <summary>
+    /// Invokes registered user-defined handler methods after the native window is closed.
+    /// </summary>
+    internal void OnWindowClosed()
+    {
+        WindowClosed?.Invoke(this, EventArgs.Empty);
+    }
+
+    /// <summary>
     /// Occurs before the native window is created.
     /// </summary>
     public event EventHandler? WindowCreating;

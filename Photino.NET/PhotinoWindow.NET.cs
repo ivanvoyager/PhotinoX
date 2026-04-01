@@ -350,14 +350,14 @@ public partial class PhotinoWindow
         }
     }
 
-    public string UserAgent
+    public string? UserAgent
     {
         get
         {
             if (_nativeInstance == IntPtr.Zero)
                 return _startupParameters.UserAgent;
 
-            var userAgent = string.Empty;
+            string? userAgent = null;
             Invoke(() =>
             {
                 var ptr = Photino_GetUserAgent(_nativeInstance);
@@ -934,7 +934,7 @@ public partial class PhotinoWindow
     /// <para>https://developer.apple.com/documentation/webkit/wkwebviewconfiguration</para>
     /// <para>https://developer.apple.com/documentation/webkit/wkpreferences</para>
     /// </remarks>
-    public string BrowserControlInitParameters
+    public string? BrowserControlInitParameters
     {
         get
         {
@@ -943,7 +943,7 @@ public partial class PhotinoWindow
         set
         {
             var ss = _startupParameters.BrowserControlInitParameters;
-            if (string.Compare(ss, value, true) != 0)
+            if (!string.Equals(ss, value, StringComparison.CurrentCultureIgnoreCase))
             {
                 if (_nativeInstance == IntPtr.Zero)
                     _startupParameters.BrowserControlInitParameters = value;
@@ -955,7 +955,7 @@ public partial class PhotinoWindow
 
     /// <summary>
     /// Gets or sets an HTML string that the browser control will render when initialized.
-    /// Default is none.
+    /// Default is <c>null</c>.
     /// </summary>
     /// <remarks>
     /// Either StartString or StartUrl must be specified.
@@ -964,7 +964,7 @@ public partial class PhotinoWindow
     /// <exception cref="InvalidOperationException">
     /// Thrown if trying to set value after native window is initialized.
     /// </exception>
-    public string StartString
+    public string? StartString
     {
         get
         {
@@ -973,11 +973,14 @@ public partial class PhotinoWindow
         set
         {
             var ss = _startupParameters.StartString;
-            if (string.Compare(ss, value, StringComparison.OrdinalIgnoreCase) != 0)
+            if (!string.Equals(ss, value, StringComparison.CurrentCultureIgnoreCase))
             {
                 if (_nativeInstance != IntPtr.Zero)
                     throw new InvalidOperationException($"{nameof(ss)} cannot be changed after Photino Window is initialized");
-                LoadRawString(value);
+                if (value != null)
+                    LoadRawString(value);
+                else
+                    _startupParameters.StartString = value;
             }
         }
     }
@@ -993,7 +996,7 @@ public partial class PhotinoWindow
     /// <exception cref="InvalidOperationException">
     /// Thrown if trying to set value after native window is initialized.
     /// </exception>
-    public string StartUrl
+    public string? StartUrl
     {
         get
         {
@@ -1002,11 +1005,15 @@ public partial class PhotinoWindow
         set
         {
             var su = _startupParameters.StartUrl;
-            if (string.Compare(su, value, StringComparison.OrdinalIgnoreCase) != 0)
+            if (!string.Equals(su, value, StringComparison.CurrentCultureIgnoreCase))
             {
                 if (_nativeInstance != IntPtr.Zero)
                     throw new InvalidOperationException($"{nameof(su)} cannot be changed after Photino Window is initialized");
-                Load(value);
+
+                if (value != null)
+                    Load(value);
+                else
+                    _startupParameters.StartUrl = value;
             }
         }
     }
@@ -1049,7 +1056,7 @@ public partial class PhotinoWindow
     /// <exception cref="InvalidOperationException">
     /// Thrown if platform is not Windows.
     /// </exception>
-    public string NotificationRegistrationId
+    public string? NotificationRegistrationId
     {
         get
         {
@@ -1071,14 +1078,14 @@ public partial class PhotinoWindow
     /// Gets or sets the native window title.
     /// Default is "Photino".
     /// </summary>
-    public string Title
+    public string? Title
     {
         get
         {
             if (_nativeInstance == IntPtr.Zero)
                 return _startupParameters.Title;
 
-            var title = string.Empty;
+            string? title = null;
             Invoke(() =>
             {
                 var ptr = Photino_GetTitle(_nativeInstance);
@@ -1091,7 +1098,7 @@ public partial class PhotinoWindow
             if (Title != value)
             {
                 // Due to Linux/Gtk platform limitations, the window title has to be no more than 31 chars
-                if (value.Length > 31 && Platform.IsLinux)
+                if (value?.Length > 31 && Platform.IsLinux)
                     value = value[..31];
 
                 if (_nativeInstance == IntPtr.Zero)
@@ -1284,6 +1291,7 @@ public partial class PhotinoWindow
         _startupParameters.FocusOutHandler = OnFocusOut;
         _startupParameters.WebMessageReceivedHandler = OnWebMessageReceived;
         _startupParameters.CustomSchemeHandler = OnCustomScheme;
+        _startupParameters.ClosedHandler = OnWindowClosed;
     }
 
     //FLUENT METHODS FOR INITIALIZING STARTUP PARAMETERS FOR NEW WINDOWS
@@ -1314,7 +1322,7 @@ public partial class PhotinoWindow
     /// Returns the current <see cref="PhotinoWindow"/> instance.
     /// </returns>
     /// <remarks>
-    /// Load() or LoadString() must be called before native window is initialized.
+    /// Load() or LoadRawString() must be called before native window is initialized.
     /// </remarks>
     /// <param name="uri">A Uri pointing to the file or the URL to load.</param>
     public PhotinoWindow Load(Uri uri)
@@ -1334,11 +1342,13 @@ public partial class PhotinoWindow
     /// Returns the current <see cref="PhotinoWindow"/> instance.
     /// </returns>
     /// <remarks>
-    /// Load() or LoadString() must be called before native window is initialized.
+    /// Load() or LoadRawString() must be called before native window is initialized.
     /// </remarks>
     /// <param name="path">A path pointing to the resource to load.</param>
     public PhotinoWindow Load(string path)
     {
+        ArgumentNullException.ThrowIfNull(path);
+
         Log($".Load({path})");
 
         // ––––––––––––––––––––––
@@ -1376,11 +1386,13 @@ public partial class PhotinoWindow
     /// </returns>
     /// <remarks>
     /// Used to load HTML into the browser control directly.
-    /// Load() or LoadString() must be called before native window is initialized.
+    /// Load() or LoadRawString() must be called before native window is initialized.
     /// </remarks>
     /// <param name="content">Raw content (such as HTML)</param>
     public PhotinoWindow LoadRawString(string content)
     {
+        ArgumentNullException.ThrowIfNull(content);
+
         var shortContent = content.Length > 50 ? string.Concat(content.AsSpan(0, 50), "...") : content;
         Log($".LoadRawString({shortContent})");
         if (_nativeInstance == IntPtr.Zero)

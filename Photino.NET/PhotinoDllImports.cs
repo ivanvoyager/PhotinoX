@@ -1,6 +1,9 @@
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
+using GetAllMonitorsCallback = Photino.NET.NativeDelegates.MonitorCallback;
+using InvokeCallback = Photino.NET.NativeDelegates.VoidCallback;
+
 namespace Photino.NET;
 
 /// <summary>
@@ -50,7 +53,7 @@ public partial class PhotinoWindow
 
     [LibraryImport(DLL_NAME, SetLastError = true)]
     [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
-    private static partial void Photino_GetAllMonitors(IntPtr instance, CppGetAllMonitorsDelegate callback);
+    private static partial void Photino_GetAllMonitors(IntPtr instance, GetAllMonitorsCallback callback);
 
     [LibraryImport(DLL_NAME, SetLastError = true)]
     [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
@@ -158,7 +161,7 @@ public partial class PhotinoWindow
     //NAVIGATE
     [LibraryImport(DLL_NAME, SetLastError = true, StringMarshalling = StringMarshalling.Utf8)]
     [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
-    private static partial void Photino_NavigateToString(IntPtr instance, string content);
+    private static partial void Photino_NavigateToString(IntPtr instance, string? content);
 
     [LibraryImport(DLL_NAME, SetLastError = true, StringMarshalling = StringMarshalling.Utf8)]
     [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
@@ -224,7 +227,7 @@ public partial class PhotinoWindow
 
     [LibraryImport(DLL_NAME, SetLastError = true, StringMarshalling = StringMarshalling.Utf8)]
     [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
-    private static partial void Photino_SetTitle(IntPtr instance, string title);
+    private static partial void Photino_SetTitle(IntPtr instance, string? title);
 
     [LibraryImport(DLL_NAME, SetLastError = true)]
     [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]

@@ -14,7 +14,7 @@ Maintained fork of Photino.NET.</Description>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="PhotinoX.Native" Version="4.1.1" />
+    <PackageReference Include="PhotinoX.Native" Version="4.2.0" />
   </ItemGroup>
 
 </Project>
