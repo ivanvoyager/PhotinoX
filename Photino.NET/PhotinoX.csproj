@@ -10,11 +10,11 @@ Maintained fork of Photino.NET.</Description>
     <RootNamespace>Photino.NET</RootNamespace>
     <GenerateDocumentationFile>True</GenerateDocumentationFile>
     <NoWarn>$(NoWarn);1591;NETSDK1233</NoWarn>
-    <VersionPrefix>4.1.1</VersionPrefix>
+    <VersionPrefix>4.2.0</VersionPrefix>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="PhotinoX.Native" Version="4.1.1" />
+    <PackageReference Include="PhotinoX.Native" Version="4.2.0" />
   </ItemGroup>
 
 </Project>

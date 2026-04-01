@@ -2,20 +2,20 @@
 
 namespace Photino.NET;
 
-//These are for the callbacks from C++ to C#.
+internal static class NativeDelegates
+{
+    private const CallingConvention CC = CallingConvention.Cdecl;
+    private const CharSet CS = CharSet.Auto;
 
-//These are wired up automatically in the PhotinoWindow (.NET) constructor.
-[UnmanagedFunctionPointer(CallingConvention.Cdecl, CharSet = CharSet.Auto)] public delegate byte CppClosingDelegate();    //C++ uses 1 byte for bool, C# uses 4 bytes
-[UnmanagedFunctionPointer(CallingConvention.Cdecl, CharSet = CharSet.Auto)] public delegate void CppFocusInDelegate();
-[UnmanagedFunctionPointer(CallingConvention.Cdecl, CharSet = CharSet.Auto)] public delegate void CppFocusOutDelegate();
-[UnmanagedFunctionPointer(CallingConvention.Cdecl, CharSet = CharSet.Auto)] public delegate void CppResizedDelegate(int width, int height);
-[UnmanagedFunctionPointer(CallingConvention.Cdecl, CharSet = CharSet.Auto)] public delegate void CppMaximizedDelegate();
-[UnmanagedFunctionPointer(CallingConvention.Cdecl, CharSet = CharSet.Auto)] public delegate void CppRestoredDelegate();
-[UnmanagedFunctionPointer(CallingConvention.Cdecl, CharSet = CharSet.Auto)] public delegate void CppMinimizedDelegate();
-[UnmanagedFunctionPointer(CallingConvention.Cdecl, CharSet = CharSet.Auto)] public delegate void CppMovedDelegate(int x, int y);
-[UnmanagedFunctionPointer(CallingConvention.Cdecl, CharSet = CharSet.Auto)] public delegate void CppWebMessageReceivedDelegate(string message);
-[UnmanagedFunctionPointer(CallingConvention.Cdecl, CharSet = CharSet.Auto)] public delegate IntPtr CppWebResourceRequestedDelegate(string url, out int outNumBytes, out string? outContentType);
+    //These are for the callbacks from C++ to C#.
 
-//These are sent in during the request
-[UnmanagedFunctionPointer(CallingConvention.Cdecl, CharSet = CharSet.Auto)] public delegate int CppGetAllMonitorsDelegate(in NativeMonitor monitor);
-[UnmanagedFunctionPointer(CallingConvention.Cdecl)] delegate void InvokeCallback();
+    //These are wired up automatically in the PhotinoWindow (.NET) constructor.
+    [UnmanagedFunctionPointer(CC, CharSet = CS)] public delegate void VoidCallback();
+    [UnmanagedFunctionPointer(CC, CharSet = CS)] public delegate byte BoolCallback();    //C++ uses 1 byte for bool, C# uses 4 bytes
+    [UnmanagedFunctionPointer(CC, CharSet = CS)] public delegate void IntIntCallback(int a, int b);
+    [UnmanagedFunctionPointer(CC, CharSet = CS)] public delegate void StringCallback(string message);
+    [UnmanagedFunctionPointer(CC, CharSet = CS)] public delegate IntPtr ResourceCallback(string url, out int outNumBytes, out string? outContentType);
+
+    //These are sent in during the request
+    [UnmanagedFunctionPointer(CC)] public delegate int MonitorCallback(in NativeMonitor monitor);
+}
