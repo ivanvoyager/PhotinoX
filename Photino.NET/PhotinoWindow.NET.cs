@@ -42,11 +42,13 @@ public partial class PhotinoWindow
 
     //Pointers to the type and instance.
     private static IntPtr s_nativeType = IntPtr.Zero;
+    private static int s_nativeTypeIsInitialized;
+    private static int s_nativeTypeIsRegistered;
     private IntPtr _nativeInstance;
     private readonly int _managedThreadId;
 
     //There can only be 1 message loop for all windows.
-    private static bool s_messageLoopIsStarted;
+    private static int s_messageLoopIsStarted;
 
     //READ ONLY PROPERTIES
 
@@ -99,17 +101,17 @@ public partial class PhotinoWindow
             if (_nativeInstance == IntPtr.Zero)
                 throw new InvalidOperationException("The Photino window hasn't been initialized yet.");
 
-            List<Monitor> monitors = [];
+            var monitors = new List<Monitor>();
+
+            Invoke(() => Photino_GetAllMonitors(_nativeInstance, Callback));
+
+            return monitors;
 
             int Callback(in NativeMonitor monitor)
             {
                 monitors.Add(new Monitor(monitor));
                 return 1;
             }
-
-            Invoke(() => Photino_GetAllMonitors(_nativeInstance, Callback));
-
-            return monitors;
         }
     }
 
@@ -1275,10 +1277,11 @@ public partial class PhotinoWindow
         Parent = parent;
         _managedThreadId = Environment.CurrentManagedThreadId;
 
-
         //This only has to be done once
-        if (s_nativeType == IntPtr.Zero)
+        if (Interlocked.CompareExchange(ref s_nativeTypeIsInitialized, 1, 0) == 0)
+        {
             s_nativeType = NativeLibrary.GetMainProgramHandle();
+        }
 
         //Wire up handlers from C++ to C#
         _startupParameters.ClosingHandler = OnWindowClosing;
@@ -2221,9 +2224,6 @@ public partial class PhotinoWindow
         return this;
     }
 
-    //NON-FLUENT METHODS - CAN ONLY BE CALLED AFTER WINDOW IS INITIALIZED
-    //ONE OF THESE 2 METHODS *MUST* BE CALLED TO CREATE THE WINDOW
-
     /// <summary>
     /// Responsible for the initialization of the primary native window and remains in operation until the window is closed.
     /// This method is also applicable for initializing child windows, but in this case, it does not inhibit operation.
@@ -2233,30 +2233,60 @@ public partial class PhotinoWindow
     /// </remarks>
     public void WaitForClose()
     {
-        //fill in the fixed size array of custom scheme names
+        // 1. Fill fixed-size array of custom scheme names
         var i = 0;
         foreach (var name in CustomSchemes.Take(16))
         {
-            _startupParameters.CustomSchemeNames[i] = name.Key;
-            i++;
+            _startupParameters.CustomSchemeNames[i++] = name.Key;
         }
 
         _startupParameters.NativeParent = Parent?._nativeInstance ?? IntPtr.Zero;
 
-        var errors = _startupParameters.GetParamErrors();
-        if (errors.Count == 0)
+        // 2. Validate startup parameters
+        List<string>? errors = null;
+        _startupParameters.GetParamErrors(ref errors);
+        if (errors is { Count: > 0 })
         {
-            OnWindowCreating();
-            try  //All C++ exceptions will bubble up to here.
-            {
-                s_nativeType = NativeLibrary.GetMainProgramHandle();
+            throw new ArgumentException($"Startup parameters are not valid:{Environment.NewLine}" +
+                                        string.Join(Environment.NewLine, errors.Select(e => $" - {e}")));
+        }
 
+        // 3. Create native window
+        OnWindowCreating();
+        try  //All C++ exceptions will bubble up to here.
+        {
+            if (Interlocked.CompareExchange(ref s_nativeTypeIsRegistered, 1, 0) == 0)
+            {
                 if (Platform.IsWindows)
                     Invoke(() => Photino_register_win32(s_nativeType));
                 else if (Platform.IsMacOS)
                     Invoke(() => Photino_register_mac());
+                else if (Platform.IsLinux)
+                    Invoke(() => Photino_register_linux());
+            }
 
-                Invoke(() => _nativeInstance = Photino_ctor(ref _startupParameters));
+            Invoke(() => _nativeInstance = Photino_ctor(ref _startupParameters));
+        }
+        catch (Exception ex)
+        {
+            int lastError = 0;
+            if (Platform.IsWindows)
+                lastError = Marshal.GetLastWin32Error();
+
+            Log($"Error #{lastError}{Environment.NewLine}{ex}");
+            throw new ExternalException(
+                $"Native code exception. Error # {lastError}. See inner exception for details.", ex)
+                { HResult = lastError };
+        }
+
+        OnWindowCreated();
+
+        // 4. Start global message loop ONCE (main window only)
+        if (Parent is null && Interlocked.CompareExchange(ref s_messageLoopIsStarted, 1, 0) == 0)
+        {
+            try
+            {
+                Invoke(() => Photino_WaitForExit(_nativeInstance));//start the message loop. there can only be 1 message loop for all windows.
             }
             catch (Exception ex)
             {
@@ -2264,36 +2294,10 @@ public partial class PhotinoWindow
                 if (Platform.IsWindows)
                     lastError = Marshal.GetLastWin32Error();
 
-                Log($"***\n{ex.Message}\n{ex.StackTrace}\nError #{lastError}");
+                Log($"Error #{lastError}{Environment.NewLine}{ex}");
                 throw new ExternalException($"Native code exception. Error # {lastError}. See inner exception for details.", ex) { HResult = lastError };
             }
-            OnWindowCreated();
-
-            if (!s_messageLoopIsStarted)
-            {
-                s_messageLoopIsStarted = true;
-                try
-                {
-                    Invoke(() => Photino_WaitForExit(_nativeInstance));       //start the message loop. there can only be 1 message loop for all windows.
-                }
-                catch (Exception ex)
-                {
-                    int lastError = 0;
-                    if (Platform.IsWindows)
-                        lastError = Marshal.GetLastWin32Error();
-
-                    Log($"***\n{ex.Message}\n{ex.StackTrace}\nError #{lastError}");
-                    throw new ExternalException($"Native code exception. Error # {lastError}. See inner exception for details.", ex) { HResult = lastError };
-                }
-            }
-            return;
         }
-
-        var formattedErrors = "\n";
-        foreach (var error in errors)
-            formattedErrors += error + "\n";
-
-        throw new ArgumentException($"Startup Parameters Are Not Valid: {formattedErrors}");
     }
 
     /// <summary>
