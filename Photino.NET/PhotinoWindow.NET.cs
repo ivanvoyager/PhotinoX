@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Drawing;
 using System.Reflection;
 using System.Runtime.InteropServices;
@@ -2257,6 +2258,7 @@ public partial class PhotinoWindow
         {
             if (Interlocked.CompareExchange(ref s_nativeTypeIsRegistered, 1, 0) == 0)
             {
+                Debug.Assert(s_nativeType != IntPtr.Zero, $"{nameof(s_nativeType)} should be initialized");
                 if (Platform.IsWindows)
                     Invoke(() => Photino_register_win32(s_nativeType));
                 else if (Platform.IsMacOS)
