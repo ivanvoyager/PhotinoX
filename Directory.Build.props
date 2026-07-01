@@ -1,6 +1,9 @@
 <Project>
-	<!-- Project properties -->
-	<PropertyGroup>
-		<LangVersion>14</LangVersion>
-	</PropertyGroup>
+  <!-- Project properties -->
+  <PropertyGroup>
+    <LangVersion>14</LangVersion>
+  </PropertyGroup>
+
+  <!-- Imports -->
+  <Import Project="..\Directory.Build.props" Condition="Exists('..\Directory.Build.props')" />
 </Project>

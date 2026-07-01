@@ -22,6 +22,9 @@ public partial class PhotinoWindow
     [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
     private static partial IntPtr Photino_register_mac();
 
+    [LibraryImport(DLL_NAME, SetLastError = true)]
+    [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
+    private static partial IntPtr Photino_register_linux();
 
 
     //CTOR-DTOR

@@ -10,11 +10,25 @@ Maintained fork of Photino.NET.</Description>
     <RootNamespace>Photino.NET</RootNamespace>
     <GenerateDocumentationFile>True</GenerateDocumentationFile>
     <NoWarn>$(NoWarn);1591;NETSDK1233</NoWarn>
-    <VersionPrefix>4.2.0</VersionPrefix>
+    <VersionPrefix>4.2.1</VersionPrefix>
   </PropertyGroup>
 
-  <ItemGroup>
+  <ItemGroup Condition="'$(PhotinoX_UseLocalProjects)' != 'true'">
     <PackageReference Include="PhotinoX.Native" Version="4.2.0" />
   </ItemGroup>
+
+  <ItemGroup Condition="'$(PhotinoX_UseLocalProjects)' == 'true'">
+    <NativeDll Include="..\..\PhotinoX.Native\Photino.Native\x64\$(Configuration)\PhotinoX.Native.dll"
+               Condition="'$(OS)' == 'Windows_NT'" />
+  </ItemGroup>
+  
+  <Target Name="CopyNativePhotinoDll" AfterTargets="ResolveReferences" Condition="'$(PhotinoX_UseLocalProjects)' == 'true'">
+
+    <ItemGroup>
+      <_ExistingNativeDll Include="@(NativeDll)" Condition="Exists('%(NativeDll.Identity)')" />
+    </ItemGroup>
+
+    <Copy SourceFiles="@(_ExistingNativeDll)" DestinationFolder="$(OutputPath)" SkipUnchangedFiles="true" />
+  </Target>
 
 </Project>
