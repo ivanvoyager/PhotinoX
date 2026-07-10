@@ -1,4 +1,5 @@
-﻿using System.Runtime.InteropServices;
+﻿using System.Diagnostics;
+using System.Runtime.InteropServices;
 using Photino.NET.Utils;
 using ClosingCallback = Photino.NET.NativeDelegates.BoolCallback;
 using ClosedCallback = Photino.NET.NativeDelegates.VoidCallback;
@@ -14,7 +15,7 @@ using WebResourceRequestedCallback = Photino.NET.NativeDelegates.ResourceCallbac
 
 namespace Photino.NET;
 
-[StructLayout(LayoutKind.Sequential, CharSet = CharSet.Auto)]
+[StructLayout(LayoutKind.Sequential)]
 internal struct PhotinoNativeParameters
 {
     ///<summary>EITHER StartString or StartUrl Must be specified: Browser control will render this HTML string when initialized. Default is none.</summary>
@@ -189,20 +190,28 @@ internal struct PhotinoNativeParameters
         var windowIconFile = WindowIconFile;
 
         if (string.IsNullOrWhiteSpace(startUrl) && string.IsNullOrWhiteSpace(startString))
-            (errors ??= []).Add("An initial URL or HTML string must be supplied in StartUrl or StartString for the browser control to naviage to.");
+            (errors ??= []).Add("An initial URL or HTML string must be supplied in StartUrl or StartString for the browser control to navigate to.");
 
         if (Maximized && Minimized)
             (errors ??= []).Add("Window cannot be both maximized and minimized on startup.");
 
         if (FullScreen && (Maximized || Minimized))
-            (errors ??= []).Add("FullScreen cannot be combined with Maximized or Minimized");
+            (errors ??= []).Add("FullScreen cannot be combined with Maximized or Minimized.");
 
         if (!string.IsNullOrWhiteSpace(windowIconFile) && !File.Exists(windowIconFile))
             (errors ??= []).Add($"WindowIconFile: {windowIconFile} cannot be found");
 
         if (Platform.IsWindows && Chromeless && (UseOsDefaultLocation || UseOsDefaultSize))
-            (errors ??= []).Add($"Chromeless cannot be used with UseOsDefaultLocation or UseOsDefaultSize on Windows. Size and location must be specified.");
+            (errors ??= []).Add("Chromeless cannot be used with UseOsDefaultLocation or UseOsDefaultSize on Windows. Size and location must be specified.");
 
-        Size = Marshal.SizeOf<PhotinoNativeParameters>();
+        try
+        {
+            Size = Marshal.SizeOf<PhotinoNativeParameters>();
+        }
+        catch (Exception ex)
+        {
+            Debug.Fail(ex.Message);
+            throw;
+        }
     }
 }
