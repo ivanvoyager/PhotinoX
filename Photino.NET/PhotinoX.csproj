@@ -10,24 +10,51 @@ Maintained fork of Photino.NET.</Description>
     <RootNamespace>Photino.NET</RootNamespace>
     <GenerateDocumentationFile>True</GenerateDocumentationFile>
     <NoWarn>$(NoWarn);1591;NETSDK1233</NoWarn>
-    <VersionPrefix>4.2.1</VersionPrefix>
+    <VersionPrefix>4.3.0</VersionPrefix>
   </PropertyGroup>
 
   <ItemGroup Condition="'$(PhotinoX_UseLocalProjects)' != 'true'">
     <PackageReference Include="PhotinoX.Native" Version="4.2.1" />
   </ItemGroup>
 
-  <ItemGroup Condition="'$(PhotinoX_UseLocalProjects)' == 'true'">
-    <NativeDll Include="..\..\PhotinoX.Native\Photino.Native\x64\$(Configuration)\PhotinoX.Native.dll" Condition="'$(OS)' == 'Windows_NT'" />
+  <PropertyGroup Condition="'$(PhotinoX_UseLocalProjects)' == 'true' AND '$(OS)' == 'Windows_NT'">
+    <NativePlatform Condition="'$(Platform)' == 'x64'">x64</NativePlatform>
+    <NativePlatform Condition="'$(Platform)' == 'ARM64'">ARM64</NativePlatform>
+    <NativePlatform Condition="'$(Platform)' == 'AnyCPU'">x64</NativePlatform>
+
+    <NativeRidArch Condition="'$(NativePlatform)' == 'x64'">x64</NativeRidArch>
+    <NativeRidArch Condition="'$(NativePlatform)' == 'ARM64'">arm64</NativeRidArch>
+
+    <NativeOutputDir>..\..\PhotinoX.Native\Photino.Native\$(NativePlatform)\$(Configuration)\</NativeOutputDir>
+  </PropertyGroup>
+
+  <ItemGroup Condition="'$(PhotinoX_UseLocalProjects)' == 'true' AND '$(OS)' == 'Windows_NT' AND '$(NativePlatform)' != ''">
+    <None Include="$(NativeOutputDir)PhotinoX.Native.dll"
+          Link="PhotinoX.Native.dll"
+          TargetPath="PhotinoX.Native.dll"
+          CopyToOutputDirectory="PreserveNewest"
+          CopyToPublishDirectory="PreserveNewest"
+          Condition="Exists('$(NativeOutputDir)PhotinoX.Native.dll')">
+      <Visible>false</Visible>
+    </None>
+
+    <None Include="$(NativeOutputDir)PhotinoX.Native.pdb"
+          Link="PhotinoX.Native.pdb"
+          TargetPath="PhotinoX.Native.pdb"
+          CopyToOutputDirectory="PreserveNewest"
+          CopyToPublishDirectory="PreserveNewest"
+          Condition="'$(Configuration)' == 'Debug' AND Exists('$(NativeOutputDir)PhotinoX.Native.pdb')">
+      <Visible>false</Visible>
+    </None>
+
+    <None Include="$(NativeOutputDir)runtimes\win-$(NativeRidArch)\native\WebView2Loader.dll"
+          Link="WebView2Loader.dll"
+          TargetPath="WebView2Loader.dll"
+          CopyToOutputDirectory="PreserveNewest"
+          CopyToPublishDirectory="PreserveNewest"
+          Condition="Exists('$(NativeOutputDir)runtimes\win-$(NativeRidArch)\native\WebView2Loader.dll')">
+      <Visible>false</Visible>
+    </None>
   </ItemGroup>
-  
-  <Target Name="CopyNativePhotinoDll" AfterTargets="ResolveReferences" Condition="'$(PhotinoX_UseLocalProjects)' == 'true'">
-
-    <ItemGroup>
-      <_ExistingNativeDll Include="@(NativeDll)" Condition="Exists('%(NativeDll.Identity)')" />
-    </ItemGroup>
-
-    <Copy SourceFiles="@(_ExistingNativeDll)" DestinationFolder="$(OutputPath)" SkipUnchangedFiles="true" />
-  </Target>
 
 </Project>
