@@ -45,12 +45,12 @@ public partial class PhotinoWindow
     private static IntPtr s_nativeType;
     private static int s_nativeTypeIsInitialized;
     private IntPtr _nativeInstance;
-    private int _managedThreadId;
+    private volatile int _managedThreadId;
 
     //There can only be 1 message loop for all windows.
     private static int s_messageLoopIsStarted;
 
-    //READ ONLY PROPERTIES
+    internal bool IsNativeCreated => _nativeInstance != IntPtr.Zero;
 
     /// <summary>
     /// Represents a property that gets the handle of the native window on a Windows platform. 
@@ -665,6 +665,8 @@ public partial class PhotinoWindow
         {
             if (IconFile != value)
             {
+                ArgumentException.ThrowIfNullOrWhiteSpace(value);
+
                 if (!File.Exists(value))
                 {
                     var absolutePath = $"{AppContext.BaseDirectory}{value}";
@@ -763,6 +765,9 @@ public partial class PhotinoWindow
         {
             if (MaxWidth != value.X || MaxHeight != value.Y)
             {
+                _maxWidth = value.X;
+                _maxHeight = value.Y;
+
                 if (_nativeInstance == IntPtr.Zero)
                 {
                     _startupParameters.MaxWidth = value.X;
@@ -789,7 +794,7 @@ public partial class PhotinoWindow
         }
     }
 
-    ///<summary>Gets or sets the native window maximum height in pixels.</summary>
+    ///<summary>Gets or sets the native window maximum width in pixels.</summary>
     private int _maxWidth = int.MaxValue;
     public int MaxWidth
     {
@@ -839,6 +844,9 @@ public partial class PhotinoWindow
         {
             if (MinWidth != value.X || MinHeight != value.Y)
             {
+                _minWidth = value.X;
+                _minHeight = value.Y;
+
                 if (_nativeInstance == IntPtr.Zero)
                 {
                     _startupParameters.MinWidth = value.X;
@@ -865,7 +873,7 @@ public partial class PhotinoWindow
         }
     }
 
-    ///<summary>Gets or sets the native window minimum height in pixels.</summary>
+    ///<summary>Gets or sets the native window minimum width in pixels.</summary>
     private int _minWidth = 0;
     public int MinWidth
     {
@@ -979,7 +987,7 @@ public partial class PhotinoWindow
                 if (_nativeInstance == IntPtr.Zero)
                     _startupParameters.BrowserControlInitParameters = value;
                 else
-                    throw new InvalidOperationException($"{nameof(ss)} cannot be changed after Photino Window is initialized");
+                    throw new InvalidOperationException($"{nameof(BrowserControlInitParameters)} cannot be changed after Photino Window is initialized");
             }
         }
     }
@@ -1007,7 +1015,7 @@ public partial class PhotinoWindow
             if (!string.Equals(ss, value, StringComparison.CurrentCultureIgnoreCase))
             {
                 if (_nativeInstance != IntPtr.Zero)
-                    throw new InvalidOperationException($"{nameof(ss)} cannot be changed after Photino Window is initialized");
+                    throw new InvalidOperationException($"{nameof(StartString)} cannot be changed after Photino Window is initialized");
                 if (value != null)
                     LoadRawString(value);
                 else
@@ -1039,7 +1047,7 @@ public partial class PhotinoWindow
             if (!string.Equals(su, value, StringComparison.CurrentCultureIgnoreCase))
             {
                 if (_nativeInstance != IntPtr.Zero)
-                    throw new InvalidOperationException($"{nameof(su)} cannot be changed after Photino Window is initialized");
+                    throw new InvalidOperationException($"{nameof(StartUrl)} cannot be changed after Photino Window is initialized");
 
                 if (value != null)
                     Load(value);
@@ -1099,7 +1107,7 @@ public partial class PhotinoWindow
             if (nri != value)
             {
                 if (_nativeInstance != IntPtr.Zero)
-                    throw new InvalidOperationException($"{nameof(nri)} cannot be changed after Photino Window is initialized");
+                    throw new InvalidOperationException($"{nameof(NotificationRegistrationId)} cannot be changed after Photino Window is initialized");
                 _startupParameters.NotificationRegistrationId = value;
             }
         }
@@ -1329,6 +1337,8 @@ public partial class PhotinoWindow
                 Photino_register_mac();
             else if (Platform.IsLinux)
                 Photino_register_linux();
+            else
+                throw new PlatformNotSupportedException("PhotinoX supports Windows, macOS, and Linux.");
         }
 
         //Wire up handlers from C++ to C#
@@ -1416,8 +1426,11 @@ public partial class PhotinoWindow
         // This needs validation!
         // ––––––––––––––––––––––
         // Open a web URL string path
-        if (path.Contains("http://") || path.Contains("https://"))
-            return Load(new Uri(path));
+        if (Uri.TryCreate(path, UriKind.Absolute, out var uri) &&
+            (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps))
+        {
+            return Load(uri);
+        }
 
         // Open a file resource string path
         string absolutePath = Path.GetFullPath(path);
@@ -1426,7 +1439,7 @@ public partial class PhotinoWindow
         // the app context base directory. Check there too.
         if (File.Exists(absolutePath) == false)
         {
-            absolutePath = $"{AppContext.BaseDirectory}/{path}";
+            absolutePath = Path.Combine(AppContext.BaseDirectory, path);
 
             if (File.Exists(absolutePath) == false)
             {
@@ -2255,7 +2268,7 @@ public partial class PhotinoWindow
     public PhotinoWindow Win32SetWebView2Path(string data)
     {
         if (Platform.IsWindows)
-            Invoke(() => Photino_setWebView2RuntimePath_win32(data));
+            Photino_setWebView2RuntimePath_win32(data);
         else
             Log("Win32SetWebView2Path is only supported on the Windows platform");
 
@@ -2357,6 +2370,7 @@ public partial class PhotinoWindow
         {
             try
             {
+                Debug.Assert(_nativeInstance != IntPtr.Zero, "Photino_WaitForExit: _nativeInstance is null");
                 Photino_WaitForExit(_nativeInstance);//start the message loop. there can only be 1 message loop for all windows.
             }
             catch (Exception ex)

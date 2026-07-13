@@ -65,7 +65,7 @@ internal struct PhotinoNativeParameters
     [MarshalAs(UnmanagedType.ByValArray, ArraySubType = UnmanagedType.LPStr, SizeConst = 16)]
     internal string[] CustomSchemeNames;//#9
 
-    ///<summary>OPTIONAL: If native window is created from another native window, this is the pointer to the parent window. It is set automatically in <see cref="PhotinoWindow.WaitForClose"/>.</summary>
+    ///<summary>OPTIONAL: If native window is created from another native window, this is the pointer to the parent window. It is set automatically in <see cref="PhotinoWindow.Show"/>.</summary>
     internal IntPtr NativeParent;//#10
 
     [MarshalAs(UnmanagedType.FunctionPtr)] internal ClosingCallback ClosingHandler;//#11
@@ -143,10 +143,10 @@ internal struct PhotinoNativeParameters
     ///<summary>OPTIONAL: If true, native window appears in front of other windows and cannot be hidden behind them. Default is false.</summary>
     [MarshalAs(UnmanagedType.I1)] internal bool Topmost;//#41
 
-    ///<summary>OPTIONAL: If true, overrides Top and Left parameters and lets the OS size the newly created window. Default is true.</summary>
+    ///<summary>OPTIONAL: If true, overrides Top and Left parameters and lets the OS position the newly created window. Default is true.</summary>
     [MarshalAs(UnmanagedType.I1)] internal bool UseOsDefaultLocation;//#42
 
-    ///<summary>OPTIONAL: If true, overrides Height and Width parameters and lets the OS position the newly created window. Default is true.</summary>
+    ///<summary>OPTIONAL: If true, overrides Height and Width parameters and lets the OS size the newly created window. Default is true.</summary>
     [MarshalAs(UnmanagedType.I1)] internal bool UseOsDefaultSize;//#43
 
     ///<summary>OPTIONAL: If true, requests for access to local resources (camera, microphone, etc.) will automatically be granted. Default is true.</summary>

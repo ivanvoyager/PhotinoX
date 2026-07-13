@@ -14,7 +14,7 @@ Maintained fork of Photino.NET.</Description>
   </PropertyGroup>
 
   <ItemGroup Condition="'$(PhotinoX_UseLocalProjects)' != 'true'">
-    <PackageReference Include="PhotinoX.Native" Version="4.2.1" />
+    <PackageReference Include="PhotinoX.Native" Version="4.3.0" />
   </ItemGroup>
 
   <PropertyGroup Condition="'$(PhotinoX_UseLocalProjects)' == 'true' AND '$(OS)' == 'Windows_NT'">
@@ -29,30 +29,15 @@ Maintained fork of Photino.NET.</Description>
   </PropertyGroup>
 
   <ItemGroup Condition="'$(PhotinoX_UseLocalProjects)' == 'true' AND '$(OS)' == 'Windows_NT' AND '$(NativePlatform)' != ''">
-    <None Include="$(NativeOutputDir)PhotinoX.Native.dll"
-          Link="PhotinoX.Native.dll"
-          TargetPath="PhotinoX.Native.dll"
-          CopyToOutputDirectory="PreserveNewest"
-          CopyToPublishDirectory="PreserveNewest"
-          Condition="Exists('$(NativeOutputDir)PhotinoX.Native.dll')">
+    <None Include="$(NativeOutputDir)PhotinoX.Native.dll" Link="PhotinoX.Native.dll" TargetPath="PhotinoX.Native.dll" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" Condition="Exists('$(NativeOutputDir)PhotinoX.Native.dll')">
       <Visible>false</Visible>
     </None>
 
-    <None Include="$(NativeOutputDir)PhotinoX.Native.pdb"
-          Link="PhotinoX.Native.pdb"
-          TargetPath="PhotinoX.Native.pdb"
-          CopyToOutputDirectory="PreserveNewest"
-          CopyToPublishDirectory="PreserveNewest"
-          Condition="'$(Configuration)' == 'Debug' AND Exists('$(NativeOutputDir)PhotinoX.Native.pdb')">
+    <None Include="$(NativeOutputDir)PhotinoX.Native.pdb" Link="PhotinoX.Native.pdb" TargetPath="PhotinoX.Native.pdb" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" Condition="'$(Configuration)' == 'Debug' AND Exists('$(NativeOutputDir)PhotinoX.Native.pdb')">
       <Visible>false</Visible>
     </None>
 
-    <None Include="$(NativeOutputDir)runtimes\win-$(NativeRidArch)\native\WebView2Loader.dll"
-          Link="WebView2Loader.dll"
-          TargetPath="WebView2Loader.dll"
-          CopyToOutputDirectory="PreserveNewest"
-          CopyToPublishDirectory="PreserveNewest"
-          Condition="Exists('$(NativeOutputDir)runtimes\win-$(NativeRidArch)\native\WebView2Loader.dll')">
+    <None Include="$(NativeOutputDir)runtimes\win-$(NativeRidArch)\native\WebView2Loader.dll" Link="WebView2Loader.dll" TargetPath="WebView2Loader.dll" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" Condition="Exists('$(NativeOutputDir)runtimes\win-$(NativeRidArch)\native\WebView2Loader.dll')">
       <Visible>false</Visible>
     </None>
   </ItemGroup>

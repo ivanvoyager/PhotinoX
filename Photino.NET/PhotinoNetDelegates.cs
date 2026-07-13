@@ -267,7 +267,7 @@ public partial class PhotinoWindow
     }
 
     /// <summary>
-    /// Occurs when the native window is about to close.
+    /// Occurs after the native window is closed.
     /// </summary>
     public event EventHandler? WindowClosed;
 
@@ -407,28 +407,19 @@ public partial class PhotinoWindow
 
         if (_nativeInstance == IntPtr.Zero)
         {
-            if (!CustomSchemes.TryGetValue(scheme, out var existing))
+            if (!CustomSchemes.TryGetValue(scheme, out _))
             {
                 if (CustomSchemes.Count >= 16)
                     throw new InvalidOperationException($"No more than 16 custom schemes can be set prior to initialization. Additional handlers can be added after initialization.");
-
-                CustomSchemes[scheme] = handler;
-            }
-            else
-            {
-                CustomSchemes[scheme] = existing + handler;
             }
         }
         else
         {
-            if (!Photino_AddCustomSchemeName(_nativeInstance, scheme))
+            if (!CustomSchemes.ContainsKey(scheme) && !Photino_AddCustomSchemeName(_nativeInstance, scheme))
                 throw new InvalidOperationException($"Failed to register custom scheme: '{scheme}'.");
-
-            if (CustomSchemes.TryGetValue(scheme, out var existing))
-                CustomSchemes[scheme] = existing + handler;
-            else
-                CustomSchemes[scheme] = handler;
         }
+
+        CustomSchemes[scheme] = handler;
 
         return this;
     }
