@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel;
+using System.Diagnostics;
 using System.Drawing;
 using System.Runtime.InteropServices;
 
@@ -266,7 +267,7 @@ public partial class PhotinoWindow
     }
 
     /// <summary>
-    /// Occurs when the native window is about to close.
+    /// Occurs after the native window is closed.
     /// </summary>
     public event EventHandler? WindowClosed;
 
@@ -288,7 +289,15 @@ public partial class PhotinoWindow
     /// </summary>
     internal void OnWindowClosed()
     {
-        WindowClosed?.Invoke(this, EventArgs.Empty);
+        try
+        {
+            WindowClosed?.Invoke(this, EventArgs.Empty);
+        }
+        finally
+        {
+            _nativeInstance = IntPtr.Zero;
+            Interlocked.Exchange(ref _managedThreadId, 0);
+        }
     }
 
     /// <summary>
@@ -393,29 +402,24 @@ public partial class PhotinoWindow
 
         scheme = scheme.ToLowerInvariant();
 
+        if (!IsValidSchemeName(scheme))
+            throw new ArgumentException($"Invalid custom scheme name: '{scheme}'.");
+
         if (_nativeInstance == IntPtr.Zero)
         {
-            if (!CustomSchemes.TryGetValue(scheme, out var existing))
+            if (!CustomSchemes.TryGetValue(scheme, out _))
             {
                 if (CustomSchemes.Count >= 16)
                     throw new InvalidOperationException($"No more than 16 custom schemes can be set prior to initialization. Additional handlers can be added after initialization.");
-
-                CustomSchemes[scheme] = handler;
-            }
-            else
-            {
-                CustomSchemes[scheme] = existing + handler;
             }
         }
         else
         {
-            Photino_AddCustomSchemeName(_nativeInstance, scheme);
-
-            if (CustomSchemes.TryGetValue(scheme, out var existing))
-                CustomSchemes[scheme] = existing + handler;
-            else
-                CustomSchemes[scheme] = handler;
+            if (!CustomSchemes.ContainsKey(scheme) && !Photino_AddCustomSchemeName(_nativeInstance, scheme))
+                throw new InvalidOperationException($"Failed to register custom scheme: '{scheme}'.");
         }
+
+        CustomSchemes[scheme] = handler;
 
         return this;
     }
@@ -426,7 +430,7 @@ public partial class PhotinoWindow
     /// </summary>
     /// <param name="url">URL of the Scheme</param>
     /// <param name="numBytes">Number of bytes of the response</param>
-    /// <param name="contentType">Content type of the response</param>
+    /// <param name="outContentType">Content type of the response</param>
     /// <returns><see cref="IntPtr"/></returns>
     /// <exception cref="ArgumentException"><paramref name="url"/> is null or empty or consists only of white-space characters.</exception>
     /// <exception cref="ArgumentException">
@@ -435,7 +439,7 @@ public partial class PhotinoWindow
     /// <exception cref="InvalidOperationException">
     /// Thrown when no handler is registered.
     /// </exception>
-    public IntPtr OnCustomScheme(string url, out int numBytes, out string? contentType)
+    public IntPtr OnCustomScheme(string url, out int numBytes, out IntPtr outContentType)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(url);
         var colonPos = url.IndexOf(':');
@@ -448,13 +452,15 @@ public partial class PhotinoWindow
         if (!CustomSchemes.TryGetValue(scheme, out NetCustomSchemeDelegate? handler))
             throw new InvalidOperationException($"A handler for the custom scheme '{scheme}' has not been registered.");
 
-        var responseStream = handler.Invoke(this, scheme, url, out contentType);
+        var responseStream = handler.Invoke(this, scheme, url, out var contentType);
+
+        numBytes = 0;
+        outContentType = IntPtr.Zero;
 
         if (responseStream == null)
         {
             // Webview should pass through request to normal handlers (e.g., network)
             // or handle as 404 otherwise
-            numBytes = 0;
             return IntPtr.Zero;
         }
 
@@ -465,11 +471,36 @@ public partial class PhotinoWindow
         {
             responseStream.CopyTo(ms);
 
-            numBytes = (int)ms.Position;
-            // Memory allocated here should be released by the native layer after the response is processed.
-            var buffer = Marshal.AllocHGlobal(numBytes);
-            Marshal.Copy(ms.GetBuffer(), 0, buffer, numBytes);
-            //_hGlobalToFree.Add(buffer);
+            if (ms.Length is <= 0 or > int.MaxValue)
+                return IntPtr.Zero;
+
+            numBytes = (int)ms.Length;
+            IntPtr buffer = IntPtr.Zero;
+            try
+            {
+                // Memory allocated here should be released by the native layer after the response is processed.
+                buffer = Photino_AllocateMemory(numBytes);
+                if (buffer == IntPtr.Zero)
+                {
+                    numBytes = 0;
+                    return IntPtr.Zero;
+                }
+
+                Marshal.Copy(ms.GetBuffer(), 0, buffer, numBytes);
+                outContentType = CopyUtf8StringToNative(contentType);//uses Photino_AllocateString
+                //_hGlobalToFree.Add(buffer);
+            }
+            catch (Exception ex)
+            {
+                if (buffer != IntPtr.Zero)
+                {
+                    Photino_FreeMemory(buffer);
+                    buffer = IntPtr.Zero;
+                }
+                numBytes = 0;
+                Debug.Fail(ex.Message);
+            }
+
             return buffer;
         }
     }

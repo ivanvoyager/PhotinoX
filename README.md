@@ -25,7 +25,7 @@ It relies entirely on **OS‑native WebView engines**, keeping apps small and ef
 
 - [**PhotinoX.Native**](https://github.com/ivanvoyager/PhotinoX.Native) - native binaries for Windows/macOS/Linux.
 - [**PhotinoX.Blazor**](https://github.com/ivanvoyager/PhotinoX.Blazor) - Blazor integration for native desktop apps.
-- [**PhotinoX.Server**](https://github.com/ivanvoyager/PhotinoX.Server) - optional static-file server (avoids CORS/ESM issues).
+- [**PhotinoX.Server**](https://github.com/ivanvoyager/PhotinoX.Server) - optional local static-file server for SPA/static assets.
 - [**PhotinoX.Samples**](https://github.com/ivanvoyager/PhotinoX.Samples) - sample projects showcasing common scenarios.
 
 ---
@@ -35,16 +35,16 @@ It relies entirely on **OS‑native WebView engines**, keeping apps small and ef
 ```bash
 dotnet add package PhotinoX
 ```
-(Ensure `PhotinoX.Native` is available at runtime for your target RID.)
+`PhotinoX.Native` provides the native WebView host binaries and must be available for the target runtime identifier.
 > Package targets **net8.0; net9.0; net10.0**. CI builds use the latest **.NET 10 SDK**.
 
 ## Samples
 
 See real, working examples here:
 - [PhotinoX.Samples](https://github.com/ivanvoyager/PhotinoX.Samples)
-- [PhotinoX.Blazor](https://github.com/ivanvoyager/PhotinoX.Blazor) (with Blazor support, samples inside /Samples) 
+- [PhotinoX.Blazor](https://github.com/ivanvoyager/PhotinoX.Blazor) (with Blazor support, samples inside `Samples/`)
 
-Docs (original Photino concepts): https://docs.tryphotino.io/
+Original Photino concept docs: https://docs.tryphotino.io/
 
 ## Requirements
 
@@ -56,7 +56,7 @@ Docs (original Photino concepts): https://docs.tryphotino.io/
   https://learn.microsoft.com/microsoft-edge/webview2/
 - **macOS**: WKWebView (system WebKit)  
   https://developer.apple.com/documentation/webkit/wkwebview/
-- **Linux:** WebKitGTK 4.1 development/runtime packages  
+- **Linux:** WebKitGTK 4.1 runtime packages  
   https://webkitgtk.org/
 
 ## Build from source

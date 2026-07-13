@@ -1,4 +1,5 @@
-﻿using System.Runtime.InteropServices;
+﻿using System.Diagnostics;
+using System.Runtime.InteropServices;
 using Photino.NET.Utils;
 using ClosingCallback = Photino.NET.NativeDelegates.BoolCallback;
 using ClosedCallback = Photino.NET.NativeDelegates.VoidCallback;
@@ -14,7 +15,7 @@ using WebResourceRequestedCallback = Photino.NET.NativeDelegates.ResourceCallbac
 
 namespace Photino.NET;
 
-[StructLayout(LayoutKind.Sequential, CharSet = CharSet.Auto)]
+[StructLayout(LayoutKind.Sequential)]
 internal struct PhotinoNativeParameters
 {
     ///<summary>EITHER StartString or StartUrl Must be specified: Browser control will render this HTML string when initialized. Default is none.</summary>
@@ -64,7 +65,7 @@ internal struct PhotinoNativeParameters
     [MarshalAs(UnmanagedType.ByValArray, ArraySubType = UnmanagedType.LPStr, SizeConst = 16)]
     internal string[] CustomSchemeNames;//#9
 
-    ///<summary>OPTIONAL: If native window is created from another native window, this is the pointer to the parent window. It is set automatically in <see cref="PhotinoWindow.WaitForClose"/>.</summary>
+    ///<summary>OPTIONAL: If native window is created from another native window, this is the pointer to the parent window. It is set automatically in <see cref="PhotinoWindow.Show"/>.</summary>
     internal IntPtr NativeParent;//#10
 
     [MarshalAs(UnmanagedType.FunctionPtr)] internal ClosingCallback ClosingHandler;//#11
@@ -142,10 +143,10 @@ internal struct PhotinoNativeParameters
     ///<summary>OPTIONAL: If true, native window appears in front of other windows and cannot be hidden behind them. Default is false.</summary>
     [MarshalAs(UnmanagedType.I1)] internal bool Topmost;//#41
 
-    ///<summary>OPTIONAL: If true, overrides Top and Left parameters and lets the OS size the newly created window. Default is true.</summary>
+    ///<summary>OPTIONAL: If true, overrides Top and Left parameters and lets the OS position the newly created window. Default is true.</summary>
     [MarshalAs(UnmanagedType.I1)] internal bool UseOsDefaultLocation;//#42
 
-    ///<summary>OPTIONAL: If true, overrides Height and Width parameters and lets the OS position the newly created window. Default is true.</summary>
+    ///<summary>OPTIONAL: If true, overrides Height and Width parameters and lets the OS size the newly created window. Default is true.</summary>
     [MarshalAs(UnmanagedType.I1)] internal bool UseOsDefaultSize;//#43
 
     ///<summary>OPTIONAL: If true, requests for access to local resources (camera, microphone, etc.) will automatically be granted. Default is true.</summary>
@@ -189,20 +190,28 @@ internal struct PhotinoNativeParameters
         var windowIconFile = WindowIconFile;
 
         if (string.IsNullOrWhiteSpace(startUrl) && string.IsNullOrWhiteSpace(startString))
-            (errors ??= []).Add("An initial URL or HTML string must be supplied in StartUrl or StartString for the browser control to naviage to.");
+            (errors ??= []).Add("An initial URL or HTML string must be supplied in StartUrl or StartString for the browser control to navigate to.");
 
         if (Maximized && Minimized)
             (errors ??= []).Add("Window cannot be both maximized and minimized on startup.");
 
         if (FullScreen && (Maximized || Minimized))
-            (errors ??= []).Add("FullScreen cannot be combined with Maximized or Minimized");
+            (errors ??= []).Add("FullScreen cannot be combined with Maximized or Minimized.");
 
         if (!string.IsNullOrWhiteSpace(windowIconFile) && !File.Exists(windowIconFile))
             (errors ??= []).Add($"WindowIconFile: {windowIconFile} cannot be found");
 
         if (Platform.IsWindows && Chromeless && (UseOsDefaultLocation || UseOsDefaultSize))
-            (errors ??= []).Add($"Chromeless cannot be used with UseOsDefaultLocation or UseOsDefaultSize on Windows. Size and location must be specified.");
+            (errors ??= []).Add("Chromeless cannot be used with UseOsDefaultLocation or UseOsDefaultSize on Windows. Size and location must be specified.");
 
-        Size = Marshal.SizeOf<PhotinoNativeParameters>();
+        try
+        {
+            Size = Marshal.SizeOf<PhotinoNativeParameters>();
+        }
+        catch (Exception ex)
+        {
+            Debug.Fail(ex.Message);
+            throw;
+        }
     }
 }
