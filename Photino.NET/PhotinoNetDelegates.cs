@@ -5,6 +5,8 @@ using System.Runtime.InteropServices;
 
 namespace Photino.NET;
 
+using static NativeMethods;
+
 public partial class PhotinoWindow
 {
     /// <summary>

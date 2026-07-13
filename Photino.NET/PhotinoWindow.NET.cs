@@ -6,6 +6,11 @@ using Photino.NET.Utils;
 
 namespace Photino.NET;
 
+using static NativeMethods;
+
+/// <summary>
+/// The PhotinoWindow class represents a window in a Photino-based desktop application.
+/// </summary>
 public partial class PhotinoWindow
 {
     //PRIVATE FIELDS
