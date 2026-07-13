@@ -68,6 +68,14 @@ public partial class PhotinoWindow
     [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
     private static partial IntPtr Photino_getHwnd_win32(IntPtr instance);
 
+    [LibraryImport(DLL_NAME, SetLastError = true)]
+    [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
+    private static partial IntPtr Photino_getGtkWidget_linux(IntPtr instance);
+
+    [LibraryImport(DLL_NAME, SetLastError = true)]
+    [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
+    private static partial IntPtr Photino_getNSWindow_mac(IntPtr instance);
+
     [LibraryImport(DLL_NAME)]
     [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
     private static partial void Photino_GetAllMonitors(IntPtr instance, GetAllMonitorsCallback callback);

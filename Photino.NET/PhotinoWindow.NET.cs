@@ -53,33 +53,47 @@ public partial class PhotinoWindow
     internal bool IsNativeCreated => _nativeInstance != IntPtr.Zero;
 
     /// <summary>
-    /// Represents a property that gets the handle of the native window on a Windows platform. 
+    /// Gets the platform-specific native window reference.
     /// </summary>
     /// <remarks>
-    /// Only available on the Windows platform. 
-    /// If this property is accessed from a non-Windows platform, a PlatformNotSupportedException will be thrown.
-    /// If this property is accessed before the window is initialized, an <see cref="InvalidOperationException"/> will be thrown.
+    /// On Windows, returns an HWND.
+    /// On Linux, returns a GtkWidget* whose runtime type is GtkWindow.
+    /// On macOS, returns an NSWindow*.
+    /// The returned pointer is owned by Photino and must not be destroyed, released, or unreferenced by the caller.
+    /// Platform-specific APIs using this pointer must follow the platform UI-thread rules.
     /// </remarks>
     /// <value>
-    /// The handle of the native window. The value is of type <see cref="IntPtr"/>.
+    /// The platform-specific native window reference as an <see cref="IntPtr"/>.
     /// </value>
     /// <exception cref="InvalidOperationException">Thrown when the window is not initialized yet.</exception>
-    /// <exception cref="PlatformNotSupportedException">Thrown when accessed from a non-Windows platform.</exception>
+    /// <exception cref="PlatformNotSupportedException">Thrown when the current platform is not supported.</exception>
     public IntPtr WindowHandle
     {
         get
         {
+            if (_nativeInstance == IntPtr.Zero)
+                throw new InvalidOperationException("The Photino window is not initialized yet.");
+
+            var handle = IntPtr.Zero;
             if (Platform.IsWindows)
             {
-                if (_nativeInstance == IntPtr.Zero)
-                    throw new InvalidOperationException("The Photino window is not initialized yet.");
-
-                var handle = IntPtr.Zero;
                 Invoke(() => handle = Photino_getHwnd_win32(_nativeInstance));
                 return handle;
             }
 
-            throw new PlatformNotSupportedException($"{nameof(WindowHandle)} is only supported on Windows.");
+            if (Platform.IsLinux)
+            {
+                Invoke(() => handle = Photino_getGtkWidget_linux(_nativeInstance));
+                return handle;
+            }
+
+            if (Platform.IsMacOS)
+            {
+                Invoke(() => handle = Photino_getNSWindow_mac(_nativeInstance));
+                return handle;
+            }
+
+            throw new PlatformNotSupportedException($"{nameof(WindowHandle)} not supported on current platform.");
         }
     }
 
