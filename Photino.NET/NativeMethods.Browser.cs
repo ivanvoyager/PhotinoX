@@ -5,6 +5,24 @@ namespace Photino.NET;
 
 internal static partial class NativeMethods
 {
+    [LibraryImport(DLL_NAME, StringMarshalling = StringMarshalling.Utf16/* wchar_t* */)]
+    [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
+    internal static partial void Photino_setWebView2RuntimePath_win32(string? webView2RuntimePath);
+
+    [LibraryImport(DLL_NAME)]
+    [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
+    internal static partial void Photino_GetTransparentEnabled(IntPtr instance, out byte enabled);
+
+    [LibraryImport(DLL_NAME)]
+    [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
+    internal static partial void Photino_SetTransparentEnabled(IntPtr instance, byte enabled);
+
+
+    [LibraryImport(DLL_NAME)]
+    [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
+    internal static partial void Photino_ClearBrowserAutoFill(IntPtr instance);
+
+
     [LibraryImport(DLL_NAME, StringMarshalling = StringMarshalling.Utf8)]
     [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
     internal static partial void Photino_NavigateToString(IntPtr instance, string? content);
@@ -23,11 +41,6 @@ internal static partial class NativeMethods
     [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
     [return: MarshalAs(UnmanagedType.I1)]
     internal static partial bool Photino_AddCustomSchemeName(IntPtr instance, string scheme);
-
-
-    [LibraryImport(DLL_NAME)]
-    [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
-    internal static partial void Photino_ClearBrowserAutoFill(IntPtr instance);
 
 
     [LibraryImport(DLL_NAME)]

@@ -90,15 +90,6 @@ internal static partial class NativeMethods
 
     [LibraryImport(DLL_NAME)]
     [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
-    internal static partial void Photino_GetTransparentEnabled(IntPtr instance, out byte enabled);
-
-    [LibraryImport(DLL_NAME)]
-    [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
-    internal static partial void Photino_SetTransparentEnabled(IntPtr instance, byte enabled);
-
-
-    [LibraryImport(DLL_NAME)]
-    [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
     internal static partial void Photino_GetFullScreen(IntPtr instance, out byte fullScreen);
 
     [LibraryImport(DLL_NAME)]

@@ -27,11 +27,7 @@ internal static partial class NativeMethods
     [DllImport(DLL_NAME, CallingConvention = CallingConvention.Cdecl)]
     internal static extern IntPtr Photino_ctor(ref PhotinoNativeParameters parameters);
 #pragma warning restore SYSLIB1054
-
-    [LibraryImport(DLL_NAME, StringMarshalling = StringMarshalling.Utf16/* wchar_t* */)]
-    [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
-    internal static partial void Photino_setWebView2RuntimePath_win32(string? webView2RuntimePath);
-
+    
 
     [LibraryImport(DLL_NAME)]
     [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
