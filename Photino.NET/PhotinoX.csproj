@@ -10,7 +10,7 @@ Maintained fork of Photino.NET.</Description>
     <RootNamespace>Photino.NET</RootNamespace>
     <GenerateDocumentationFile>True</GenerateDocumentationFile>
     <NoWarn>$(NoWarn);1591;NETSDK1233</NoWarn>
-    <VersionPrefix>4.3.1</VersionPrefix>
+    <VersionPrefix>4.3.2</VersionPrefix>
   </PropertyGroup>
 
   <ItemGroup Condition="'$(PhotinoX_UseLocalProjects)' != 'true'">
