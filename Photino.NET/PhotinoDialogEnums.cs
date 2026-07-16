@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace Photino.NET;
+﻿namespace Photino.NET;
 
 /// <summary>
 /// Represents the types of buttons that can be displayed in a Photino-dialog.
@@ -62,33 +60,6 @@ public enum PhotinoDialogIcon
     /// A question icon. 
     /// </summary> 
     Question
-}
-
-/// <summary>
-/// Defines options for a dialog
-/// </summary>
-[Flags]
-public enum PhotinoDialogOptions : byte
-{
-    /// <summary>
-    /// Represents no options for the dialog.
-    /// </summary>
-    None = 0,
-
-    /// <summary>
-    /// Enables multi-selection in the dialog.
-    /// </summary>
-    MultiSelect = 1 << 0,
-
-    /// <summary>
-    /// Forces an overwrite of existing files without prompting the user in the dialog.
-    /// </summary>
-    ForceOverwrite = 1 << 1,
-
-    /// <summary>
-    /// Disables the capability of creating folders via the dialog.
-    /// </summary>
-    DisableCreateFolder = 1 << 2
 }
 
 /// <summary>
