@@ -5,5 +5,5 @@
   </PropertyGroup>
 
   <!-- Imports -->
-  <Import Project="..\Directory.Build.props" Condition="Exists('..\Directory.Build.props')" />
+  <Import Project="$(MSBuildThisFileDirectory)..\Directory.Build.props" Condition="Exists('$(MSBuildThisFileDirectory)..\Directory.Build.props')" />
 </Project>

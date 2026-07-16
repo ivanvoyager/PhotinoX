@@ -14,7 +14,7 @@ Maintained fork of Photino.NET.</Description>
   </PropertyGroup>
 
   <ItemGroup Condition="'$(PhotinoX_UseLocalProjects)' != 'true'">
-    <PackageReference Include="PhotinoX.Native" Version="4.3.1" />
+    <PackageReference Include="PhotinoX.Native" Version="4.3.2" />
   </ItemGroup>
 
   <PropertyGroup Condition="'$(PhotinoX_UseLocalProjects)' == 'true' AND '$(OS)' == 'Windows_NT'">
