@@ -6,6 +6,11 @@ using Photino.NET.Utils;
 
 namespace Photino.NET;
 
+using static NativeMethods;
+
+/// <summary>
+/// The PhotinoWindow class represents a window in a Photino-based desktop application.
+/// </summary>
 public partial class PhotinoWindow
 {
     //PRIVATE FIELDS
@@ -660,7 +665,7 @@ public partial class PhotinoWindow
             string? iconFile = null;
             Invoke(() =>
             {
-                var ptr = Photino_GetIconFileName(_nativeInstance);
+                var ptr = Photino_GetIconFile(_nativeInstance);
                 try
                 {
                     iconFile = ptr != IntPtr.Zero
@@ -2385,7 +2390,7 @@ public partial class PhotinoWindow
             try
             {
                 Debug.Assert(_nativeInstance != IntPtr.Zero, "Photino_WaitForExit: _nativeInstance is null");
-                Photino_WaitForExit(_nativeInstance);//start the message loop. there can only be 1 message loop for all windows.
+                Photino_WaitForExit(_nativeInstance);//Start the message loop.
             }
             catch (Exception ex)
             {
