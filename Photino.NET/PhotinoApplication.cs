@@ -1,4 +1,5 @@
-﻿using System.Runtime.ExceptionServices;
+﻿using System.Diagnostics;
+using System.Runtime.ExceptionServices;
 using Photino.NET.Utils;
 
 namespace Photino.NET;
@@ -29,6 +30,8 @@ public sealed class PhotinoApplication
 
         Current = this;
     }
+
+    public event EventHandler<UnhandledExceptionEventArgs>? DispatcherUnhandledException;
 
     /// <summary>
     /// Gets the current application instance.
@@ -81,6 +84,33 @@ public sealed class PhotinoApplication
     /// when the last window closes, or only when <see cref="Shutdown(int)"/> is called explicitly.
     /// </remarks>
     public PhotinoShutdownMode ShutdownMode { get; set; } = PhotinoShutdownMode.OnLastWindowClose;
+
+    internal void OnDispatcherUnhandledException(Exception exception)
+    {
+        var handler = DispatcherUnhandledException;
+        if (handler == null)
+        {
+            TraceUnhandledException(exception);
+            return;
+        }
+
+        var args = new UnhandledExceptionEventArgs(exception, false);
+        handler(this, args);
+
+        if (!args.IsTerminating)
+        {
+            TraceUnhandledException(exception);
+        }
+
+        return;
+
+        static void TraceUnhandledException(Exception exception)
+        {
+            var message = $"Unhandled dispatcher exception: {exception}";
+            Trace.WriteLine(message);
+            Debug.Fail(message);
+        }
+    }
 
     /// <summary>
     /// Runs the application message loop.
