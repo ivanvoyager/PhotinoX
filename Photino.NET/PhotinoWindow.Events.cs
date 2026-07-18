@@ -253,12 +253,15 @@ public partial class PhotinoWindow
     /// </returns>
     internal byte OnWindowClosing()
     {
+        if (_suppressClosing)
+            return 0;
+
         var handler = WindowClosing;
         if (handler == null)
             return 0;
 
         var args = new CancelEventArgs();
-        handler?.Invoke(this, args);
+        handler(this, args);
 
         // C++ expects a single byte (0 = allow close, 1 = cancel close)
         return args.Cancel ? (byte)1 : (byte)0;
@@ -293,8 +296,9 @@ public partial class PhotinoWindow
         }
         finally
         {
+            _isClosed = true;
             _nativeInstance = IntPtr.Zero;
-            Interlocked.Exchange(ref _managedThreadId, 0);
+            PhotinoApplication.Current.OnWindowClosed(this);
         }
     }
 
@@ -347,6 +351,7 @@ public partial class PhotinoWindow
     /// </summary>
     internal void OnWindowCreated()
     {
+        PhotinoApplication.Current.OnWindowCreated(this);
         WindowCreated?.Invoke(this, EventArgs.Empty);
     }
 }

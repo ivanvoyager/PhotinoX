@@ -13,36 +13,66 @@ using static NativeMethods;
 /// A <see cref="PhotinoApplication"/> owns the application-level lifetime, window tracking,
 /// dispatcher access, shutdown behavior, and message-loop execution.
 /// </remarks>
-public sealed class PhotinoApplication
+public sealed partial class PhotinoApplication
 {
-    private static int s_appCreated;
+    private static PhotinoApplication? s_current;
     private int _isRunning;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="PhotinoApplication"/> class.
     /// </summary>
-    public PhotinoApplication()
+    public PhotinoApplication() : this(registerCurrent: true)
     {
-        if (Interlocked.CompareExchange(ref s_appCreated, 1, 0) == 1)
-        {
-            throw new InvalidOperationException($"Cannot create more than one {typeof(PhotinoApplication).FullName} instance.");
-        }
-
-        Current = this;
     }
 
-    public event EventHandler<UnhandledExceptionEventArgs>? DispatcherUnhandledException;
+    private PhotinoApplication(bool registerCurrent)
+    {
+        if (registerCurrent && Volatile.Read(ref s_current) is not null)
+        {
+            ThrowApplicationAlreadyCreated();
+        }
+
+        PhotinoBootstrap.Initialize();
+        Dispatcher = new PhotinoDispatcher();
+
+        if (registerCurrent && Interlocked.CompareExchange(ref s_current, this, null) is not null)
+        {
+            ThrowApplicationAlreadyCreated();
+        }
+    }
+
+    /// <summary>
+    /// Occurs when an exception thrown by an asynchronous dispatcher callback is not handled by the callback path.
+    /// </summary>
+    /// <remarks>
+    /// This event forwards dispatcher-level unhandled exception notifications.
+    /// The supplied <see cref="UnhandledExceptionEventArgs"/> does not provide a handled flag.
+    /// </remarks>
+    public event UnhandledExceptionEventHandler? DispatcherUnhandledException
+    {
+        add => Dispatcher.UnhandledException += value;
+        remove => Dispatcher.UnhandledException -= value;
+    }
 
     /// <summary>
     /// Gets the current application instance.
     /// </summary>
     /// <remarks>
-    /// The current application is assigned when an application instance is created.
+    /// The current application is created on first access if no application instance has been created explicitly.
     /// </remarks>
     public static PhotinoApplication Current
     {
-        get => field ?? throw new InvalidOperationException("PhotinoApplication has not been created.");
-        private set;
+        get
+        {
+            var current = Volatile.Read(ref s_current);
+            if (current is not null)
+                return current;
+
+            var application = new PhotinoApplication(registerCurrent: false);
+            current = Interlocked.CompareExchange(ref s_current, application, null);
+
+            return current ?? application;
+        }
     }
 
     /// <summary>
@@ -62,17 +92,10 @@ public sealed class PhotinoApplication
     /// <summary>
     /// Gets the dispatcher associated with the application UI thread.
     /// </summary>
-    /// <remarks>
-    /// Available after the application message loop has been started.
-    /// </remarks>
-    public PhotinoDispatcher Dispatcher
-    {
-        get => field ?? throw new InvalidOperationException("The application is not running.");
-        private set;
-    }
+    public PhotinoDispatcher Dispatcher { get; }
 
     /// <summary>
-    /// Gets a value indicating whether the application is running.
+    /// Gets a value indicating whether the application is running or starting.
     /// </summary>
     public bool IsRunning => Volatile.Read(ref _isRunning) == 1;
 
@@ -84,33 +107,6 @@ public sealed class PhotinoApplication
     /// when the last window closes, or only when <see cref="Shutdown(int)"/> is called explicitly.
     /// </remarks>
     public PhotinoShutdownMode ShutdownMode { get; set; } = PhotinoShutdownMode.OnLastWindowClose;
-
-    internal void OnDispatcherUnhandledException(Exception exception)
-    {
-        var handler = DispatcherUnhandledException;
-        if (handler == null)
-        {
-            TraceUnhandledException(exception);
-            return;
-        }
-
-        var args = new UnhandledExceptionEventArgs(exception, false);
-        handler(this, args);
-
-        if (!args.IsTerminating)
-        {
-            TraceUnhandledException(exception);
-        }
-
-        return;
-
-        static void TraceUnhandledException(Exception exception)
-        {
-            var message = $"Unhandled dispatcher exception: {exception}";
-            Trace.WriteLine(message);
-            Debug.Fail(message);
-        }
-    }
 
     /// <summary>
     /// Runs the application message loop.
@@ -129,22 +125,28 @@ public sealed class PhotinoApplication
     /// </remarks>
     public int Run(PhotinoWindow? mainWindow = null)
     {
-        if (Interlocked.CompareExchange(ref _isRunning, 1, 0) == 1) { throw new InvalidOperationException("The application is already running."); }
+        if (Interlocked.CompareExchange(ref _isRunning, 1, 0) == 1)
+            ThrowApplicationAlreadyRunning();
 
-        if (Platform.IsWindows && Thread.CurrentThread.GetApartmentState() != ApartmentState.STA)
+        try
         {
-            return RunOnStaThread(mainWindow);
-        }
+            if (Platform.IsWindows && Thread.CurrentThread.GetApartmentState() != ApartmentState.STA)
+            {
+                return RunOnStaThread(mainWindow);
+            }
 
-        return RunCore(mainWindow);
+            return RunCore(mainWindow);
+        }
+        finally
+        {
+            Interlocked.Exchange(ref _isRunning, 0);
+        }
     }
 
     private int RunOnStaThread(PhotinoWindow? mainWindow)
     {
         if (mainWindow is not null && mainWindow.IsNativeCreated)
-        {
-            throw new InvalidOperationException("A window created on a non-STA thread cannot be moved to an STA application thread.");
-        }
+            ThrowNativeWindowCannotBeMovedToStaThread();
 
         var exitCode = 0;
         Exception? exception = null;
@@ -168,23 +170,30 @@ public sealed class PhotinoApplication
         thread.Join();
 
         if (exception is not null)
-        {
             ExceptionDispatchInfo.Capture(exception).Throw();
-        }
 
         return exitCode;
     }
 
     private int RunCore(PhotinoWindow? mainWindow)
     {
-        try
+        Dispatcher.VerifyAccessToCreateWindow();
+
+        if (mainWindow is not null)
         {
-            return RunNative();
+            MainWindow = mainWindow;
+            try
+            {
+                mainWindow.Show();
+            }
+            catch
+            {
+                MainWindow = null;
+                throw;
+            }
         }
-        finally
-        {
-            Interlocked.Exchange(ref _isRunning, 0);
-        }
+
+        return PhotinoApplication_Run();
     }
 
     /// <summary>
@@ -196,5 +205,56 @@ public sealed class PhotinoApplication
     public void Shutdown(int exitCode = 0)
     {
         PhotinoApplication_Shutdown(exitCode);
+    }
+
+    internal void OnWindowCreated(PhotinoWindow window)
+    {
+        Windows.Add(window);
+    }
+
+    internal void OnWindowClosed(PhotinoWindow window)
+    {
+        Windows.Remove(window);
+
+        bool isMainWindow = ReferenceEquals(window, MainWindow);
+        if (isMainWindow)
+            MainWindow = null;
+
+        if (ShutdownMode == PhotinoShutdownMode.OnExplicitShutdown)
+            return;
+
+        if (ShutdownMode == PhotinoShutdownMode.OnMainWindowClose && isMainWindow)
+        {
+            CloseWindows();
+            Shutdown();
+            return;
+        }
+
+        if (ShutdownMode == PhotinoShutdownMode.OnLastWindowClose && Windows.Count == 0)
+            Shutdown();
+    }
+
+    private void CloseWindows()
+    {
+        var windowsToClose = Windows.ToArray();
+        for (int i = windowsToClose.Length - 1; i >= 0; i--)
+        {
+            windowsToClose[i].InternalClose();
+        }
+    }
+
+    private static void ThrowApplicationAlreadyCreated()
+    {
+        throw new InvalidOperationException($"Cannot create more than one {typeof(PhotinoApplication).FullName} instance.");
+    }
+
+    private static void ThrowApplicationAlreadyRunning()
+    {
+        throw new InvalidOperationException("The application is already running.");
+    }
+
+    private static void ThrowNativeWindowCannotBeMovedToStaThread()
+    {
+        throw new InvalidOperationException("An initialized native window cannot be moved to another application thread.");
     }
 }

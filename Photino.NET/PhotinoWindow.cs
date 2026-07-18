@@ -1,4 +1,3 @@
-using System.Diagnostics;
 using System.Drawing;
 using System.Reflection;
 using System.Runtime.InteropServices;
@@ -46,14 +45,9 @@ public partial class PhotinoWindow
         MaxWidth = int.MaxValue,
     };
 
-    //Pointers to the type and instance.
-    private static IntPtr s_nativeType;
-    private static int s_nativeTypeIsInitialized;
     private IntPtr _nativeInstance;
-    private volatile int _managedThreadId;
-
-    //There can only be 1 message loop for all windows.
-    private static int s_messageLoopIsStarted;
+    private bool _suppressClosing;
+    private bool _isClosed;
 
     internal bool IsNativeCreated => _nativeInstance != IntPtr.Zero;
 
@@ -1342,23 +1336,7 @@ public partial class PhotinoWindow
     {
         Parent = parent;
 
-        //This only has to be done once
-        if (Interlocked.CompareExchange(ref s_nativeTypeIsInitialized, 1, 0) == 0)
-        {
-            s_nativeType = NativeLibrary.GetMainProgramHandle();
-            Debug.Assert(s_nativeType != IntPtr.Zero, $"{nameof(s_nativeType)} should be initialized");
-            if (s_nativeType == IntPtr.Zero)
-                throw new InvalidOperationException("Failed to get main program handle.");
-
-            if (Platform.IsWindows)
-                Photino_register_win32(s_nativeType);
-            else if (Platform.IsMacOS)
-                Photino_register_mac();
-            else if (Platform.IsLinux)
-                Photino_register_linux();
-            else
-                throw new PlatformNotSupportedException("PhotinoX supports Windows, macOS, and Linux.");
-        }
+        PhotinoBootstrap.Initialize();
 
         //Wire up handlers from C++ to C#
         _startupParameters.ClosingHandler = OnWindowClosing;
@@ -1374,10 +1352,6 @@ public partial class PhotinoWindow
         _startupParameters.ClosedHandler = OnWindowClosed;
     }
 
-    //FLUENT METHODS FOR INITIALIZING STARTUP PARAMETERS FOR NEW WINDOWS
-    //CAN ALSO BE CALLED AFTER INITIALIZATION TO SET VALUES
-    //ONE OF THESE 3 METHODS *MUST* BE CALLED PRIOR TO CALLING WAITFORCLOSE() OR CREATECHILDWINDOW()
-
     /// <summary>
     /// Dispatches an Action to the UI thread if called from another thread.
     /// </summary>
@@ -1388,19 +1362,7 @@ public partial class PhotinoWindow
     public PhotinoWindow Invoke(Action workItem)
     {
         ArgumentNullException.ThrowIfNull(workItem);
-
-        // If we're already on the UI thread, no need to dispatch
-        if (Environment.CurrentManagedThreadId == _managedThreadId)
-        {
-            workItem();
-            return this;
-        }
-
-        Debug.Assert(_nativeInstance != IntPtr.Zero, $"{nameof(_nativeInstance)} should be initialized.");
-        if (_nativeInstance == IntPtr.Zero)
-            throw new InvalidOperationException("Native window has not been initialized.");
-
-        Photino_Invoke(_nativeInstance, workItem.Invoke);
+        PhotinoApplication.Current.Dispatcher.Invoke(workItem);
         return this;
     }
 
@@ -2314,26 +2276,19 @@ public partial class PhotinoWindow
     }
 
     /// <summary>
-    /// Obsolete. Use <see cref="Show"/> instead.
-    /// </summary>
-    [Obsolete("Use Show() instead.")]
-    public void WaitForClose()
-    {
-        Show();
-    }
-
-    /// <summary>
     /// Creates and shows the native Photino window.
-    /// For the root window, starts the native message loop if it has not already been started,
-    /// and blocks until the loop exits. Child windows are shown without starting another message loop.
     /// </summary>
     public void Show()
     {
+        ThrowIfClosed();
+
         if (_nativeInstance != IntPtr.Zero)
             return;
 
-        if (Interlocked.CompareExchange(ref _managedThreadId, Environment.CurrentManagedThreadId, 0) != 0)
-            throw new InvalidOperationException("The window is being shown on another thread.");
+        if (Platform.IsWindows && Thread.CurrentThread.GetApartmentState() != ApartmentState.STA)
+            ThrowWindowMustBeCreatedOnStaThread();
+
+        PhotinoApplication.Current.Dispatcher.VerifyAccessToCreateWindow();
 
         // 1. Fill fixed-size array of custom scheme names
         Array.Clear(_startupParameters.CustomSchemeNames);
@@ -2361,7 +2316,7 @@ public partial class PhotinoWindow
 
         // 3. Create native window
         OnWindowCreating();
-        try  //All C++ exceptions will bubble up to here.
+        try
         {
             _nativeInstance = Photino_ctor(ref _startupParameters);
             if (_nativeInstance == IntPtr.Zero)
@@ -2369,9 +2324,6 @@ public partial class PhotinoWindow
         }
         catch (Exception ex)
         {
-            if (_nativeInstance == IntPtr.Zero)
-                Interlocked.Exchange(ref _managedThreadId, 0);
-
             int lastError = 0;
             if (Platform.IsWindows)
                 lastError = Marshal.GetLastWin32Error();
@@ -2383,29 +2335,6 @@ public partial class PhotinoWindow
         }
 
         OnWindowCreated();
-
-        // 4. Start global message loop ONCE (main window only)
-        if (Parent is null && Interlocked.CompareExchange(ref s_messageLoopIsStarted, 1, 0) == 0)
-        {
-            try
-            {
-                Debug.Assert(_nativeInstance != IntPtr.Zero, "Photino_WaitForExit: _nativeInstance is null");
-                Photino_WaitForExit(_nativeInstance);//Start the message loop.
-            }
-            catch (Exception ex)
-            {
-                int lastError = 0;
-                if (Platform.IsWindows)
-                    lastError = Marshal.GetLastWin32Error();
-
-                Log($"Error #{lastError}{Environment.NewLine}{ex}");
-                throw new ExternalException($"Native code exception. Error # {lastError}. See inner exception for details.", ex) { HResult = lastError };
-            }
-            finally
-            {
-                Interlocked.Exchange(ref s_messageLoopIsStarted, 0);
-            }
-        }
     }
 
     /// <summary>
@@ -2419,6 +2348,15 @@ public partial class PhotinoWindow
         Log(".Close()");
         if (_nativeInstance == IntPtr.Zero)
             throw new InvalidOperationException("Close cannot be called until after the Photino window is initialized.");
+        Invoke(() => Photino_Close(_nativeInstance));
+    }
+
+    internal void InternalClose()
+    {
+        if (_nativeInstance == IntPtr.Zero)
+            return;
+
+        _suppressClosing = true;
         Invoke(() => Photino_Close(_nativeInstance));
     }
 
@@ -2513,5 +2451,21 @@ public partial class PhotinoWindow
         resourceStream.CopyTo(fileStream);
 
         return tempFile;
+    }
+
+    private static void ThrowWindowMustBeCreatedOnStaThread()
+    {
+        throw new InvalidOperationException("A Photino window must be created on an STA thread on Windows.");
+    }
+
+    private void ThrowIfClosed()
+    {
+        if (_isClosed)
+            ThrowWindowAlreadyClosed();
+    }
+
+    private static void ThrowWindowAlreadyClosed()
+    {
+        throw new InvalidOperationException("A closed Photino window cannot be shown again.");
     }
 }
