@@ -1,4 +1,3 @@
-using System.Diagnostics;
 using System.Drawing;
 using System.Reflection;
 using System.Runtime.InteropServices;
@@ -23,7 +22,7 @@ public partial class PhotinoWindow
         Resizable = true,   //These values can't be initialized within the struct itself. Set required defaults.
         ContextMenuEnabled = true,
         ZoomEnabled = true,
-        CustomSchemeNames = new string[16],
+        CustomSchemeNames = new string[MaxCustomSchemeNames],
         DevToolsEnabled = true,
         GrantBrowserPermissions = true,
         UserAgent = "PhotinoX WebView",
@@ -46,14 +45,9 @@ public partial class PhotinoWindow
         MaxWidth = int.MaxValue,
     };
 
-    //Pointers to the type and instance.
-    private static IntPtr s_nativeType;
-    private static int s_nativeTypeIsInitialized;
     private IntPtr _nativeInstance;
-    private volatile int _managedThreadId;
-
-    //There can only be 1 message loop for all windows.
-    private static int s_messageLoopIsStarted;
+    private bool _suppressClosing;
+    private bool _isClosed;
 
     internal bool IsNativeCreated => _nativeInstance != IntPtr.Zero;
 
@@ -1342,23 +1336,7 @@ public partial class PhotinoWindow
     {
         Parent = parent;
 
-        //This only has to be done once
-        if (Interlocked.CompareExchange(ref s_nativeTypeIsInitialized, 1, 0) == 0)
-        {
-            s_nativeType = NativeLibrary.GetMainProgramHandle();
-            Debug.Assert(s_nativeType != IntPtr.Zero, $"{nameof(s_nativeType)} should be initialized");
-            if (s_nativeType == IntPtr.Zero)
-                throw new InvalidOperationException("Failed to get main program handle.");
-
-            if (Platform.IsWindows)
-                Photino_register_win32(s_nativeType);
-            else if (Platform.IsMacOS)
-                Photino_register_mac();
-            else if (Platform.IsLinux)
-                Photino_register_linux();
-            else
-                throw new PlatformNotSupportedException("PhotinoX supports Windows, macOS, and Linux.");
-        }
+        PhotinoBootstrap.Initialize();
 
         //Wire up handlers from C++ to C#
         _startupParameters.ClosingHandler = OnWindowClosing;
@@ -1374,10 +1352,6 @@ public partial class PhotinoWindow
         _startupParameters.ClosedHandler = OnWindowClosed;
     }
 
-    //FLUENT METHODS FOR INITIALIZING STARTUP PARAMETERS FOR NEW WINDOWS
-    //CAN ALSO BE CALLED AFTER INITIALIZATION TO SET VALUES
-    //ONE OF THESE 3 METHODS *MUST* BE CALLED PRIOR TO CALLING WAITFORCLOSE() OR CREATECHILDWINDOW()
-
     /// <summary>
     /// Dispatches an Action to the UI thread if called from another thread.
     /// </summary>
@@ -1388,19 +1362,7 @@ public partial class PhotinoWindow
     public PhotinoWindow Invoke(Action workItem)
     {
         ArgumentNullException.ThrowIfNull(workItem);
-
-        // If we're already on the UI thread, no need to dispatch
-        if (Environment.CurrentManagedThreadId == _managedThreadId)
-        {
-            workItem();
-            return this;
-        }
-
-        Debug.Assert(_nativeInstance != IntPtr.Zero, $"{nameof(_nativeInstance)} should be initialized.");
-        if (_nativeInstance == IntPtr.Zero)
-            throw new InvalidOperationException("Native window has not been initialized.");
-
-        Photino_Invoke(_nativeInstance, workItem.Invoke);
+        PhotinoApplication.Current.Dispatcher.Invoke(workItem);
         return this;
     }
 
@@ -2391,26 +2353,19 @@ public partial class PhotinoWindow
     }
 
     /// <summary>
-    /// Obsolete. Use <see cref="Show"/> instead.
-    /// </summary>
-    [Obsolete("Use Show() instead.")]
-    public void WaitForClose()
-    {
-        Show();
-    }
-
-    /// <summary>
     /// Creates and shows the native Photino window.
-    /// For the root window, starts the native message loop if it has not already been started,
-    /// and blocks until the loop exits. Child windows are shown without starting another message loop.
     /// </summary>
     public void Show()
     {
+        ThrowIfClosed();
+
         if (_nativeInstance != IntPtr.Zero)
             return;
 
-        if (Interlocked.CompareExchange(ref _managedThreadId, Environment.CurrentManagedThreadId, 0) != 0)
-            throw new InvalidOperationException("The window is being shown on another thread.");
+        if (Platform.IsWindows && Thread.CurrentThread.GetApartmentState() != ApartmentState.STA)
+            ThrowWindowMustBeCreatedOnStaThread();
+
+        PhotinoApplication.Current.Dispatcher.VerifyAccessToCreateWindow();
 
         // 1. Fill fixed-size array of custom scheme names
         Array.Clear(_startupParameters.CustomSchemeNames);
@@ -2438,7 +2393,7 @@ public partial class PhotinoWindow
 
         // 3. Create native window
         OnWindowCreating();
-        try  //All C++ exceptions will bubble up to here.
+        try
         {
             _nativeInstance = Photino_ctor(ref _startupParameters);
             if (_nativeInstance == IntPtr.Zero)
@@ -2446,9 +2401,6 @@ public partial class PhotinoWindow
         }
         catch (Exception ex)
         {
-            if (_nativeInstance == IntPtr.Zero)
-                Interlocked.Exchange(ref _managedThreadId, 0);
-
             int lastError = 0;
             if (Platform.IsWindows)
                 lastError = Marshal.GetLastWin32Error();
@@ -2460,29 +2412,6 @@ public partial class PhotinoWindow
         }
 
         OnWindowCreated();
-
-        // 4. Start global message loop ONCE (main window only)
-        if (Parent is null && Interlocked.CompareExchange(ref s_messageLoopIsStarted, 1, 0) == 0)
-        {
-            try
-            {
-                Debug.Assert(_nativeInstance != IntPtr.Zero, "Photino_WaitForExit: _nativeInstance is null");
-                Photino_WaitForExit(_nativeInstance);//Start the message loop.
-            }
-            catch (Exception ex)
-            {
-                int lastError = 0;
-                if (Platform.IsWindows)
-                    lastError = Marshal.GetLastWin32Error();
-
-                Log($"Error #{lastError}{Environment.NewLine}{ex}");
-                throw new ExternalException($"Native code exception. Error # {lastError}. See inner exception for details.", ex) { HResult = lastError };
-            }
-            finally
-            {
-                Interlocked.Exchange(ref s_messageLoopIsStarted, 0);
-            }
-        }
     }
 
     /// <summary>
@@ -2496,6 +2425,15 @@ public partial class PhotinoWindow
         Log(".Close()");
         if (_nativeInstance == IntPtr.Zero)
             throw new InvalidOperationException("Close cannot be called until after the Photino window is initialized.");
+        Invoke(() => Photino_Close(_nativeInstance));
+    }
+
+    internal void InternalClose()
+    {
+        if (_nativeInstance == IntPtr.Zero)
+            return;
+
+        _suppressClosing = true;
         Invoke(() => Photino_Close(_nativeInstance));
     }
 
@@ -2546,174 +2484,6 @@ public partial class PhotinoWindow
     }
 
     /// <summary>
-    /// Show an open file dialog native to the OS.
-    /// </summary>
-    /// <remarks>
-    /// Filter names are not used on macOS. Use async version for Photino.Blazor as synchronous version crashes.
-    /// </remarks>
-    /// <exception cref="InvalidOperationException">
-    /// Thrown when the window is not initialized.
-    /// </exception>
-    /// <param name="title">Title of the dialog</param>
-    /// <param name="defaultPath">Default path. Defaults to <see cref="Environment.SpecialFolder.MyDocuments"/></param>
-    /// <param name="multiSelect">Whether multiple selections are allowed</param>
-    /// <param name="filters">Array of (Name, Extensions) filter definitions.</param>
-    /// <returns>Array of file paths as strings</returns>
-    public string[] ShowOpenFile(string title = "Choose file", string? defaultPath = null, bool multiSelect = false, (string Name, string[] Extensions)[]? filters = null) => ShowOpenDialog(false, title, defaultPath, multiSelect, filters);
-
-    /// <summary>
-    /// Async version is required for Photino.Blazor
-    /// </summary>
-    /// <remarks>
-    /// Filter names are not used on macOS. Use async version for Photino.Blazor as synchronous version crashes.
-    /// </remarks>
-    /// <exception cref="InvalidOperationException">
-    /// Thrown when the window is not initialized.
-    /// </exception>
-    /// <param name="title">Title of the dialog</param>
-    /// <param name="defaultPath">Default path. Defaults to <see cref="Environment.SpecialFolder.MyDocuments"/></param>
-    /// <param name="multiSelect">Whether multiple selections are allowed</param>
-    /// <param name="filters">Array of (Name, Extensions) filter definitions.</param>
-    /// <returns>Array of file paths as strings</returns>
-    public Task<string[]> ShowOpenFileAsync(string title = "Choose file", string? defaultPath = null, bool multiSelect = false, (string Name, string[] Extensions)[]? filters = null)
-    {
-        return Task.Run(() => ShowOpenFile(title, defaultPath, multiSelect, filters));
-    }
-
-    /// <summary>
-    /// Show an open folder dialog native to the OS.
-    /// </summary>
-    /// <exception cref="InvalidOperationException">
-    /// Thrown when the window is not initialized.
-    /// </exception>
-    /// <param name="title">Title of the dialog</param>
-    /// <param name="defaultPath">Default path. Defaults to <see cref="Environment.SpecialFolder.MyDocuments"/></param>
-    /// <param name="multiSelect">Whether multiple selections are allowed</param>
-    /// <returns>Array of folder paths as strings</returns>
-    public string[] ShowOpenFolder(string title = "Select folder", string? defaultPath = null, bool multiSelect = false) => ShowOpenDialog(true, title, defaultPath, multiSelect, null);
-
-    /// <summary>
-    /// Async version is required for Photino.Blazor
-    /// </summary>
-    /// <exception cref="InvalidOperationException">
-    /// Thrown when the window is not initialized.
-    /// </exception>
-    /// <param name="title">Title of the dialog</param>
-    /// <param name="defaultPath">Default path. Defaults to <see cref="Environment.SpecialFolder.MyDocuments"/></param>
-    /// <param name="multiSelect">Whether multiple selections are allowed</param>
-    /// <returns>Array of folder paths as strings</returns>
-    public Task<string[]> ShowOpenFolderAsync(string title = "Select folder", string? defaultPath = null, bool multiSelect = false)
-    {
-        return Task.Run(() => ShowOpenFolder(title, defaultPath, multiSelect));
-    }
-
-    /// <summary>
-    /// Shows a native OS save‑file dialog.
-    /// </summary>
-    /// <remarks>
-    /// Filter names are not used on macOS.
-    /// </remarks>
-    /// <exception cref="InvalidOperationException">
-    /// Thrown when the window is not initialized.
-    /// </exception>
-    /// <param name="title">Title of the dialog</param>
-    /// <param name="defaultPath">Default path. Defaults to <see cref="Environment.SpecialFolder.MyDocuments"/></param>
-    /// <param name="filters">Array of (Name, Extensions) filter definitions.</param>
-    /// <param name="defaultFileName">Default file name.</param>
-    /// <returns>The selected file path, or <c>null</c>.</returns>
-    public string? ShowSaveFile(string title = "Save file", string? defaultPath = null, (string Name, string[] Extensions)[]? filters = null, string? defaultFileName = null)
-    {
-        defaultPath ??= Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
-        filters ??= [];
-        defaultFileName ??= string.Empty;
-
-        string? result = null;
-        var nativeFilters = GetNativeFilters(filters);
-
-        Invoke(() =>
-        {
-            var ptrResult = Photino_ShowSaveFile(_nativeInstance, title, defaultPath, nativeFilters, nativeFilters.Length, defaultFileName);
-            try
-            {
-                result = ptrResult != IntPtr.Zero ? Marshal.PtrToStringUTF8(ptrResult) : null;
-            }
-            finally
-            {
-                if (ptrResult != IntPtr.Zero)
-                    Photino_FreeString(ptrResult);
-            }
-        });
-
-        return result;
-    }
-
-    /// <summary>
-    /// Async version of <see cref="ShowSaveFile"/>. 
-    /// Required for PhotinoX.Blazor and any UI scenarios where blocking the thread is not allowed.
-    /// </summary>
-    /// <remarks>
-    /// Filter names are not used on macOS.
-    /// </remarks>
-    /// <exception cref="InvalidOperationException">
-    /// Thrown when the window is not initialized.
-    /// </exception>
-    /// <param name="title">Title of the dialog</param>
-    /// <param name="defaultPath">Default path. Defaults to <see cref="Environment.SpecialFolder.MyDocuments"/></param>
-    /// <param name="filters">Array of (Name, Extensions) filter definitions.</param>
-    /// <param name="defaultFileName">Default file name.</param>
-    /// <returns> A <see cref="Task{TResult}"/> that returns the selected file path, or <c>null</c>.</returns>
-    public Task<string?> ShowSaveFileAsync(string title = "Save file", string? defaultPath = null, (string Name, string[] Extensions)[]? filters = null, string? defaultFileName = null)
-    {
-        return Task.Run(() => ShowSaveFile(title, defaultPath, filters, defaultFileName));
-    }
-
-    /// <summary>
-    /// Show a message dialog native to the OS.
-    /// </summary>
-    /// <exception cref="InvalidOperationException">
-    /// Thrown when the window is not initialized.
-    /// </exception>
-    /// <param name="title">Title of the dialog</param>
-    /// <param name="text">Text of the dialog</param>
-    /// <param name="buttons">Available interaction buttons <see cref="PhotinoDialogButtons"/></param>
-    /// <param name="icon">Icon of the dialog <see cref="PhotinoDialogIcon"/></param>
-    /// <returns><see cref="PhotinoDialogResult" /></returns>
-    public PhotinoDialogResult ShowMessage(string title, string text, PhotinoDialogButtons buttons = PhotinoDialogButtons.Ok, PhotinoDialogIcon icon = PhotinoDialogIcon.Info)
-    {
-        var result = PhotinoDialogResult.Cancel;
-        Invoke(() => result = Photino_ShowMessage(_nativeInstance, title, text, buttons, icon));
-        return result;
-    }
-
-    /// <summary>
-    /// Show a native open dialog.
-    /// </summary>
-    /// <param name="foldersOnly">Whether files are hidden</param>
-    /// <param name="title">Title of the dialog</param>
-    /// <param name="defaultPath">Default path. Defaults to <see cref="Environment.SpecialFolder.MyDocuments"/></param>
-    /// <param name="multiSelect">Whether multiple selections are allowed</param>
-    /// <param name="filters">Array of (Name, Extensions) filter definitions.</param>
-    /// <returns>Array of paths</returns>
-    private string[] ShowOpenDialog(bool foldersOnly, string title, string? defaultPath, bool multiSelect, (string Name, string[] Extensions)[]? filters)
-    {
-        defaultPath ??= Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
-        filters ??= [];
-
-        var results = Array.Empty<string>();
-        var nativeFilters = GetNativeFilters(filters, foldersOnly);
-
-        Invoke(() =>
-        {
-            var ptrResults = foldersOnly ?
-                Photino_ShowOpenFolder(_nativeInstance, title, defaultPath, multiSelect, out var resultCount) :
-                Photino_ShowOpenFile(_nativeInstance, title, defaultPath, multiSelect, nativeFilters, nativeFilters.Length, out resultCount);
-            results = PtrToStringUtf8ArrayAndFree(ptrResults, resultCount);
-        });
-
-        return results;
-    }
-
-    /// <summary>
     /// Logs a message.
     /// </summary>
     /// <param name="message">Log message</param>
@@ -2721,62 +2491,6 @@ public partial class PhotinoWindow
     {
         if (LogVerbosity < 1) return;
         Console.WriteLine($"PhotinoX: \"{Title}\"{message}");
-    }
-
-    /// <summary>
-    /// Returns an array of strings for native filters.
-    /// </summary>
-    /// <param name="filters">The filter definitions.</param>
-    /// <param name="empty">Whether to return an empty filter list.</param>
-    /// <returns>String array of filters.</returns>
-    private static string[] GetNativeFilters((string Name, string[] Extensions)[] filters, bool empty = false)
-    {
-        if (empty || filters.Length == 0)
-            return [];
-
-        var nativeFilters = new List<string>();
-        List<string>? extensions = null;
-
-        foreach (var filter in filters)
-        {
-            if (Platform.IsMacOS)
-            {
-                foreach (var extension in filter.Extensions)
-                {
-                    if (string.IsNullOrWhiteSpace(extension))
-                        continue;
-
-                    var value = extension.Trim();
-
-                    nativeFilters.Add(value == "*" ? value : value.TrimStart('*', '.'));
-                }
-
-                continue;
-            }
-
-            if (string.IsNullOrWhiteSpace(filter.Name) || filter.Extensions.Length == 0)
-                continue;
-
-            extensions ??= [];
-            extensions.Clear();
-
-            foreach (var extension in filter.Extensions)
-            {
-                if (string.IsNullOrWhiteSpace(extension))
-                    continue;
-
-                var value = extension.Trim();
-
-                extensions.Add(value == "*"
-                    ? value
-                    : value.StartsWith('.') ? $"*{value}" : (value.StartsWith("*.") ? value : $"*.{value}"));
-            }
-
-            if (extensions.Count > 0)
-                nativeFilters.Add($"{filter.Name}|{string.Join(';', extensions)}");
-        }
-
-        return [.. nativeFilters];
     }
 
     /// <summary>
@@ -2816,24 +2530,19 @@ public partial class PhotinoWindow
         return tempFile;
     }
 
-    private static bool IsValidSchemeName(string value)
+    private static void ThrowWindowMustBeCreatedOnStaThread()
     {
-        if (string.IsNullOrEmpty(value) || !char.IsAsciiLetter(value[0]))
-            return false;
+        throw new InvalidOperationException("A Photino window must be created on an STA thread on Windows.");
+    }
 
-        for (var i = 1; i < value.Length; i++)
-        {
-            var c = value[i];
+    private void ThrowIfClosed()
+    {
+        if (_isClosed)
+            ThrowWindowAlreadyClosed();
+    }
 
-            if (!char.IsAsciiLetterOrDigit(c) &&
-                c != '+' &&
-                c != '-' &&
-                c != '.')
-            {
-                return false;
-            }
-        }
-
-        return true;
+    private static void ThrowWindowAlreadyClosed()
+    {
+        throw new InvalidOperationException("A closed Photino window cannot be shown again.");
     }
 }

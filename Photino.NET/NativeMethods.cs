@@ -27,16 +27,6 @@ internal static partial class NativeMethods
     [DllImport(DLL_NAME, CallingConvention = CallingConvention.Cdecl)]
     internal static extern IntPtr Photino_ctor(ref PhotinoNativeParameters parameters);
 #pragma warning restore SYSLIB1054
-    
-
-    [LibraryImport(DLL_NAME)]
-    [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
-    internal static partial void Photino_WaitForExit(IntPtr instance);
-
-    [LibraryImport(DLL_NAME)]
-    [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
-    internal static partial void Photino_Invoke(IntPtr instance, InvokeCallback callback);
-
 
     [LibraryImport(DLL_NAME)]
     [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
