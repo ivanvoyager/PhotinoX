@@ -1512,6 +1512,25 @@ public partial class PhotinoWindow
     }
 
     /// <summary>
+    /// Restores the native window from a minimized or maximized state back to its
+    /// previous size and position.
+    /// </summary>
+    /// <exception cref="InvalidOperationException">
+    /// Thrown when the window is not initialized.
+    /// </exception>
+    /// <returns>
+    /// Returns the current <see cref="PhotinoWindow"/> instance.
+    /// </returns>
+    public PhotinoWindow Restore()
+    {
+        Log(".Restore()");
+        if (_nativeInstance == IntPtr.Zero)
+            throw new InvalidOperationException("Restore cannot be called until after the Photino window is initialized.");
+        Invoke(() => Photino_Restore(_nativeInstance));
+        return this;
+    }
+
+    /// <summary>
     /// Moves the native window to the specified location on the screen in pixels using a Point.
     /// </summary>
     /// <returns>
