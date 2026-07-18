@@ -1633,6 +1633,8 @@ public partial class PhotinoWindow
     /// </summary>
     /// <remarks>
     /// The user has to supply titlebar, border, dragging and resizing manually.
+    /// Use <see cref="BeginWindowDrag()"/> and <see cref="BeginWindowResize(PhotinoWindowEdge)"/>
+    /// to drive dragging and resizing from a custom title bar and border.
     /// </remarks>
     /// <returns>
     /// Returns the current <see cref="PhotinoWindow"/> instance.
@@ -1645,6 +1647,62 @@ public partial class PhotinoWindow
             throw new InvalidOperationException("Chromeless can only be set before the native window is instantiated.");
 
         _startupParameters.Chromeless = chromeless;
+        return this;
+    }
+
+    /// <summary>
+    /// Starts an OS-level drag of the window from the current mouse position, as if
+    /// the user had pressed on a native title bar. Call this from a pointer-down
+    /// handler on a custom title bar to make a chromeless window draggable.
+    /// </summary>
+    /// <remarks>
+    /// The mouse button must still be pressed when this is called; the drag follows
+    /// the cursor until the button is released. Currently implemented on Windows;
+    /// on Linux and macOS this is a no-op pending platform support.
+    /// </remarks>
+    /// <exception cref="InvalidOperationException">
+    /// Thrown when the window is not initialized.
+    /// </exception>
+    /// <returns>
+    /// Returns the current <see cref="PhotinoWindow"/> instance.
+    /// </returns>
+    /// <seealso cref="BeginWindowResize(PhotinoWindowEdge)" />
+    /// <seealso cref="SetChromeless(bool)" />
+    public PhotinoWindow BeginWindowDrag()
+    {
+        Log(".BeginWindowDrag()");
+        if (_nativeInstance == IntPtr.Zero)
+            throw new InvalidOperationException("BeginWindowDrag cannot be called until after the Photino window is initialized.");
+        Invoke(() => Photino_BeginWindowDrag(_nativeInstance));
+        return this;
+    }
+
+    /// <summary>
+    /// Starts an OS-level resize of the window from the given edge or corner, as if
+    /// the user had dragged that part of a native window border. Call this from a
+    /// pointer-down handler on a custom resize grip to make a chromeless window
+    /// resizable.
+    /// </summary>
+    /// <remarks>
+    /// The mouse button must still be pressed when this is called; the resize follows
+    /// the cursor until the button is released. Currently implemented on Windows;
+    /// on Linux and macOS this is a no-op pending platform support.
+    /// </remarks>
+    /// <exception cref="InvalidOperationException">
+    /// Thrown when the window is not initialized.
+    /// </exception>
+    /// <returns>
+    /// Returns the current <see cref="PhotinoWindow"/> instance.
+    /// </returns>
+    /// <param name="edge">The edge or corner to resize from.</param>
+    /// <seealso cref="BeginWindowDrag()" />
+    /// <seealso cref="SetChromeless(bool)" />
+    public PhotinoWindow BeginWindowResize(PhotinoWindowEdge edge)
+    {
+        Log($".BeginWindowResize({edge})");
+        if (_nativeInstance == IntPtr.Zero)
+            throw new InvalidOperationException("BeginWindowResize cannot be called until after the Photino window is initialized.");
+        Invoke(() => Photino_BeginWindowResize(_nativeInstance, edge));
         return this;
     }
 

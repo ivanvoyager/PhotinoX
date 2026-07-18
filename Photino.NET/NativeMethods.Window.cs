@@ -81,6 +81,15 @@ internal static partial class NativeMethods
 
     [LibraryImport(DLL_NAME)]
     [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
+    internal static partial void Photino_BeginWindowDrag(IntPtr instance);
+
+    [LibraryImport(DLL_NAME)]
+    [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
+    internal static partial void Photino_BeginWindowResize(IntPtr instance, PhotinoWindowEdge edge);
+
+
+    [LibraryImport(DLL_NAME)]
+    [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
     internal static partial uint Photino_GetScreenDpi(IntPtr instance);
 
     [LibraryImport(DLL_NAME)]
