@@ -1,5 +1,7 @@
+using System.Diagnostics.CodeAnalysis;
 using System.Drawing;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using Photino.NET.Utils;
 
@@ -12,7 +14,6 @@ using static NativeMethods;
 /// </summary>
 public partial class PhotinoWindow
 {
-    //PRIVATE FIELDS
     /// <summary>
     /// Parameters sent to Photino.Native to start a new instance of a Photino.Native window.
     /// </summary>
@@ -37,7 +38,7 @@ public partial class PhotinoWindow
         TemporaryFilesPath = Platform.IsWindows
             ? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Photino")
             : null,
-        Title = "PhotinoX",
+        Title = DefaultTitle,
         UseOsDefaultLocation = true,
         UseOsDefaultSize = true,
         Zoom = 100,
@@ -45,11 +46,22 @@ public partial class PhotinoWindow
         MaxWidth = int.MaxValue,
     };
 
+    private const string DefaultTitle = "PhotinoX";
+
     private IntPtr _nativeInstance;
     private bool _suppressClosing;
-    private bool _isClosed;
 
-    internal bool IsNativeCreated => _nativeInstance != IntPtr.Zero;
+    private string? _title = DefaultTitle;
+
+    /// <summary>
+    /// Gets a value indicating whether the native window has been initialized and has not been closed.
+    /// </summary>
+    public bool IsInitialized => _nativeInstance != IntPtr.Zero;
+
+    /// <summary>
+    /// Gets a value indicating whether the window has already been closed.
+    /// </summary>
+    public bool IsClosed { get; private set; }
 
     /// <summary>
     /// Gets the platform-specific native window reference.
@@ -64,14 +76,13 @@ public partial class PhotinoWindow
     /// <value>
     /// The platform-specific native window reference as an <see cref="IntPtr"/>.
     /// </value>
-    /// <exception cref="InvalidOperationException">Thrown when the window is not initialized yet.</exception>
+    /// <exception cref="InvalidOperationException">Thrown when the window is not initialized or has already been closed.</exception>
     /// <exception cref="PlatformNotSupportedException">Thrown when the current platform is not supported.</exception>
     public IntPtr WindowHandle
     {
         get
         {
-            if (_nativeInstance == IntPtr.Zero)
-                throw new InvalidOperationException("The Photino window is not initialized yet.");
+            ThrowIfClosedOrNotInitialized();
 
             var handle = IntPtr.Zero;
             if (Platform.IsWindows)
@@ -103,7 +114,7 @@ public partial class PhotinoWindow
     /// <remarks>
     /// If called when the native instance of the window is not initialized, it will throw an <see cref="InvalidOperationException"/>.
     /// </remarks>
-    /// <exception cref="InvalidOperationException">Thrown when the native instance of the window is not initialized.</exception>
+    /// <exception cref="InvalidOperationException">Thrown when the window is not initialized or has already been closed.</exception>
     /// <returns>
     /// A read-only list of Monitor objects representing information about each display monitor.
     /// </returns>
@@ -111,8 +122,7 @@ public partial class PhotinoWindow
     {
         get
         {
-            if (_nativeInstance == IntPtr.Zero)
-                throw new InvalidOperationException("The Photino window hasn't been initialized yet.");
+            ThrowIfClosedOrNotInitialized();
 
             var monitors = new List<Monitor>();
 
@@ -131,7 +141,7 @@ public partial class PhotinoWindow
     /// <summary>
     /// Retrieves the primary monitor information from the native window instance.
     /// </summary>
-    /// <exception cref="InvalidOperationException"> Thrown when the window hasn't been initialized yet. </exception>
+    /// <exception cref="InvalidOperationException">Thrown when the window is not initialized or has already been closed.</exception>
     /// <returns>
     /// Returns a Monitor object representing the main monitor. The main monitor is the first monitor in the list of available monitors.
     /// </returns>
@@ -139,8 +149,7 @@ public partial class PhotinoWindow
     {
         get
         {
-            if (_nativeInstance == IntPtr.Zero)
-                throw new InvalidOperationException("The Photino window hasn't been initialized yet.");
+            ThrowIfClosedOrNotInitialized();
 
             return Monitors[0];
         }
@@ -150,14 +159,13 @@ public partial class PhotinoWindow
     /// Gets the dots per inch (DPI) for the primary display from the native window.
     /// </summary>
     /// <exception cref="InvalidOperationException">
-    /// An <see cref="InvalidOperationException"/> is thrown if the window hasn't been initialized yet.
+    /// Thrown when the window is not initialized or has already been closed.
     /// </exception>
     public uint ScreenDpi
     {
         get
         {
-            if (_nativeInstance == IntPtr.Zero)
-                throw new InvalidOperationException("The Photino window hasn't been initialized yet.");
+            ThrowIfClosedOrNotInitialized();
 
             uint dpi = 0;
             Invoke(() => dpi = Photino_GetScreenDpi(_nativeInstance));
@@ -186,10 +194,10 @@ public partial class PhotinoWindow
         }
         set
         {
+            ThrowIfClosed();
+
             if (_nativeInstance == IntPtr.Zero)
-            {
                 _startupParameters.CenterOnInitialize = value;
-            }
             else
                 Invoke(() => Photino_Center(_nativeInstance));
         }
@@ -214,10 +222,8 @@ public partial class PhotinoWindow
         }
         set
         {
-            if (_nativeInstance == IntPtr.Zero)
-                _startupParameters.Chromeless = value;
-            else
-                throw new InvalidOperationException("Chromeless can only be set before the native window is instantiated.");
+            ThrowIfClosedOrInitialized();
+            _startupParameters.Chromeless = value;
         }
     }
 
@@ -243,6 +249,8 @@ public partial class PhotinoWindow
         }
         set
         {
+            ThrowIfClosed();
+
             if (Transparent != value)
             {
                 if (_nativeInstance == IntPtr.Zero)
@@ -278,6 +286,8 @@ public partial class PhotinoWindow
         }
         set
         {
+            ThrowIfClosed();
+
             if (ContextMenuEnabled != value)
             {
                 if (_nativeInstance == IntPtr.Zero)
@@ -305,6 +315,8 @@ public partial class PhotinoWindow
         }
         set
         {
+            ThrowIfClosed();
+
             if (ZoomEnabled != value)
             {
                 if (_nativeInstance == IntPtr.Zero)
@@ -332,6 +344,8 @@ public partial class PhotinoWindow
         }
         set
         {
+            ThrowIfClosed();
+
             if (DevToolsEnabled != value)
             {
                 if (_nativeInstance == IntPtr.Zero)
@@ -355,12 +369,10 @@ public partial class PhotinoWindow
         }
         set
         {
+            ThrowIfClosedOrInitialized();
             if (MediaAutoplayEnabled != value)
             {
-                if (_nativeInstance == IntPtr.Zero)
-                    _startupParameters.MediaAutoplayEnabled = value;
-                else
-                    throw new InvalidOperationException("MediaAutoplayEnabled can only be set before the native window is instantiated.");
+                _startupParameters.MediaAutoplayEnabled = value;
             }
         }
     }
@@ -392,12 +404,10 @@ public partial class PhotinoWindow
         }
         set
         {
+            ThrowIfClosedOrInitialized();
             if (UserAgent != value)
             {
-                if (_nativeInstance == IntPtr.Zero)
-                    _startupParameters.UserAgent = value;
-                else
-                    throw new InvalidOperationException("UserAgent can only be set before the native window is instantiated.");
+                _startupParameters.UserAgent = value;
             }
         }
     }
@@ -415,12 +425,10 @@ public partial class PhotinoWindow
         }
         set
         {
+            ThrowIfClosedOrInitialized();
             if (FileSystemAccessEnabled != value)
             {
-                if (_nativeInstance == IntPtr.Zero)
-                    _startupParameters.FileSystemAccessEnabled = value;
-                else
-                    throw new InvalidOperationException("FileSystemAccessEnabled can only be set before the native window is instantiated.");
+                _startupParameters.FileSystemAccessEnabled = value;
             }
         }
     }
@@ -438,12 +446,10 @@ public partial class PhotinoWindow
         }
         set
         {
+            ThrowIfClosedOrInitialized();
             if (WebSecurityEnabled != value)
             {
-                if (_nativeInstance == IntPtr.Zero)
-                    _startupParameters.WebSecurityEnabled = value;
-                else
-                    throw new InvalidOperationException("WebSecurityEnabled can only be set before the native window is instantiated.");
+                _startupParameters.WebSecurityEnabled = value;
             }
         }
     }
@@ -461,12 +467,10 @@ public partial class PhotinoWindow
         }
         set
         {
+            ThrowIfClosedOrInitialized();
             if (JavascriptClipboardAccessEnabled != value)
             {
-                if (_nativeInstance == IntPtr.Zero)
-                    _startupParameters.JavascriptClipboardAccessEnabled = value;
-                else
-                    throw new InvalidOperationException("JavascriptClipboardAccessEnabled can only be set before the native window is instantiated.");
+                _startupParameters.JavascriptClipboardAccessEnabled = value;
             }
         }
     }
@@ -484,12 +488,10 @@ public partial class PhotinoWindow
         }
         set
         {
+            ThrowIfClosedOrInitialized();
             if (MediaStreamEnabled != value)
             {
-                if (_nativeInstance == IntPtr.Zero)
-                    _startupParameters.MediaStreamEnabled = value;
-                else
-                    throw new InvalidOperationException("MediaStreamEnabled can only be set before the native window is instantiated.");
+                _startupParameters.MediaStreamEnabled = value;
             }
         }
     }
@@ -507,12 +509,10 @@ public partial class PhotinoWindow
         }
         set
         {
+            ThrowIfClosedOrInitialized();
             if (SmoothScrollingEnabled != value)
             {
-                if (_nativeInstance == IntPtr.Zero)
-                    _startupParameters.SmoothScrollingEnabled = value;
-                else
-                    throw new InvalidOperationException("SmoothScrollingEnabled can only be set before the native window is instantiated.");
+                _startupParameters.SmoothScrollingEnabled = value;
             }
         }
     }
@@ -530,12 +530,10 @@ public partial class PhotinoWindow
         }
         set
         {
+            ThrowIfClosedOrInitialized();
             if (IgnoreCertificateErrorsEnabled != value)
             {
-                if (_nativeInstance == IntPtr.Zero)
-                    _startupParameters.IgnoreCertificateErrorsEnabled = value;
-                else
-                    throw new InvalidOperationException("IgnoreCertificateErrorsEnabled can only be set before the native window is instantiated.");
+                _startupParameters.IgnoreCertificateErrorsEnabled = value;
             }
         }
     }
@@ -553,12 +551,10 @@ public partial class PhotinoWindow
         }
         set
         {
+            ThrowIfClosedOrInitialized();
             if (NotificationsEnabled != value)
             {
-                if (_nativeInstance == IntPtr.Zero)
-                    _startupParameters.NotificationsEnabled = value;
-                else
-                    throw new InvalidOperationException("NotificationsEnabled can only be set before the native window is instantiated.");
+                _startupParameters.NotificationsEnabled = value;
             }
         }
     }
@@ -582,6 +578,8 @@ public partial class PhotinoWindow
         }
         set
         {
+            ThrowIfClosed();
+
             if (FullScreen != value)
             {
                 if (_nativeInstance == IntPtr.Zero)
@@ -612,12 +610,10 @@ public partial class PhotinoWindow
         }
         set
         {
+            ThrowIfClosedOrInitialized();
             if (GrantBrowserPermissions != value)
             {
-                if (_nativeInstance == IntPtr.Zero)
-                    _startupParameters.GrantBrowserPermissions = value;
-                else
-                    throw new InvalidOperationException("GrantBrowserPermissions can only be set before the native window is instantiated.");
+                _startupParameters.GrantBrowserPermissions = value;
             }
         }
     }
@@ -632,6 +628,8 @@ public partial class PhotinoWindow
         get => Size.Height;
         set
         {
+            ThrowIfClosed();
+
             var currentSize = Size;
             if (currentSize.Height != value)
                 Size = currentSize with { Height = value };
@@ -676,6 +674,8 @@ public partial class PhotinoWindow
         }
         set
         {
+            ThrowIfClosed();
+
             if (IconFile != value)
             {
                 ArgumentException.ThrowIfNullOrWhiteSpace(value);
@@ -714,6 +714,8 @@ public partial class PhotinoWindow
         }
         set
         {
+            ThrowIfClosed();
+
             if (Location.X != value.X || Location.Y != value.Y)
             {
                 if (_nativeInstance == IntPtr.Zero)
@@ -738,6 +740,8 @@ public partial class PhotinoWindow
         get => Location.X;
         set
         {
+            ThrowIfClosed();
+
             if (Location.X != value)
                 Location = Location with { X = value };
         }
@@ -760,6 +764,8 @@ public partial class PhotinoWindow
         }
         set
         {
+            ThrowIfClosed();
+
             if (Maximized != value)
             {
                 if (_nativeInstance == IntPtr.Zero)
@@ -776,6 +782,8 @@ public partial class PhotinoWindow
         get => new(MaxWidth, MaxHeight);
         set
         {
+            ThrowIfClosed();
+
             if (MaxWidth != value.X || MaxHeight != value.Y)
             {
                 _maxWidth = value.X;
@@ -799,6 +807,8 @@ public partial class PhotinoWindow
         get => _maxHeight;
         set
         {
+            ThrowIfClosed();
+
             if (_maxHeight != value)
             {
                 MaxSize = MaxSize with { Y = value };
@@ -814,6 +824,8 @@ public partial class PhotinoWindow
         get => _maxWidth;
         set
         {
+            ThrowIfClosed();
+
             if (_maxWidth != value)
             {
                 MaxSize = MaxSize with { X = value };
@@ -839,6 +851,8 @@ public partial class PhotinoWindow
         }
         set
         {
+            ThrowIfClosed();
+
             if (Minimized != value)
             {
                 if (_nativeInstance == IntPtr.Zero)
@@ -855,6 +869,8 @@ public partial class PhotinoWindow
         get => new(MinWidth, MinHeight);
         set
         {
+            ThrowIfClosed();
+
             if (MinWidth != value.X || MinHeight != value.Y)
             {
                 _minWidth = value.X;
@@ -878,6 +894,8 @@ public partial class PhotinoWindow
         get => _minHeight;
         set
         {
+            ThrowIfClosed();
+
             if (_minHeight != value)
             {
                 MinSize = MinSize with { Y = value };
@@ -893,6 +911,8 @@ public partial class PhotinoWindow
         get => _minWidth;
         set
         {
+            ThrowIfClosed();
+
             if (_minWidth != value)
             {
                 MinSize = MinSize with { X = value };
@@ -924,6 +944,8 @@ public partial class PhotinoWindow
         }
         set
         {
+            ThrowIfClosed();
+
             if (Resizable != value)
             {
                 if (_nativeInstance == IntPtr.Zero)
@@ -953,6 +975,8 @@ public partial class PhotinoWindow
         }
         set
         {
+            ThrowIfClosed();
+
             if (Size.Width != value.Width || Size.Height != value.Height)
             {
                 if (_nativeInstance == IntPtr.Zero)
@@ -994,13 +1018,11 @@ public partial class PhotinoWindow
         }
         set
         {
+            ThrowIfClosedOrInitialized();
             var ss = _startupParameters.BrowserControlInitParameters;
             if (!string.Equals(ss, value, StringComparison.CurrentCultureIgnoreCase))
             {
-                if (_nativeInstance == IntPtr.Zero)
-                    _startupParameters.BrowserControlInitParameters = value;
-                else
-                    throw new InvalidOperationException($"{nameof(BrowserControlInitParameters)} cannot be changed after Photino Window is initialized");
+                _startupParameters.BrowserControlInitParameters = value;
             }
         }
     }
@@ -1024,11 +1046,10 @@ public partial class PhotinoWindow
         }
         set
         {
+            ThrowIfClosedOrInitialized();
             var ss = _startupParameters.StartString;
             if (!string.Equals(ss, value, StringComparison.CurrentCultureIgnoreCase))
             {
-                if (_nativeInstance != IntPtr.Zero)
-                    throw new InvalidOperationException($"{nameof(StartString)} cannot be changed after Photino Window is initialized");
                 if (value != null)
                     LoadRawString(value);
                 else
@@ -1056,12 +1077,10 @@ public partial class PhotinoWindow
         }
         set
         {
+            ThrowIfClosedOrInitialized();
             var su = _startupParameters.StartUrl;
             if (!string.Equals(su, value, StringComparison.CurrentCultureIgnoreCase))
             {
-                if (_nativeInstance != IntPtr.Zero)
-                    throw new InvalidOperationException($"{nameof(StartUrl)} cannot be changed after Photino Window is initialized");
-
                 if (value != null)
                     Load(value);
                 else
@@ -1088,11 +1107,10 @@ public partial class PhotinoWindow
         }
         set
         {
+            ThrowIfClosedOrInitialized();
             var tfp = _startupParameters.TemporaryFilesPath;
             if (tfp != value)
             {
-                if (_nativeInstance != IntPtr.Zero)
-                    throw new InvalidOperationException($"{nameof(tfp)} cannot be changed after Photino Window is initialized");
                 _startupParameters.TemporaryFilesPath = value;
             }
         }
@@ -1116,11 +1134,10 @@ public partial class PhotinoWindow
         }
         set
         {
+            ThrowIfClosedOrInitialized();
             var nri = _startupParameters.NotificationRegistrationId;
             if (nri != value)
             {
-                if (_nativeInstance != IntPtr.Zero)
-                    throw new InvalidOperationException($"{nameof(NotificationRegistrationId)} cannot be changed after Photino Window is initialized");
                 _startupParameters.NotificationRegistrationId = value;
             }
         }
@@ -1128,45 +1145,41 @@ public partial class PhotinoWindow
 
     /// <summary>
     /// Gets or sets the native window title.
-    /// Default is "Photino".
+    /// Default is <c>PhotinoX</c>.
     /// </summary>
     public string? Title
     {
-        get
-        {
-            if (_nativeInstance == IntPtr.Zero)
-                return _startupParameters.Title;
-
-            string? title = null;
-            Invoke(() =>
-            {
-                var ptr = Photino_GetTitle(_nativeInstance);
-                try
-                {
-                    title = ptr != IntPtr.Zero
-                        ? Marshal.PtrToStringUTF8(ptr)
-                        : null;
-                }
-                finally
-                {
-                    if (ptr != IntPtr.Zero)
-                        Photino_FreeString(ptr);
-                }
-            });
-            return title;
-        }
+        get => _title;
         set
         {
-            if (Title != value)
-            {
-                // Due to Linux/Gtk platform limitations, the window title has to be no more than 31 chars
-                if (value?.Length > 31 && Platform.IsLinux)
-                    value = value[..31];
+            ThrowIfClosed();
 
+            if (_title != value)
+            {
                 if (_nativeInstance == IntPtr.Zero)
+                {
                     _startupParameters.Title = value;
+                    _title = value;
+                }
                 else
-                    Invoke(() => Photino_SetTitle(_nativeInstance, value));
+                {
+                    Invoke(() =>
+                    {
+                        Photino_SetTitle(_nativeInstance, value);
+                        var ptr = Photino_GetTitle(_nativeInstance);
+                        try
+                        {
+                            _title = ptr != IntPtr.Zero
+                                ? Marshal.PtrToStringUTF8(ptr)
+                                : null;
+                        }
+                        finally
+                        {
+                            if (ptr != IntPtr.Zero)
+                                Photino_FreeString(ptr);
+                        }
+                    });
+                }
             }
         }
     }
@@ -1181,6 +1194,8 @@ public partial class PhotinoWindow
         get => Location.Y;
         set
         {
+            ThrowIfClosed();
+
             if (Location.Y != value)
                 Location = Location with { Y = value };
         }
@@ -1203,6 +1218,8 @@ public partial class PhotinoWindow
         }
         set
         {
+            ThrowIfClosed();
+
             if (Topmost != value)
             {
                 if (_nativeInstance == IntPtr.Zero)
@@ -1231,13 +1248,8 @@ public partial class PhotinoWindow
         }
         set
         {
-            if (_nativeInstance == IntPtr.Zero)
-            {
-                if (UseOsDefaultLocation != value)
-                    _startupParameters.UseOsDefaultLocation = value;
-            }
-            else
-                throw new InvalidOperationException("UseOsDefaultLocation can only be set before the native window is instantiated.");
+            ThrowIfClosedOrInitialized();
+            _startupParameters.UseOsDefaultLocation = value;
         }
     }
 
@@ -1259,13 +1271,8 @@ public partial class PhotinoWindow
         }
         set
         {
-            if (_nativeInstance == IntPtr.Zero)
-            {
-                if (UseOsDefaultSize != value)
-                    _startupParameters.UseOsDefaultSize = value;
-            }
-            else
-                throw new InvalidOperationException("UseOsDefaultSize can only be set before the native window is instantiated.");
+            ThrowIfClosedOrInitialized();
+            _startupParameters.UseOsDefaultSize = value;
         }
     }
 
@@ -1279,6 +1286,8 @@ public partial class PhotinoWindow
         get => Size.Width;
         set
         {
+            ThrowIfClosed();
+
             var currentSize = Size;
             if (currentSize.Width != value)
                 Size = currentSize with { Width = value };
@@ -1303,6 +1312,8 @@ public partial class PhotinoWindow
         }
         set
         {
+            ThrowIfClosed();
+
             if (Zoom != value)
             {
                 if (_nativeInstance == IntPtr.Zero)
@@ -1378,7 +1389,10 @@ public partial class PhotinoWindow
     /// <param name="uri">A Uri pointing to the file or the URL to load.</param>
     public PhotinoWindow Load(Uri uri)
     {
+        ArgumentNullException.ThrowIfNull(uri);
+
         Log($".Load({uri})");
+        ThrowIfClosed();
         if (_nativeInstance == IntPtr.Zero)
             _startupParameters.StartUrl = uri.ToString();
         else
@@ -1401,6 +1415,7 @@ public partial class PhotinoWindow
         ArgumentNullException.ThrowIfNull(path);
 
         Log($".Load({path})");
+        ThrowIfClosed();
 
         // ––––––––––––––––––––––
         // SECURITY RISK!
@@ -1449,6 +1464,7 @@ public partial class PhotinoWindow
 
         var shortContent = content.Length > 50 ? string.Concat(content.AsSpan(0, 50), "...") : content;
         Log($".LoadRawString({shortContent})");
+        ThrowIfClosed();
         if (_nativeInstance == IntPtr.Zero)
             _startupParameters.StartString = content;
         else
@@ -1474,11 +1490,10 @@ public partial class PhotinoWindow
     }
 
     /// <summary>
-    /// Restores the native window from a minimized or maximized state back to its
-    /// previous size and position.
+    /// Restores the native window from a minimized or maximized state back to its previous size and position.
     /// </summary>
     /// <exception cref="InvalidOperationException">
-    /// Thrown when the window is not initialized.
+    /// Thrown when the window is not initialized or has already been closed.
     /// </exception>
     /// <returns>
     /// Returns the current <see cref="PhotinoWindow"/> instance.
@@ -1486,8 +1501,7 @@ public partial class PhotinoWindow
     public PhotinoWindow Restore()
     {
         Log(".Restore()");
-        if (_nativeInstance == IntPtr.Zero)
-            throw new InvalidOperationException("Restore cannot be called until after the Photino window is initialized.");
+        ThrowIfClosedOrNotInitialized();
         Invoke(() => Photino_Restore(_nativeInstance));
         return this;
     }
@@ -1624,10 +1638,7 @@ public partial class PhotinoWindow
     public PhotinoWindow SetChromeless(bool chromeless)
     {
         Log($".SetChromeless({chromeless})");
-        if (_nativeInstance != IntPtr.Zero)
-            throw new InvalidOperationException("Chromeless can only be set before the native window is instantiated.");
-
-        _startupParameters.Chromeless = chromeless;
+        Chromeless = chromeless;
         return this;
     }
 
@@ -1642,7 +1653,7 @@ public partial class PhotinoWindow
     /// on Linux and macOS this is a no-op pending platform support.
     /// </remarks>
     /// <exception cref="InvalidOperationException">
-    /// Thrown when the window is not initialized.
+    /// Thrown when the window is not initialized or has already been closed.
     /// </exception>
     /// <returns>
     /// Returns the current <see cref="PhotinoWindow"/> instance.
@@ -1652,8 +1663,7 @@ public partial class PhotinoWindow
     public PhotinoWindow BeginWindowDrag()
     {
         Log(".BeginWindowDrag()");
-        if (_nativeInstance == IntPtr.Zero)
-            throw new InvalidOperationException("BeginWindowDrag cannot be called until after the Photino window is initialized.");
+        ThrowIfClosedOrNotInitialized();
         Invoke(() => Photino_BeginWindowDrag(_nativeInstance));
         return this;
     }
@@ -1670,7 +1680,7 @@ public partial class PhotinoWindow
     /// on Linux and macOS this is a no-op pending platform support.
     /// </remarks>
     /// <exception cref="InvalidOperationException">
-    /// Thrown when the window is not initialized.
+    /// Thrown when the window is not initialized or has already been closed.
     /// </exception>
     /// <returns>
     /// Returns the current <see cref="PhotinoWindow"/> instance.
@@ -1681,8 +1691,7 @@ public partial class PhotinoWindow
     public PhotinoWindow BeginWindowResize(PhotinoWindowEdge edge)
     {
         Log($".BeginWindowResize({edge})");
-        if (_nativeInstance == IntPtr.Zero)
-            throw new InvalidOperationException("BeginWindowResize cannot be called until after the Photino window is initialized.");
+        ThrowIfClosedOrNotInitialized();
         Invoke(() => Photino_BeginWindowResize(_nativeInstance, edge));
         return this;
     }
@@ -2011,7 +2020,7 @@ public partial class PhotinoWindow
     /// <param name="left">Position in pixels from the left (X).</param>
     public PhotinoWindow SetLeft(int left)
     {
-        Log($".SetLeft({Left})");
+        Log($".SetLeft({left})");
         Left = left;
         return this;
     }
@@ -2200,7 +2209,7 @@ public partial class PhotinoWindow
 
     /// <summary>
     /// Sets the native window <see cref="PhotinoWindow.Title"/>.
-    /// Default is "Photino".
+    /// Default is <c>PhotinoX</c>.
     /// </summary>
     /// <returns>
     /// Returns the current <see cref="PhotinoWindow"/> instance.
@@ -2344,6 +2353,7 @@ public partial class PhotinoWindow
     /// </returns>
     public PhotinoWindow ClearBrowserAutoFill()
     {
+        ThrowIfClosedOrNotInitialized();
         if (Platform.IsWindows)
             Invoke(() => Photino_ClearBrowserAutoFill(_nativeInstance));
         else
@@ -2353,14 +2363,60 @@ public partial class PhotinoWindow
     }
 
     /// <summary>
+    /// Attempts to activate the native Photino window.
+    /// </summary>
+    /// <returns><c>true</c> if the window was activated; otherwise, <c>false</c>.</returns>
+    /// <exception cref="InvalidOperationException">
+    /// Thrown when the window is not initialized or has already been closed.
+    /// </exception>
+    public bool Activate()
+    {
+        Log(".Activate()");
+        ThrowIfClosedOrNotInitialized();
+        var activated = false;
+        Invoke(() => activated = Photino_Activate(_nativeInstance));
+        return activated;
+    }
+
+    /// <summary>
+    /// Brings the native Photino window to the front.
+    /// </summary>
+    /// <returns>
+    /// Returns the current <see cref="PhotinoWindow"/> instance.
+    /// </returns>
+    /// <remarks>
+    /// If the window has not been created yet, it is created first.
+    /// If the window is minimized, it is restored before activation.
+    /// </remarks>
+    /// <exception cref="InvalidOperationException">
+    /// Thrown when the window has already been closed.
+    /// </exception>
+    public PhotinoWindow BringToFront()
+    {
+        ThrowIfClosed();
+        Show();
+        if (Minimized)
+            Restore();
+        Activate();
+        return this;
+    }
+
+    /// <summary>
     /// Creates and shows the native Photino window.
     /// </summary>
+    /// <remarks>
+    /// If the native window has already been created, this method shows the existing window.
+    /// A closed window cannot be shown again.
+    /// </remarks>
     public void Show()
     {
         ThrowIfClosed();
 
         if (_nativeInstance != IntPtr.Zero)
+        {
+            Invoke(() => Photino_Show(_nativeInstance));
             return;
+        }
 
         if (Platform.IsWindows && Thread.CurrentThread.GetApartmentState() != ApartmentState.STA)
             ThrowWindowMustBeCreatedOnStaThread();
@@ -2380,6 +2436,7 @@ public partial class PhotinoWindow
                 break;
         }
 
+        _startupParameters.Title = _title;
         _startupParameters.NativeParent = Parent?._nativeInstance ?? IntPtr.Zero;
 
         // 2. Validate startup parameters
@@ -2418,13 +2475,12 @@ public partial class PhotinoWindow
     /// Closes the native window.
     /// </summary>
     /// <exception cref="InvalidOperationException">
-    /// Thrown when the window is not initialized.
+    /// Thrown when the window is not initialized or has already been closed.
     /// </exception>
     public void Close()
     {
         Log(".Close()");
-        if (_nativeInstance == IntPtr.Zero)
-            throw new InvalidOperationException("Close cannot be called until after the Photino window is initialized.");
+        ThrowIfClosedOrNotInitialized();
         Invoke(() => Photino_Close(_nativeInstance));
     }
 
@@ -2444,14 +2500,13 @@ public partial class PhotinoWindow
     /// In JavaScript, messages can be received via <code>window.external.receiveMessage(message)</code>
     /// </remarks>
     /// <exception cref="InvalidOperationException">
-    /// Thrown when the window is not initialized.
+    /// Thrown when the window is not initialized or has already been closed.
     /// </exception>
     /// <param name="message">Message as string</param>
     public void SendWebMessage(string message)
     {
         Log($".SendWebMessage({message})");
-        if (_nativeInstance == IntPtr.Zero)
-            throw new InvalidOperationException("SendWebMessage cannot be called until after the Photino window is initialized.");
+        ThrowIfClosedOrNotInitialized();
         Invoke(() => Photino_SendWebMessage(_nativeInstance, message));
     }
 
@@ -2459,10 +2514,7 @@ public partial class PhotinoWindow
     {
         return Task.Run(() =>
         {
-            Log($".SendWebMessage({message})");
-            if (_nativeInstance == IntPtr.Zero)
-                throw new InvalidOperationException("SendWebMessage cannot be called until after the Photino window is initialized.");
-            Invoke(() => Photino_SendWebMessage(_nativeInstance, message));
+            SendWebMessage(message);
         });
     }
 
@@ -2471,15 +2523,14 @@ public partial class PhotinoWindow
     /// Sometimes referred to as Toast notifications.
     /// </summary>
     /// <exception cref="InvalidOperationException">
-    /// Thrown when the window is not initialized.
+    /// Thrown when the window is not initialized or has already been closed.
     /// </exception>
     /// <param name="title">The title of the notification</param>
     /// <param name="body">The text of the notification</param>
     public void SendNotification(string title, string body)
     {
         Log($".SendNotification({title}, {body})");
-        if (_nativeInstance == IntPtr.Zero)
-            throw new InvalidOperationException("SendNotification cannot be called until after the Photino window is initialized.");
+        ThrowIfClosedOrNotInitialized();
         Invoke(() => Photino_ShowNotification(_nativeInstance, title, body));
     }
 
@@ -2490,7 +2541,7 @@ public partial class PhotinoWindow
     internal void Log(string message)
     {
         if (LogVerbosity < 1) return;
-        Console.WriteLine($"PhotinoX: \"{Title}\"{message}");
+        Console.WriteLine($"PhotinoX: \"{Title ?? DefaultTitle}\"{message}");
     }
 
     /// <summary>
@@ -2535,14 +2586,47 @@ public partial class PhotinoWindow
         throw new InvalidOperationException("A Photino window must be created on an STA thread on Windows.");
     }
 
-    private void ThrowIfClosed()
+    private void ThrowIfClosedOrNotInitialized([CallerMemberName] string? callerName = null)
     {
-        if (_isClosed)
-            ThrowWindowAlreadyClosed();
+        ThrowIfClosed(callerName);
+        ThrowIfNotInitialized(callerName);
     }
 
-    private static void ThrowWindowAlreadyClosed()
+    private void ThrowIfClosed([CallerMemberName] string? callerName = null)
     {
-        throw new InvalidOperationException("A closed Photino window cannot be shown again.");
+        if (IsClosed)
+            ThrowWindowAlreadyClosed(callerName);
+    }
+
+    private void ThrowIfNotInitialized([CallerMemberName] string? callerName = null)
+    {
+        if (_nativeInstance == IntPtr.Zero)
+            ThrowWindowNotInitialized(callerName);
+    }
+
+    private void ThrowIfClosedOrInitialized([CallerMemberName] string? memberName = null)
+    {
+        ThrowIfClosed(memberName);
+
+        if (_nativeInstance != IntPtr.Zero)
+            ThrowWindowAlreadyInitialized(memberName);
+    }
+
+    [DoesNotReturn]
+    private static void ThrowWindowAlreadyClosed(string? callerName)
+    {
+        throw new InvalidOperationException($"{callerName} cannot be called after the Photino window has been closed.");
+    }
+
+    [DoesNotReturn]
+    private static void ThrowWindowNotInitialized(string? callerName)
+    {
+        throw new InvalidOperationException($"{callerName} cannot be called until after the Photino window is initialized.");
+    }
+
+    [DoesNotReturn]
+    private static void ThrowWindowAlreadyInitialized(string? memberName)
+    {
+        throw new InvalidOperationException($"{memberName} can only be set before the Photino window is initialized.");
     }
 }

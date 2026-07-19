@@ -145,7 +145,7 @@ public sealed partial class PhotinoApplication
 
     private int RunOnStaThread(PhotinoWindow? mainWindow)
     {
-        if (mainWindow is not null && mainWindow.IsNativeCreated)
+        if (mainWindow is not null && mainWindow.IsInitialized)
             ThrowNativeWindowCannotBeMovedToStaThread();
 
         var exitCode = 0;

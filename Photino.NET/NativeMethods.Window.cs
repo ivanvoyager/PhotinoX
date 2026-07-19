@@ -22,6 +22,15 @@ internal static partial class NativeMethods
 
     [LibraryImport(DLL_NAME)]
     [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
+    internal static partial void Photino_Show(IntPtr instance);
+
+    [LibraryImport(DLL_NAME)]
+    [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
+    [return: MarshalAs(UnmanagedType.I1)]
+    internal static partial bool Photino_Activate(IntPtr instance);
+
+    [LibraryImport(DLL_NAME)]
+    [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
     internal static partial void Photino_Close(IntPtr instance);
 
 
