@@ -182,24 +182,19 @@ public partial class PhotinoWindow
     public Guid Id { get; } = Guid.NewGuid();
 
     /// <summary>
-    /// When true, the native window will appear centered on the screen. By default, this is set to false.
+    /// Gets or sets whether the native window should be centered when it is initialized.
+    /// Default is false.
     /// </summary>
-    public bool Centered
+    /// <exception cref="InvalidOperationException">
+    /// Thrown when trying to set the value after the native window is initialized, or after it has been closed.
+    /// </exception>
+    public bool CenterOnInitialize
     {
-        get
-        {
-            if (_nativeInstance == IntPtr.Zero)
-                return _startupParameters.CenterOnInitialize;
-            return false;
-        }
+        get => _startupParameters.CenterOnInitialize;
         set
         {
-            ThrowIfClosed();
-
-            if (_nativeInstance == IntPtr.Zero)
-                _startupParameters.CenterOnInitialize = value;
-            else
-                Invoke(() => Photino_Center(_nativeInstance));
+            ThrowIfClosedOrInitialized();
+            _startupParameters.CenterOnInitialize = value;
         }
     }
 
@@ -1361,6 +1356,7 @@ public partial class PhotinoWindow
         _startupParameters.WebMessageReceivedHandler = OnWebMessageReceived;
         _startupParameters.CustomSchemeHandler = OnCustomScheme;
         _startupParameters.ClosedHandler = OnWindowClosed;
+        _startupParameters.FullScreenChangedHandler = OnFullScreenChanged;
     }
 
     /// <summary>
@@ -1476,16 +1472,58 @@ public partial class PhotinoWindow
     /// Centers the native window on the primary display.
     /// </summary>
     /// <remarks>
-    /// If called prior to window initialization, overrides Left (X) and Top (Y) properties.
+    /// If called before native window initialization, the window will be centered on startup.
     /// </remarks>
+    /// <exception cref="InvalidOperationException">
+    /// Thrown when the window has already been closed.
+    /// </exception>
     /// <returns>
     /// Returns the current <see cref="PhotinoWindow"/> instance.
     /// </returns>
-    /// <seealso cref="UseOsDefaultLocation" />
     public PhotinoWindow Center()
     {
         Log(".Center()");
-        Centered = true;
+        ThrowIfClosed();
+
+        if (_nativeInstance == IntPtr.Zero)
+            _startupParameters.CenterOnInitialize = true;
+        else
+            Invoke(() => Photino_Center(_nativeInstance));
+
+        return this;
+    }
+
+    /// <summary>
+    /// Maximizes the native window.
+    /// </summary>
+    /// <exception cref="InvalidOperationException">
+    /// Thrown when the window is not initialized or has already been closed.
+    /// </exception>
+    /// <returns>
+    /// Returns the current <see cref="PhotinoWindow"/> instance.
+    /// </returns>
+    public PhotinoWindow Maximize()
+    {
+        Log(".Maximize()");
+        ThrowIfClosedOrNotInitialized();
+        Invoke(() => Photino_Maximize(_nativeInstance));
+        return this;
+    }
+
+    /// <summary>
+    /// Minimizes the native window.
+    /// </summary>
+    /// <exception cref="InvalidOperationException">
+    /// Thrown when the window is not initialized or has already been closed.
+    /// </exception>
+    /// <returns>
+    /// Returns the current <see cref="PhotinoWindow"/> instance.
+    /// </returns>
+    public PhotinoWindow Minimize()
+    {
+        Log(".Minimize()");
+        ThrowIfClosedOrNotInitialized();
+        Invoke(() => Photino_Minimize(_nativeInstance));
         return this;
     }
 

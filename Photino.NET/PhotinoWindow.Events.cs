@@ -221,6 +221,61 @@ public partial class PhotinoWindow
     }
 
     /// <summary>
+    /// Occurs when the native window enters fullscreen mode.
+    /// </summary>
+    public event EventHandler? FullScreenEntered;
+
+    /// <summary>
+    /// Registers user-defined handler methods to receive callbacks when the native window enters fullscreen mode.
+    /// </summary>
+    /// <returns>
+    /// Returns the current <see cref="PhotinoWindow"/> instance.
+    /// </returns>
+    /// <param name="handler"><see cref="EventHandler"/></param>
+    /// <exception cref="InvalidOperationException">
+    /// Thrown when the window has already been closed.
+    /// </exception>
+    public PhotinoWindow RegisterFullScreenEnteredHandler(EventHandler? handler)
+    {
+        ThrowIfClosed();
+        FullScreenEntered += handler;
+        return this;
+    }
+
+    /// <summary>
+    /// Occurs when the native window exits fullscreen mode.
+    /// </summary>
+    public event EventHandler? FullScreenExited;
+
+    /// <summary>
+    /// Registers user-defined handler methods to receive callbacks when the native window exits fullscreen mode.
+    /// </summary>
+    /// <returns>
+    /// Returns the current <see cref="PhotinoWindow"/> instance.
+    /// </returns>
+    /// <param name="handler"><see cref="EventHandler"/></param>
+    /// <exception cref="InvalidOperationException">
+    /// Thrown when the window has already been closed.
+    /// </exception>
+    public PhotinoWindow RegisterFullScreenExitedHandler(EventHandler? handler)
+    {
+        ThrowIfClosed();
+        FullScreenExited += handler;
+        return this;
+    }
+
+    /// <summary>
+    /// Invokes registered user-defined handler methods when the native fullscreen state changes.
+    /// </summary>
+    internal void OnFullScreenChanged(bool fullScreen)
+    {
+        if (fullScreen)
+            FullScreenEntered?.Invoke(this, EventArgs.Empty);
+        else
+            FullScreenExited?.Invoke(this, EventArgs.Empty);
+    }
+
+    /// <summary>
     /// Occurs when the native window sends a message to the host application.
     /// </summary>
     public event EventHandler<string>? WebMessageReceived;

@@ -19,10 +19,11 @@ internal static partial class NativeMethods
     [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
     internal static partial IntPtr Photino_getNSWindow_mac(IntPtr instance);
 
-
+    // window lifecycle
     [LibraryImport(DLL_NAME)]
     [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
-    internal static partial void Photino_Show(IntPtr instance);
+    [return: MarshalAs(UnmanagedType.I1)]
+    internal static partial bool Photino_Show(IntPtr instance);
 
     [LibraryImport(DLL_NAME)]
     [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
@@ -31,9 +32,29 @@ internal static partial class NativeMethods
 
     [LibraryImport(DLL_NAME)]
     [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
+    [return: MarshalAs(UnmanagedType.I1)]
+    internal static partial bool Photino_Center(IntPtr instance);
+
+    [LibraryImport(DLL_NAME)]
+    [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
+    [return: MarshalAs(UnmanagedType.I1)]
+    internal static partial bool Photino_Maximize(IntPtr instance);
+
+    [LibraryImport(DLL_NAME)]
+    [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
+    [return: MarshalAs(UnmanagedType.I1)]
+    internal static partial bool Photino_Minimize(IntPtr instance);
+
+    [LibraryImport(DLL_NAME)]
+    [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
+    [return: MarshalAs(UnmanagedType.I1)]
+    internal static partial bool Photino_Restore(IntPtr instance);
+
+    [LibraryImport(DLL_NAME)]
+    [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
     internal static partial void Photino_Close(IntPtr instance);
 
-
+    // getters/setters
     [LibraryImport(DLL_NAME)]
     [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
     internal static partial IntPtr Photino_GetTitle(IntPtr instance);
@@ -77,15 +98,6 @@ internal static partial class NativeMethods
     [LibraryImport(DLL_NAME)]
     [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
     internal static partial void Photino_SetMaxSize(IntPtr instance, int maxWidth, int maxHeight);
-
-
-    [LibraryImport(DLL_NAME)]
-    [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
-    internal static partial void Photino_Center(IntPtr instance);
-
-    [LibraryImport(DLL_NAME)]
-    [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
-    internal static partial void Photino_Restore(IntPtr instance);
 
 
     [LibraryImport(DLL_NAME)]
