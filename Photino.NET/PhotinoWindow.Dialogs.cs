@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Runtime.InteropServices;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Runtime.InteropServices;
 using Photino.NET.Utils;
 
 namespace Photino.NET;
@@ -16,10 +11,10 @@ public partial class PhotinoWindow
     /// Show an open file dialog native to the OS.
     /// </summary>
     /// <remarks>
-    /// Filter names are not used on macOS. Use async version for Photino.Blazor as synchronous version crashes.
+    /// Filter names are not used on macOS. Use async version for PhotinoX.Blazor as synchronous version crashes.
     /// </remarks>
     /// <exception cref="InvalidOperationException">
-    /// Thrown when the window is not initialized.
+    /// Thrown when the window is not initialized or has already been closed.
     /// </exception>
     /// <param name="title">Title of the dialog</param>
     /// <param name="defaultPath">Default path. Defaults to <see cref="Environment.SpecialFolder.MyDocuments"/></param>
@@ -29,13 +24,13 @@ public partial class PhotinoWindow
     public string[] ShowOpenFile(string title = "Choose file", string? defaultPath = null, bool multiSelect = false, (string Name, string[] Extensions)[]? filters = null) => ShowOpenDialog(false, title, defaultPath, multiSelect, filters);
 
     /// <summary>
-    /// Async version is required for Photino.Blazor
+    /// Async version is required for PhotinoX.Blazor
     /// </summary>
     /// <remarks>
-    /// Filter names are not used on macOS. Use async version for Photino.Blazor as synchronous version crashes.
+    /// Filter names are not used on macOS. Use async version for PhotinoX.Blazor as synchronous version crashes.
     /// </remarks>
     /// <exception cref="InvalidOperationException">
-    /// Thrown when the window is not initialized.
+    /// Thrown when the window is not initialized or has already been closed.
     /// </exception>
     /// <param name="title">Title of the dialog</param>
     /// <param name="defaultPath">Default path. Defaults to <see cref="Environment.SpecialFolder.MyDocuments"/></param>
@@ -51,7 +46,7 @@ public partial class PhotinoWindow
     /// Show an open folder dialog native to the OS.
     /// </summary>
     /// <exception cref="InvalidOperationException">
-    /// Thrown when the window is not initialized.
+    /// Thrown when the window is not initialized or has already been closed.
     /// </exception>
     /// <param name="title">Title of the dialog</param>
     /// <param name="defaultPath">Default path. Defaults to <see cref="Environment.SpecialFolder.MyDocuments"/></param>
@@ -60,10 +55,10 @@ public partial class PhotinoWindow
     public string[] ShowOpenFolder(string title = "Select folder", string? defaultPath = null, bool multiSelect = false) => ShowOpenDialog(true, title, defaultPath, multiSelect, null);
 
     /// <summary>
-    /// Async version is required for Photino.Blazor
+    /// Async version is required for PhotinoX.Blazor
     /// </summary>
     /// <exception cref="InvalidOperationException">
-    /// Thrown when the window is not initialized.
+    /// Thrown when the window is not initialized or has already been closed.
     /// </exception>
     /// <param name="title">Title of the dialog</param>
     /// <param name="defaultPath">Default path. Defaults to <see cref="Environment.SpecialFolder.MyDocuments"/></param>
@@ -81,7 +76,7 @@ public partial class PhotinoWindow
     /// Filter names are not used on macOS.
     /// </remarks>
     /// <exception cref="InvalidOperationException">
-    /// Thrown when the window is not initialized.
+    /// Thrown when the window is not initialized or has already been closed.
     /// </exception>
     /// <param name="title">Title of the dialog</param>
     /// <param name="defaultPath">Default path. Defaults to <see cref="Environment.SpecialFolder.MyDocuments"/></param>
@@ -90,6 +85,8 @@ public partial class PhotinoWindow
     /// <returns>The selected file path, or <c>null</c>.</returns>
     public string? ShowSaveFile(string title = "Save file", string? defaultPath = null, (string Name, string[] Extensions)[]? filters = null, string? defaultFileName = null)
     {
+        ThrowIfClosedOrNotInitialized();
+
         defaultPath ??= Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
         filters ??= [];
         defaultFileName ??= string.Empty;
@@ -122,7 +119,7 @@ public partial class PhotinoWindow
     /// Filter names are not used on macOS.
     /// </remarks>
     /// <exception cref="InvalidOperationException">
-    /// Thrown when the window is not initialized.
+    /// Thrown when the window is not initialized or has already been closed.
     /// </exception>
     /// <param name="title">Title of the dialog</param>
     /// <param name="defaultPath">Default path. Defaults to <see cref="Environment.SpecialFolder.MyDocuments"/></param>
@@ -138,7 +135,7 @@ public partial class PhotinoWindow
     /// Show a message dialog native to the OS.
     /// </summary>
     /// <exception cref="InvalidOperationException">
-    /// Thrown when the window is not initialized.
+    /// Thrown when the window is not initialized or has already been closed.
     /// </exception>
     /// <param name="title">Title of the dialog</param>
     /// <param name="text">Text of the dialog</param>
@@ -147,6 +144,8 @@ public partial class PhotinoWindow
     /// <returns><see cref="PhotinoDialogResult" /></returns>
     public PhotinoDialogResult ShowMessage(string title, string text, PhotinoDialogButtons buttons = PhotinoDialogButtons.Ok, PhotinoDialogIcon icon = PhotinoDialogIcon.Info)
     {
+        ThrowIfClosedOrNotInitialized();
+
         var result = PhotinoDialogResult.Cancel;
         Invoke(() => result = Photino_ShowMessage(_nativeInstance, title, text, buttons, icon));
         return result;
@@ -163,6 +162,8 @@ public partial class PhotinoWindow
     /// <returns>Array of paths</returns>
     private string[] ShowOpenDialog(bool foldersOnly, string title, string? defaultPath, bool multiSelect, (string Name, string[] Extensions)[]? filters)
     {
+        ThrowIfClosedOrNotInitialized();
+
         defaultPath ??= Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
         filters ??= [];
 

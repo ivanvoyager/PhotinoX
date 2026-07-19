@@ -215,7 +215,7 @@ internal static partial class NativeMethods
         }
     }
 
-    private static void OnDispatcherUnhandledException(Exception ex)
+    internal static void OnDispatcherUnhandledException(Exception ex)
     {
         try
         {

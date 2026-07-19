@@ -17,8 +17,12 @@ public partial class PhotinoWindow
     /// Returns the current <see cref="PhotinoWindow"/> instance.
     /// </returns>
     /// <param name="handler"><see cref="EventHandler"/></param>
+    /// <exception cref="InvalidOperationException">
+    /// Thrown when the window has already been closed.
+    /// </exception>
     public PhotinoWindow RegisterLocationChangedHandler(EventHandler<Point>? handler)
     {
+        ThrowIfClosed();
         WindowLocationChanged += handler;
         return this;
     }
@@ -46,8 +50,12 @@ public partial class PhotinoWindow
     /// Returns the current <see cref="PhotinoWindow"/> instance.
     /// </returns>
     /// <param name="handler"><see cref="EventHandler"/></param>
+    /// <exception cref="InvalidOperationException">
+    /// Thrown when the window has already been closed.
+    /// </exception>
     public PhotinoWindow RegisterSizeChangedHandler(EventHandler<Size>? handler)
     {
+        ThrowIfClosed();
         WindowSizeChanged += handler;
         return this;
     }
@@ -74,8 +82,12 @@ public partial class PhotinoWindow
     /// Returns the current <see cref="PhotinoWindow"/> instance.
     /// </returns>
     /// <param name="handler"><see cref="EventHandler"/></param>
+    /// <exception cref="InvalidOperationException">
+    /// Thrown when the window has already been closed.
+    /// </exception>
     public PhotinoWindow RegisterFocusInHandler(EventHandler? handler)
     {
+        ThrowIfClosed();
         WindowFocusIn += handler;
         return this;
     }
@@ -100,8 +112,12 @@ public partial class PhotinoWindow
     /// Returns the current <see cref="PhotinoWindow"/> instance.
     /// </returns>
     /// <param name="handler"><see cref="EventHandler"/></param>
+    /// <exception cref="InvalidOperationException">
+    /// Thrown when the window has already been closed.
+    /// </exception>
     public PhotinoWindow RegisterMaximizedHandler(EventHandler? handler)
     {
+        ThrowIfClosed();
         WindowMaximized += handler;
         return this;
     }
@@ -126,8 +142,12 @@ public partial class PhotinoWindow
     /// Returns the current <see cref="PhotinoWindow"/> instance.
     /// </returns>
     /// <param name="handler"><see cref="EventHandler"/></param>
+    /// <exception cref="InvalidOperationException">
+    /// Thrown when the window has already been closed.
+    /// </exception>
     public PhotinoWindow RegisterRestoredHandler(EventHandler? handler)
     {
+        ThrowIfClosed();
         WindowRestored += handler;
         return this;
     }
@@ -152,8 +172,12 @@ public partial class PhotinoWindow
     /// Returns the current <see cref="PhotinoWindow"/> instance.
     /// </returns>
     /// <param name="handler"><see cref="EventHandler"/></param>
+    /// <exception cref="InvalidOperationException">
+    /// Thrown when the window has already been closed.
+    /// </exception>
     public PhotinoWindow RegisterFocusOutHandler(EventHandler? handler)
     {
+        ThrowIfClosed();
         WindowFocusOut += handler;
         return this;
     }
@@ -178,8 +202,12 @@ public partial class PhotinoWindow
     /// Returns the current <see cref="PhotinoWindow"/> instance.
     /// </returns>
     /// <param name="handler"><see cref="EventHandler"/></param>
+    /// <exception cref="InvalidOperationException">
+    /// Thrown when the window has already been closed.
+    /// </exception>
     public PhotinoWindow RegisterMinimizedHandler(EventHandler? handler)
     {
+        ThrowIfClosed();
         WindowMinimized += handler;
         return this;
     }
@@ -190,6 +218,61 @@ public partial class PhotinoWindow
     internal void OnMinimized()
     {
         WindowMinimized?.Invoke(this, EventArgs.Empty);
+    }
+
+    /// <summary>
+    /// Occurs when the native window enters fullscreen mode.
+    /// </summary>
+    public event EventHandler? FullScreenEntered;
+
+    /// <summary>
+    /// Registers user-defined handler methods to receive callbacks when the native window enters fullscreen mode.
+    /// </summary>
+    /// <returns>
+    /// Returns the current <see cref="PhotinoWindow"/> instance.
+    /// </returns>
+    /// <param name="handler"><see cref="EventHandler"/></param>
+    /// <exception cref="InvalidOperationException">
+    /// Thrown when the window has already been closed.
+    /// </exception>
+    public PhotinoWindow RegisterFullScreenEnteredHandler(EventHandler? handler)
+    {
+        ThrowIfClosed();
+        FullScreenEntered += handler;
+        return this;
+    }
+
+    /// <summary>
+    /// Occurs when the native window exits fullscreen mode.
+    /// </summary>
+    public event EventHandler? FullScreenExited;
+
+    /// <summary>
+    /// Registers user-defined handler methods to receive callbacks when the native window exits fullscreen mode.
+    /// </summary>
+    /// <returns>
+    /// Returns the current <see cref="PhotinoWindow"/> instance.
+    /// </returns>
+    /// <param name="handler"><see cref="EventHandler"/></param>
+    /// <exception cref="InvalidOperationException">
+    /// Thrown when the window has already been closed.
+    /// </exception>
+    public PhotinoWindow RegisterFullScreenExitedHandler(EventHandler? handler)
+    {
+        ThrowIfClosed();
+        FullScreenExited += handler;
+        return this;
+    }
+
+    /// <summary>
+    /// Invokes registered user-defined handler methods when the native fullscreen state changes.
+    /// </summary>
+    internal void OnFullScreenChanged(bool fullScreen)
+    {
+        if (fullScreen)
+            FullScreenEntered?.Invoke(this, EventArgs.Empty);
+        else
+            FullScreenExited?.Invoke(this, EventArgs.Empty);
     }
 
     /// <summary>
@@ -207,8 +290,12 @@ public partial class PhotinoWindow
     /// Messages can be sent from JavaScript via <code>window.external.sendMessage(message)</code>
     /// </remarks>
     /// <param name="handler"><see cref="EventHandler"/></param>
+    /// <exception cref="InvalidOperationException">
+    /// Thrown when the window has already been closed.
+    /// </exception>
     public PhotinoWindow RegisterWebMessageReceivedHandler(EventHandler<string>? handler)
     {
+        ThrowIfClosed();
         WebMessageReceived += handler;
         return this;
     }
@@ -239,8 +326,12 @@ public partial class PhotinoWindow
     /// <returns>
     /// Returns the current <see cref="PhotinoWindow"/> instance.
     /// </returns>
+    /// <exception cref="InvalidOperationException">
+    /// Thrown when the window has already been closed.
+    /// </exception>
     public PhotinoWindow RegisterWindowClosingHandler(EventHandler<CancelEventArgs>? handler)
     {
+        ThrowIfClosed();
         WindowClosing += handler;
         return this;
     }
@@ -279,8 +370,12 @@ public partial class PhotinoWindow
     /// Returns the current <see cref="PhotinoWindow"/> instance.
     /// </returns>
     /// <param name="handler"><see cref="EventHandler"/></param>
+    /// <exception cref="InvalidOperationException">
+    /// Thrown when the window has already been closed.
+    /// </exception>
     public PhotinoWindow RegisterWindowClosedHandler(EventHandler? handler)
     {
+        ThrowIfClosed();
         WindowClosed += handler;
         return this;
     }
@@ -290,14 +385,15 @@ public partial class PhotinoWindow
     /// </summary>
     internal void OnWindowClosed()
     {
+        IsClosed = true;
+        _nativeInstance = IntPtr.Zero;
+
         try
         {
             WindowClosed?.Invoke(this, EventArgs.Empty);
         }
         finally
         {
-            _isClosed = true;
-            _nativeInstance = IntPtr.Zero;
             PhotinoApplication.Current.OnWindowClosed(this);
         }
     }
@@ -314,8 +410,12 @@ public partial class PhotinoWindow
     /// Returns the current <see cref="PhotinoWindow"/> instance.
     /// </returns>
     /// <param name="handler"><see cref="EventHandler"/></param>
+    /// <exception cref="InvalidOperationException">
+    /// Thrown when the window has already been closed.
+    /// </exception>
     public PhotinoWindow RegisterWindowCreatingHandler(EventHandler? handler)
     {
+        ThrowIfClosed();
         WindowCreating += handler;
         return this;
     }
@@ -340,8 +440,12 @@ public partial class PhotinoWindow
     /// Returns the current <see cref="PhotinoWindow"/> instance.
     /// </returns>
     /// <param name="handler"><see cref="EventHandler"/></param>
+    /// <exception cref="InvalidOperationException">
+    /// Thrown when the window has already been closed.
+    /// </exception>
     public PhotinoWindow RegisterWindowCreatedHandler(EventHandler? handler)
     {
+        ThrowIfClosed();
         WindowCreated += handler;
         return this;
     }

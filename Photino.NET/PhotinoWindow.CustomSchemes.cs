@@ -30,7 +30,6 @@ public partial class PhotinoWindow
 
     /// <summary>
     /// Stores registered custom scheme handlers keyed by scheme name.
-    /// Multiple handlers for the same scheme are aggregated.
     /// </summary>
     internal Dictionary<string, NetCustomSchemeDelegate> CustomSchemes = [];
 
@@ -40,25 +39,36 @@ public partial class PhotinoWindow
     /// </summary>
     /// <remarks>
     /// Up to 16 unique custom scheme names can be registered before native initialization.
-    /// After initialization, additional handlers may be added for existing schemes.
+    /// After initialization, additional schemes may be registered if the native platform accepts them.
+    /// Registering an existing scheme replaces its previous handler.
     /// </remarks>
     /// <returns>
     /// Returns the current <see cref="PhotinoWindow"/> instance.
     /// </returns>
     /// <param name="scheme">The custom scheme</param>
     /// <param name="handler"><see cref="NetCustomSchemeDelegate"/></param>
-    /// <exception cref="ArgumentException">Thrown if no scheme or handler was provided</exception>
-    /// <exception cref="InvalidOperationException">Thrown if more than 16 custom schemes were set</exception>
+    /// <exception cref="ArgumentException">
+    /// Thrown when the scheme is missing, reserved, invalid, or when no handler was provided.
+    /// </exception>
+    /// <exception cref="InvalidOperationException">
+    /// Thrown when the window has already been closed, when more than 16 custom schemes were set before initialization,
+    /// or when the native platform fails to register the scheme after initialization.
+    /// </exception>
     public PhotinoWindow RegisterCustomSchemeHandler(string scheme, NetCustomSchemeDelegate handler)
     {
+        ThrowIfClosed();
+
         if (string.IsNullOrWhiteSpace(scheme)) throw new ArgumentException("A scheme must be provided (for example 'app' or 'custom').", nameof(scheme));
 
-        _ = handler ?? throw new ArgumentException("A handler (method) with a signature matching NetCustomSchemeDelegate must be supplied.", nameof(handler));
+        _ = handler ?? throw new ArgumentException($"A handler with a signature matching {nameof(NetCustomSchemeDelegate)} must be supplied.", nameof(handler));
 
         scheme = scheme.ToLowerInvariant();
 
+        if (scheme is "http" or "https" or "file")
+            throw new ArgumentException($"The scheme '{scheme}' cannot be registered as a custom scheme.", nameof(scheme));
+
         if (!IsValidSchemeName(scheme))
-            throw new ArgumentException($"Invalid custom scheme name: '{scheme}'.");
+            throw new ArgumentException($"Invalid custom scheme name: '{scheme}'.", nameof(scheme));
 
         if (_nativeInstance == IntPtr.Zero)
         {
@@ -70,8 +80,13 @@ public partial class PhotinoWindow
         }
         else
         {
-            if (!CustomSchemes.ContainsKey(scheme) && !Photino_AddCustomSchemeName(_nativeInstance, scheme))
-                throw new InvalidOperationException($"Failed to register custom scheme: '{scheme}'.");
+            if (!CustomSchemes.ContainsKey(scheme))
+            {
+                var added = false;
+                Invoke(() => added = Photino_AddCustomSchemeName(_nativeInstance, scheme));
+                if (!added)
+                    throw new InvalidOperationException($"Failed to register custom scheme: '{scheme}'.");
+            }
         }
 
         CustomSchemes[scheme] = handler;
@@ -87,30 +102,46 @@ public partial class PhotinoWindow
     /// <param name="numBytes">Number of bytes of the response</param>
     /// <param name="outContentType">Content type of the response</param>
     /// <returns><see cref="IntPtr"/></returns>
-    /// <exception cref="ArgumentException"><paramref name="url"/> is null or empty or consists only of white-space characters.</exception>
-    /// <exception cref="ArgumentException">
-    /// Thrown when the URL does not contain a colon.
-    /// </exception>
-    /// <exception cref="InvalidOperationException">
-    /// Thrown when no handler is registered.
-    /// </exception>
     public IntPtr OnCustomScheme(string url, out int numBytes, out IntPtr outContentType)
     {
-        ArgumentException.ThrowIfNullOrWhiteSpace(url);
+        numBytes = 0;
+        outContentType = IntPtr.Zero;
+
+        Debug.Assert(!string.IsNullOrWhiteSpace(url));
+
+        if (string.IsNullOrWhiteSpace(url))
+            return IntPtr.Zero;
+
         var colonPos = url.IndexOf(':');
 
+        Debug.Assert(colonPos >= 0, $"URL: '{url}' does not contain a colon.");
+
         if (colonPos < 0)
-            throw new ArgumentException($"URL: '{url}' does not contain a colon.", nameof(url));
+            return IntPtr.Zero;
 
         var scheme = url.Substring(0, colonPos).ToLowerInvariant();
 
+        Debug.Assert(scheme is not ("http" or "https" or "file"), $"The scheme '{scheme}' cannot be registered as a custom scheme.");
+
+        if (scheme is "http" or "https" or "file")
+            return IntPtr.Zero;
+
+        Debug.Assert(CustomSchemes.ContainsKey(scheme), $"A handler for the custom scheme '{scheme}' has not been registered.");
+
         if (!CustomSchemes.TryGetValue(scheme, out NetCustomSchemeDelegate? handler))
-            throw new InvalidOperationException($"A handler for the custom scheme '{scheme}' has not been registered.");
+            return IntPtr.Zero;
 
-        var responseStream = handler.Invoke(this, scheme, url, out var contentType);
-
-        numBytes = 0;
-        outContentType = IntPtr.Zero;
+        Stream? responseStream;
+        string? contentType;
+        try
+        {
+            responseStream = handler.Invoke(this, scheme, url, out contentType);
+        }
+        catch (Exception ex)
+        {
+            OnDispatcherUnhandledException(ex);
+            return IntPtr.Zero;
+        }
 
         if (responseStream == null)
         {
@@ -124,7 +155,15 @@ public partial class PhotinoWindow
         using (responseStream)
         using (var ms = new MemoryStream())
         {
-            responseStream.CopyTo(ms);
+            try
+            {
+                responseStream.CopyTo(ms);
+            }
+            catch (Exception ex)
+            {
+                OnDispatcherUnhandledException(ex);
+                return IntPtr.Zero;
+            }
 
             if (ms.Length is <= 0 or > int.MaxValue)
                 return IntPtr.Zero;
@@ -143,7 +182,6 @@ public partial class PhotinoWindow
 
                 Marshal.Copy(ms.GetBuffer(), 0, buffer, numBytes);
                 outContentType = CopyUtf8StringToNative(contentType);//uses Photino_AllocateString
-                //_hGlobalToFree.Add(buffer);
             }
             catch (Exception ex)
             {
@@ -153,7 +191,7 @@ public partial class PhotinoWindow
                     buffer = IntPtr.Zero;
                 }
                 numBytes = 0;
-                Debug.Fail(ex.Message);
+                OnDispatcherUnhandledException(ex);
             }
 
             return buffer;
