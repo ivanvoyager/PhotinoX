@@ -1021,7 +1021,7 @@ public partial class PhotinoWindow
             if (!string.Equals(su, value, StringComparison.Ordinal))
             {
                 if (value != null)
-                    Load(new Uri(value, UriKind.Absolute));
+                    Load(value);
                 else
                     _startupParameters.StartUrl = value;
             }

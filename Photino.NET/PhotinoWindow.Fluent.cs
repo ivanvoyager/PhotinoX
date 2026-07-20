@@ -786,16 +786,29 @@ partial class PhotinoWindow
     #region Browser content
 
     /// <summary>
-    /// Loads a specified <see cref="Uri"/> into the browser control.
+    /// Loads the specified <see cref="Uri"/> into the browser control.
     /// </summary>
     /// <returns>
     /// Returns the current <see cref="PhotinoWindow"/> instance.
     /// </returns>
     /// <remarks>
-    /// If called before native window initialization, the content is loaded on startup.
+    /// If called before native window initialization, the URI is stored as startup content.
     /// Otherwise, the current browser content is navigated immediately.
+    /// Runtime navigation requires an absolute URI.
     /// </remarks>
-    /// <param name="uri">A Uri pointing to the file or the URL to load.</param>
+    /// <param name="uri">
+    /// The URI to load. Relative URIs are allowed before native window initialization.
+    /// Runtime navigation requires an absolute URI.
+    /// </param>
+    /// <exception cref="ArgumentNullException">
+    /// Thrown when <paramref name="uri"/> is <c>null</c>.
+    /// </exception>
+    /// <exception cref="ArgumentException">
+    /// Thrown when the window is already initialized and <paramref name="uri"/> is not an absolute URI.
+    /// </exception>
+    /// <exception cref="InvalidOperationException">
+    /// Thrown when the window has already been closed.
+    /// </exception>
     public PhotinoWindow Load(Uri uri)
     {
         ArgumentNullException.ThrowIfNull(uri);
@@ -804,31 +817,38 @@ partial class PhotinoWindow
 
         ThrowIfClosed();
 
-        if (!uri.IsAbsoluteUri)
-            throw new ArgumentException("URI must be absolute.", nameof(uri));
-
         if (_nativeInstance == IntPtr.Zero)
         {
             _startupParameters.StartUrl = uri.ToString();
             _startupParameters.StartString = null;
         }
         else
+        {
+            if (!uri.IsAbsoluteUri)
+                throw new ArgumentException("Runtime navigation URI must be absolute.", nameof(uri));
+
             Invoke(() => Photino_NavigateToUrl(_nativeInstance, uri.ToString()));
+        }
 
         return this;
     }
 
     /// <summary>
-    /// Loads a specified path into the browser control.
+    /// Loads the specified path, HTTP/HTTPS URL, file URI, or registered custom-scheme URI into the browser control.
     /// </summary>
     /// <returns>
     /// Returns the current <see cref="PhotinoWindow"/> instance.
     /// </returns>
     /// <remarks>
-    /// If called before native window initialization, the content is loaded on startup.
+    /// If called before native window initialization, the resolved content is used as startup content.
     /// Otherwise, the current browser content is navigated immediately.
+    /// Relative paths are resolved first against the current working directory and then against
+    /// <see cref="AppContext.BaseDirectory"/>.
+    /// Registered custom-scheme URI strings, such as <c>app://index.html</c>, are loaded as URIs.
     /// </remarks>
-    /// <param name="path">A path pointing to the resource to load.</param>
+    /// <param name="path">
+    /// A local file path, relative file path, HTTP/HTTPS URL, file URI, or registered custom-scheme URI to load.
+    /// </param>
     public PhotinoWindow Load(string path)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(path);
@@ -840,9 +860,12 @@ partial class PhotinoWindow
         // SECURITY RISK!
         // This needs validation!
         // ––––––––––––––––––––––
-        // Open a web URL string path
+        // Open a scheme string path
         if (Uri.TryCreate(path, UriKind.Absolute, out var uri) &&
-            (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps))
+            (uri.Scheme == Uri.UriSchemeHttp ||
+             uri.Scheme == Uri.UriSchemeHttps ||
+             uri.Scheme == Uri.UriSchemeFile ||
+             IsCustomSchemeRegistered(uri.Scheme)))
         {
             return Load(uri);
         }

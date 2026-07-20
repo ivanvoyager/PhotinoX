@@ -31,7 +31,23 @@ public partial class PhotinoWindow
     /// <summary>
     /// Stores registered custom scheme handlers keyed by scheme name.
     /// </summary>
-    internal Dictionary<string, NetCustomSchemeDelegate> CustomSchemes = [];
+    internal Dictionary<string, NetCustomSchemeDelegate> CustomSchemes = new(StringComparer.OrdinalIgnoreCase);
+
+    /// <summary>
+    /// Determines whether the specified URI scheme has a registered managed custom scheme handler.
+    /// </summary>
+    /// <param name="scheme">
+    /// The URI scheme name to check, without the trailing colon.
+    /// </param>
+    /// <returns>
+    /// <c>true</c> when a managed custom scheme handler has been registered for
+    /// <paramref name="scheme"/>; otherwise, <c>false</c>.
+    /// </returns>
+    private bool IsCustomSchemeRegistered(string scheme)
+    {
+        return !string.IsNullOrWhiteSpace(scheme) &&
+               CustomSchemes.ContainsKey(scheme);
+    }
 
     /// <summary>
     /// Registers user-defined custom schemes (other than 'http', 'https' and 'file') and handler methods to receive callbacks
