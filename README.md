@@ -12,7 +12,7 @@ Lightweight **.NET wrapper** for native OS WebView windows:
 - **macOS**: WKWebView
 - **Linux**: WebKitGTK 4.1
 
-`PhotinoX` is a maintained fork of Photino.NET focused on stability, compatibility, and predictable cross‑platform behavior.
+PhotinoX is a maintained fork of Photino.NET focused on predictable cross-platform desktop behavior, native runtime stability, and a cleaner managed API surface.
 
 ## What is PhotinoX?
 
@@ -20,6 +20,107 @@ PhotinoX builds on the original Photino design: native desktop windows hosted by
 It relies entirely on **OS‑native WebView engines**, keeping apps small and efficient.
 
 > **Note:** PhotinoX is an independent fork of [tryphotino/photino.NET](https://github.com/tryphotino/photino.NET) under the Apache‑2.0 license and is **not affiliated** with the original project or organization.
+
+## How PhotinoX differs from Photino.NET
+
+PhotinoX differs from the original Photino.NET project in several managed API areas: an explicit `PhotinoApplication` model, UI-thread dispatching through `PhotinoDispatcher`, simplified window event names, clearer window state operations, and a cleaner fluent `PhotinoWindow` API.
+
+### Application model
+
+`PhotinoApplication` is the explicit application lifetime object. Window creation, shutdown behavior, and UI-thread dispatching are coordinated through the application and its dispatcher instead of implicit global state. The application also tracks open windows and exposes `MainWindow` and `Windows`.
+
+| Previous model | New model |
+|---|---|
+| `PhotinoWindow.WaitForClose()` creates the native window and starts the message loop. | `PhotinoApplication.Run(window)` owns application lifetime and message-loop execution. |
+| Window creation and message-loop state are controlled from `PhotinoWindow`. | `PhotinoApplication.Run(window)` shows the main window; explicit window creation/showing is available through `PhotinoWindow.Show()`. |
+| Window lifetime is centered around individual `PhotinoWindow` instances. | `PhotinoApplication` tracks open windows through `MainWindow` and `Windows`. |
+| `PhotinoWindow.Invoke(...)` dispatches through native window-level invoke helpers. | `PhotinoWindow.Invoke(...)` dispatches through `PhotinoApplication.Current.Dispatcher`. |
+| Shutdown behavior is implicit around the native message loop. | Shutdown behavior is controlled by `PhotinoShutdownMode` and `PhotinoApplication.Shutdown(...)`. |
+
+```csharp
+var app = new PhotinoApplication();
+
+var window = new PhotinoWindow()
+    .SetTitle("PhotinoX")
+    .Load("index.html")
+    .RegisterClosingHandler((_, e) => e.Cancel = true);
+
+return app.Run(window);
+```
+
+### Window events
+
+Window event names are simplified to remove redundant `Window` prefixes and align better with common .NET event naming. Closing now uses standard `CancelEventArgs`, focus events are exposed as `Activated` and `Deactivated`, and additional closed/fullscreen lifecycle events are available.
+
+| Photino.NET API | New API |
+|---|---|
+| `WindowCreating` | `Creating` |
+| `WindowCreated` | `Created` |
+| `WindowClosing` | `Closing` |
+| - | `Closed` |
+| `WindowLocationChanged` | `LocationChanged` |
+| `WindowSizeChanged` | `SizeChanged` |
+| `WindowFocusIn` | `Activated` |
+| `WindowFocusOut` | `Deactivated` |
+| `WindowMaximized` | `Maximized` |
+| `WindowRestored` | `Restored` |
+| `WindowMinimized` | `Minimized` |
+| - | `FullScreenEntered` |
+| - | `FullScreenExited` |
+
+`Closing` now uses `EventHandler<CancelEventArgs>`; set `CancelEventArgs.Cancel` to cancel the close operation.
+
+| Previous registration helper | New registration helper |
+|---|---|
+| `RegisterWindowCreatingHandler(...)` | `RegisterCreatingHandler(...)` |
+| `RegisterWindowCreatedHandler(...)` | `RegisterCreatedHandler(...)` |
+| `RegisterWindowClosingHandler(...)` | `RegisterClosingHandler(...)` |
+| `RegisterFocusInHandler(...)` | `RegisterActivatedHandler(...)` |
+| `RegisterFocusOutHandler(...)` | `RegisterDeactivatedHandler(...)` |
+| - | `RegisterClosedHandler(...)` |
+| - | `RegisterFullScreenEnteredHandler(...)` |
+| - | `RegisterFullScreenExitedHandler(...)` |
+
+### Window API
+
+`PhotinoWindow` now uses explicit `Show()`-based window creation, a more consistent fluent API, clearer window state operations, platform-specific native handles, and simplified lifecycle events.
+
+| Previous API | New API / direction |
+|---|---|
+| `WaitForClose()` | `PhotinoApplication.Run(window)` for application startup; `PhotinoWindow.Show()` for explicit window creation/showing. |
+| `LoadRawString(...)` | `LoadString(...)` |
+| Windows-only `WindowHandle` | Platform-specific handle: `HWND`, `GtkWidget*`, or `NSWindow*` |
+| No explicit closed state | `IsClosed` |
+| No explicit initialization state | `IsInitialized` |
+
+Notable lifecycle and API changes in PhotinoX:
+
+| Area | API |
+|---|---|
+| Window lifecycle | `Show`, `Activate`, `Maximize`, `Minimize`, `Restore`, `BringToFront` |
+| Chromeless window helpers | `BeginWindowDrag`, `BeginWindowResize` |
+| Window/platform state | `IsInitialized`, `IsClosed`, cross-platform `WindowHandle` |
+
+### Custom schemes and startup content
+
+Custom scheme registration is stricter and more predictable. Scheme names are validated, and reserved schemes such as `http`, `https`, and `file` are rejected.
+
+Startup content selection is explicit: `Load(...)` sets URL content and clears raw string content, while `LoadString(...)` sets raw string content and clears URL content.
+
+| Area | Behavior |
+|---|---|
+| `RegisterCustomSchemeHandler(...)` | Validates scheme names and rejects reserved schemes. |
+| Managed custom scheme responses | Response data is backed by native-owned memory for safer managed/native interop. |
+| `Load(...)` | Sets startup URL content and clears raw string content. |
+| `LoadString(...)` | Sets raw string content and clears startup URL content. |
+
+### Compatibility
+
+These changes may require source-level updates for applications that use older Photino.NET event names, `WaitForClose()`-based startup, focus-in/focus-out event handlers, or old bool-returning close handlers.
+
+### Native runtime foundation
+
+The managed API is built on the updated `PhotinoX.Native` runtime, including safer native memory ownership, clearer platform isolation, improved interop layout, and an application-oriented native message-loop model.
 
 ## Core (ecosystem)
 
