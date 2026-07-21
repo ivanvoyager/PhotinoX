@@ -1291,8 +1291,9 @@ partial class PhotinoWindow
     /// <param name="verbosity">Verbosity as integer</param>
     public PhotinoWindow SetLogVerbosity(int verbosity)
     {
-        Log($".{nameof(SetLogVerbosity)}({verbosity})");
         LogVerbosity = verbosity;
+        if (verbosity > 0)
+            Log($".{nameof(SetLogVerbosity)}({verbosity})");
         return this;
     }
 
