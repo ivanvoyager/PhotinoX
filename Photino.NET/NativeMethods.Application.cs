@@ -5,11 +5,17 @@ using System.Runtime.InteropServices;
 
 namespace Photino.NET;
 
-using InvokeCallback = NativeDelegates.VoidCallback;
 using InvokeStateCallback = NativeDelegates.VoidStateCallback;
 
 internal static partial class NativeMethods
 {
+    private sealed class InvokeState
+    {
+        public required Action Callback;
+        public Exception? Exception;
+    }
+
+    private static readonly InvokeStateCallback s_invokeCallback = OnInvoke;
     private static readonly InvokeStateCallback s_beginInvokeCallback = OnBeginInvoke;
     private static readonly InvokeStateCallback s_sendOrPostCallback = OnSendOrPost;
 
@@ -49,7 +55,7 @@ internal static partial class NativeMethods
     [LibraryImport(DLL_NAME)]
     [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
     [return: MarshalAs(UnmanagedType.I1)]
-    private static partial bool PhotinoApplication_Invoke(InvokeCallback callback);
+    private static partial bool PhotinoApplication_Invoke(InvokeStateCallback callback, IntPtr state);
 
     [LibraryImport(DLL_NAME)]
     [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
@@ -60,26 +66,15 @@ internal static partial class NativeMethods
     {
         ArgumentNullException.ThrowIfNull(callback);
 
-        Exception? exception = null;
-
-        InvokeCallback wrapper = () =>
-        {
-            try
-            {
-                callback();
-            }
-            catch (Exception ex)
-            {
-                exception = ex;
-            }
-        };
+        var state = new InvokeState { Callback = callback };
+        var handle = GCHandle.Alloc(state);
 
         bool result;
 
         Interlocked.Increment(ref s_invokeCount);
         try
         {
-            result = PhotinoApplication_Invoke(wrapper);
+            result = PhotinoApplication_Invoke(s_invokeCallback, GCHandle.ToIntPtr(handle));
         }
         catch
         {
@@ -89,16 +84,35 @@ internal static partial class NativeMethods
         finally
         {
             Interlocked.Decrement(ref s_invokeCount);
-            GC.KeepAlive(wrapper);
+            handle.Free();
         }
 
         if (!result)
             Interlocked.Increment(ref s_invokeFailureCount);
 
-        if (exception is not null)
-            ExceptionDispatchInfo.Capture(exception).Throw();
+        if (state.Exception is not null)
+            ExceptionDispatchInfo.Capture(state.Exception).Throw();
 
         return result;
+    }
+
+    private static void OnInvoke(IntPtr value)
+    {
+        Debug.Assert(value != IntPtr.Zero);
+        if (value == IntPtr.Zero)
+            return;
+
+        var handle = GCHandle.FromIntPtr(value);
+        var state = (InvokeState)handle.Target!;
+
+        try
+        {
+            state.Callback();
+        }
+        catch (Exception ex)
+        {
+            state.Exception = ex;
+        }
     }
 
     internal static bool BeginInvokeNative(Action callback)
