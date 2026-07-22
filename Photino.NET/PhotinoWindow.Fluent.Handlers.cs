@@ -230,6 +230,23 @@ partial class PhotinoWindow
     }
 
     /// <summary>
+    /// Registers user-defined handler methods to receive callbacks when the native window state changes.
+    /// </summary>
+    /// <returns>
+    /// Returns the current <see cref="PhotinoWindow"/> instance.
+    /// </returns>
+    /// <param name="handler">The handler to register.</param>
+    /// <exception cref="InvalidOperationException">
+    /// Thrown when the window has already been closed.
+    /// </exception>
+    public PhotinoWindow RegisterStateChangedHandler(EventHandler<PhotinoWindowStateChangedEventArgs>? handler)
+    {
+        ThrowIfClosed();
+        StateChanged += handler;
+        return this;
+    }
+
+    /// <summary>
     /// Registers user-defined handler methods to receive callbacks from the native window when it sends a message.
     /// </summary>
     /// <returns>

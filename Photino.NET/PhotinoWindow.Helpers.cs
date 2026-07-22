@@ -56,6 +56,12 @@ partial class PhotinoWindow
             ThrowWindowAlreadyInitialized(memberName);
     }
 
+    private static void ThrowIfNotValidWindowState(PhotinoWindowState state)
+    {
+        if (!Enum.IsDefined(state))
+            throw new ArgumentOutOfRangeException(nameof(state), state, "Invalid window state.");
+    }
+
     [DoesNotReturn]
     [MethodImpl(MethodImplOptions.NoInlining)]
     private static void ThrowWindowIsBeingCreated(string? callerName)

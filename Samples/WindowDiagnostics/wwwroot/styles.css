@@ -1,0 +1,230 @@
+:root {
+    color-scheme: light dark;
+    font-family: Segoe UI, system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+    background: #111827;
+    color: #e5e7eb;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    height: 100vh;
+    overflow: hidden;
+    background:
+        radial-gradient(circle at top left, rgba(59, 130, 246, 0.22), transparent 30rem),
+        radial-gradient(circle at bottom right, rgba(16, 185, 129, 0.16), transparent 28rem),
+        #111827;
+}
+
+header {
+    height: 5.2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 1rem;
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+    background: rgba(17, 24, 39, 0.78);
+}
+
+h1,
+h2,
+p {
+    margin: 0;
+}
+
+h1 {
+    font-size: 1.45rem;
+}
+
+h2 {
+    margin-bottom: 0.7rem;
+    font-size: 0.98rem;
+}
+
+header p {
+    margin-top: 0.3rem;
+    color: #9ca3af;
+}
+
+.window-info {
+    padding: 0.45rem 0.7rem;
+    border-radius: 0.5rem;
+    background: rgba(31, 41, 55, 0.95);
+    color: #bfdbfe;
+    font-family: Consolas, Menlo, monospace;
+    font-size: 0.84rem;
+    white-space: nowrap;
+}
+
+main {
+    height: calc(100vh - 5.2rem);
+    display: grid;
+    grid-template-columns: 24rem minmax(0, 1fr);
+    gap: 0.85rem;
+    padding: 0.85rem;
+    overflow: hidden;
+}
+
+.controls {
+    min-width: 0;
+    overflow: auto;
+    padding-right: 0.15rem;
+}
+
+.panel {
+    padding: 0.9rem;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 0.85rem;
+    background: rgba(31, 41, 55, 0.9);
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.18);
+}
+
+.controls .panel {
+    margin-bottom: 0.85rem;
+}
+
+.toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.45rem;
+}
+
+button {
+    border: 0;
+    border-radius: 0.48rem;
+    padding: 0.5rem 0.62rem;
+    background: #2563eb;
+    color: white;
+    font: inherit;
+    font-size: 0.86rem;
+    cursor: pointer;
+}
+
+button:hover {
+    background: #1d4ed8;
+}
+
+button.danger {
+    background: #dc2626;
+}
+
+button.danger:hover {
+    background: #b91c1c;
+}
+
+.checkbox-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0.38rem;
+    margin-top: 0.75rem;
+}
+
+.event-option,
+.inline-check {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    color: #d1d5db;
+    font-size: 0.88rem;
+}
+
+.inline-check + .inline-check {
+    margin-top: 0.55rem;
+}
+
+.button-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.45rem;
+}
+
+.state-list {
+    display: grid;
+    grid-template-columns: max-content minmax(0, 1fr);
+    gap: 0.35rem 0.75rem;
+    margin: 0;
+    font-family: Consolas, Menlo, monospace;
+    font-size: 0.82rem;
+}
+
+.state-list dt {
+    color: #9ca3af;
+}
+
+.state-list dd {
+    margin: 0;
+    color: #bbf7d0;
+    min-width: 0;
+    word-break: break-word;
+}
+
+.log-panel {
+    min-width: 0;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.log-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 0.7rem;
+}
+
+.log-header h2 {
+    margin-bottom: 0;
+}
+
+pre {
+    margin: 0;
+    font-family: Consolas, Menlo, monospace;
+    font-size: 0.82rem;
+    line-height: 1.45;
+}
+
+#log-output {
+    flex: 1;
+    min-height: 0;
+    overflow: auto;
+    white-space: pre-wrap;
+    word-break: break-word;
+    padding: 0.75rem;
+    border-radius: 0.65rem;
+    background: rgba(17, 24, 39, 0.85);
+    color: #dbeafe;
+}
+
+@media (max-width: 920px) {
+    body {
+        overflow: auto;
+    }
+
+    header {
+        height: auto;
+        flex-direction: column;
+    }
+
+    main {
+        height: auto;
+        grid-template-columns: 1fr;
+        overflow: visible;
+    }
+
+    .controls {
+        overflow: visible;
+    }
+
+    .log-panel {
+        min-height: 28rem;
+    }
+
+    .window-info {
+        white-space: normal;
+    }
+}

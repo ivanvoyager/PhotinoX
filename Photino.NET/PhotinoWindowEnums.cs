@@ -46,3 +46,11 @@ public enum PhotinoWindowEdge
     /// </summary>
     BottomRight
 }
+
+public enum PhotinoWindowState
+{
+    Normal,
+    Minimized,
+    Maximized,
+    FullScreen,
+}

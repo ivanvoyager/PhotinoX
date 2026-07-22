@@ -28,9 +28,7 @@ partial class PhotinoWindow
 
         if (_nativeInstance == IntPtr.Zero)
         {
-            _startupParameters.Maximized = true;
-            _startupParameters.Minimized = false;
-            _startupParameters.FullScreen = false;
+            _startupParameters.WindowState = PhotinoWindowState.Maximized;
         }
         else
         {
@@ -59,9 +57,7 @@ partial class PhotinoWindow
 
         if (_nativeInstance == IntPtr.Zero)
         {
-            _startupParameters.Minimized = true;
-            _startupParameters.Maximized = false;
-            _startupParameters.FullScreen = false;
+            _startupParameters.WindowState = PhotinoWindowState.Minimized;
         }
         else
         {
@@ -87,9 +83,7 @@ partial class PhotinoWindow
 
         if (_nativeInstance == IntPtr.Zero)
         {
-            _startupParameters.Minimized = false;
-            _startupParameters.Maximized = false;
-            _startupParameters.FullScreen = false;
+            _startupParameters.WindowState = PhotinoWindowState.Normal;
         }
         else
         {
@@ -119,9 +113,7 @@ partial class PhotinoWindow
 
         Show();
 
-        byte minimized = 0;
-        Invoke(() => Photino_GetMinimized(_nativeInstance, out minimized));
-        if (minimized != 0)
+        if (WindowState == PhotinoWindowState.Minimized)
             Restore();
 
         Activate();
@@ -569,11 +561,33 @@ partial class PhotinoWindow
     #region Window state
 
     /// <summary>
+    /// Sets the native window state.
+    /// </summary>
+    /// <param name="state">The native window state.</param>
+    /// <returns>
+    /// Returns the current <see cref="PhotinoWindow"/> instance.
+    /// </returns>
+    /// <exception cref="ArgumentOutOfRangeException">
+    /// Thrown when <paramref name="state"/> is not a defined <see cref="PhotinoWindowState"/> value.
+    /// </exception>
+    /// <exception cref="InvalidOperationException">
+    /// Thrown when the window has already been closed.
+    /// </exception>
+    public PhotinoWindow SetWindowState(PhotinoWindowState state)
+    {
+        Log($".{nameof(SetWindowState)}({state})");
+        ThrowIfClosed();
+
+        WindowState = state;
+
+        return this;
+    }
+
+    /// <summary>
     /// Sets whether the native window should be fullscreen.
     /// </summary>
     /// <remarks>
     /// If called before native window initialization, the window will be fullscreen on startup.
-    /// Fullscreen is incompatible with minimized and maximized startup states.
     /// </remarks>
     /// <param name="fullScreen">
     /// <see langword="true"/> to enter fullscreen mode; otherwise, <see langword="false"/>.
@@ -591,12 +605,10 @@ partial class PhotinoWindow
 
         if (_nativeInstance == IntPtr.Zero)
         {
-            _startupParameters.FullScreen = fullScreen;
             if (fullScreen)
-            {
-                _startupParameters.Maximized = false;
-                _startupParameters.Minimized = false;
-            }
+                _startupParameters.WindowState = PhotinoWindowState.FullScreen;
+            else if (_startupParameters.WindowState == PhotinoWindowState.FullScreen)
+                _startupParameters.WindowState = PhotinoWindowState.Normal;
         }
         else
         {
@@ -623,9 +635,14 @@ partial class PhotinoWindow
             return Maximize();
 
         if (_nativeInstance == IntPtr.Zero)
-            _startupParameters.Maximized = false;
+        {
+            if (_startupParameters.WindowState == PhotinoWindowState.Maximized)
+                _startupParameters.WindowState = PhotinoWindowState.Normal;
+        }
         else
+        {
             Invoke(() => Photino_SetMaximized(_nativeInstance, 0));
+        }
 
         return this;
     }
@@ -647,9 +664,14 @@ partial class PhotinoWindow
             return Minimize();
 
         if (_nativeInstance == IntPtr.Zero)
-            _startupParameters.Minimized = false;
+        {
+            if (_startupParameters.WindowState == PhotinoWindowState.Minimized)
+                _startupParameters.WindowState = PhotinoWindowState.Normal;
+        }
         else
+        {
             Invoke(() => Photino_SetMinimized(_nativeInstance, 0));
+        }
 
         return this;
     }

@@ -50,7 +50,7 @@ return app.Run(window);
 
 ### Window events
 
-Window event names are simplified to remove redundant `Window` prefixes and align better with common .NET event naming. Closing now uses standard `CancelEventArgs`, focus events are exposed as `Activated` and `Deactivated`, and additional closed/fullscreen lifecycle events are available.
+Window event names are simplified to remove redundant `Window` prefixes and align better with common .NET event naming. Closing now uses standard `CancelEventArgs`, focus events are exposed as `Activated` and `Deactivated`, and window state events are driven by actual native state transitions instead of transient resize messages.
 
 | Photino.NET API | New API |
 |---|---|
@@ -67,6 +67,7 @@ Window event names are simplified to remove redundant `Window` prefixes and alig
 | `WindowMinimized` | `Minimized` |
 | - | `FullScreenEntered` |
 | - | `FullScreenExited` |
+| - | `StateChanged` |
 
 `Closing` now uses `EventHandler<CancelEventArgs>`; set `CancelEventArgs.Cancel` to cancel the close operation.
 
@@ -80,10 +81,11 @@ Window event names are simplified to remove redundant `Window` prefixes and alig
 | - | `RegisterClosedHandler(...)` |
 | - | `RegisterFullScreenEnteredHandler(...)` |
 | - | `RegisterFullScreenExitedHandler(...)` |
+| - | `RegisterStateChangedHandler(...)` |
 
 ### Window API
 
-`PhotinoWindow` now uses explicit `Show()`-based window creation, a more consistent fluent API, clearer window state operations, platform-specific native handles, and simplified lifecycle events.
+`PhotinoWindow` now uses explicit `Show()`-based window creation, a more consistent fluent API, unified `WindowState` tracking, clearer window state operations, platform-specific native handles, and simplified lifecycle events.
 
 | Previous API | New API / direction |
 |---|---|
@@ -92,14 +94,24 @@ Window event names are simplified to remove redundant `Window` prefixes and alig
 | Windows-only `WindowHandle` | Platform-specific handle: `HWND`, `GtkWidget*`, or `NSWindow*` |
 | No explicit closed state | `IsClosed` |
 | No explicit initialization state | `IsInitialized` |
+| `FullScreen`, `Maximized`, and `Minimized` properties | Unified native-driven `WindowState` with `Normal`, `Minimized`, `Maximized`, and `FullScreen` |
 
 Notable lifecycle and API changes in PhotinoX:
 
 | Area | API |
 |---|---|
-| Window lifecycle | `Show`, `Activate`, `Maximize`, `Minimize`, `Restore`, `BringToFront` |
+| Window lifecycle | `Show`, `Activate`, `BringToFront` |
+| Window state model | `WindowState`, `StateChanged` |
+| Window state commands | `Maximize`, `Minimize`, `Restore`, `SetWindowState` |
+| Existing state helpers | `SetFullScreen`, `SetMaximized`, `SetMinimized` |
 | Chromeless window helpers | `BeginWindowDrag`, `BeginWindowResize` |
 | Window/platform state | `IsInitialized`, `IsClosed`, cross-platform `WindowHandle` |
+
+`WindowState` replaces the previous `FullScreen`, `Maximized`, and `Minimized` properties with a single cross-platform state model. It supports `Normal`, `Minimized`, `Maximized`, and `FullScreen`, and is also used for startup state configuration.
+
+Window state tracking is native-driven: `StateChanged`, `Maximized`, `Minimized`, `Restored`, `FullScreenEntered`, and `FullScreenExited` are raised from actual state transitions, not from transient resize messages. This avoids duplicate or misleading `Restored` notifications during operations such as resizing or minimizing from fullscreen.
+
+`Maximize()`, `Minimize()`, and `Restore()` are new command-style APIs. Existing helpers such as `SetFullScreen(...)`, `SetMaximized(...)`, and `SetMinimized(...)` remain available and update the same underlying native state.
 
 ### Custom schemes and startup content
 
@@ -116,11 +128,13 @@ Startup content selection is explicit: `Load(...)` sets URL content and clears r
 
 ### Compatibility
 
-These changes may require source-level updates for applications that use older Photino.NET event names, `WaitForClose()`-based startup, focus-in/focus-out event handlers, or old bool-returning close handlers.
+These changes may require source-level updates for applications that use older Photino.NET event names, `WaitForClose()`-based startup, focus-in/focus-out event handlers, old bool-returning close handlers, the previous separate fullscreen/maximized/minimized state model now replaced by `WindowState`, or code that relied on duplicate `Restored` notifications from transient native resize messages.
 
 ### Native runtime foundation
 
-The managed API is built on the updated `PhotinoX.Native` runtime, including safer native memory ownership, clearer platform isolation, improved interop layout, and an application-oriented native message-loop model.
+The managed API is built on the updated `PhotinoX.Native` runtime, including safer native memory ownership, clearer platform isolation, improved interop layout, an application-oriented native message-loop model, and unified native window state tracking.
+
+On Windows, fullscreen is handled as a native restore-aware state transition: the previous window style and placement are preserved before entering fullscreen and restored when leaving fullscreen. Startup state is synchronized without raising user callbacks before window creation completes.
 
 ## Core (ecosystem)
 

@@ -3,8 +3,6 @@ using System.Runtime.InteropServices;
 
 namespace Photino.NET;
 
-using InvokeCallback = NativeDelegates.VoidCallback;
-
 internal static partial class NativeMethods
 {
     private const string DLL_NAME = "PhotinoX.Native";

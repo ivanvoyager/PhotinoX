@@ -1,4 +1,7 @@
 <Solution>
+  <Folder Name="/Samples/">
+    <Project Path="Samples/WindowDiagnostics/WindowDiagnostics.csproj" />
+  </Folder>
   <Folder Name="/Solution Items/">
     <File Path="Directory.Build.props" />
     <File Path="Directory.Build.targets" />
