@@ -160,6 +160,31 @@ public sealed partial class PhotinoDispatcher
     }
 
     /// <summary>
+    /// Executes the specified <see cref="SendOrPostCallback"/> on the dispatcher thread.
+    /// </summary>
+    /// <param name="callback">The callback to execute.</param>
+    /// <param name="state">The object passed to the callback.</param>
+    /// <returns><c>true</c> if the callback was executed; otherwise, <c>false</c>.</returns>
+    /// <remarks>
+    /// Exceptions thrown by <paramref name="callback"/> are propagated to the caller.
+    /// Dispatcher scheduling failures are reported through diagnostics and dispatcher statistics.
+    /// </remarks>
+    public bool Invoke(SendOrPostCallback callback, object? state)
+    {
+        ArgumentNullException.ThrowIfNull(callback);
+
+        if (CheckAccess())
+        {
+            callback(state);
+            return true;
+        }
+
+        bool success = InvokeNative(callback, state);
+        Debug.Assert(success);
+        return success;
+    }
+
+    /// <summary>
     /// Asynchronously executes the specified <see cref="SendOrPostCallback"/> on the dispatcher thread.
     /// </summary>
     /// <param name="callback">The callback to execute.</param>
