@@ -34,7 +34,7 @@ PhotinoX differs from the original Photino.NET project in several managed API ar
 | `PhotinoWindow.WaitForClose()` creates the native window and starts the message loop. | `PhotinoApplication.Run(window)` owns application lifetime and message-loop execution. |
 | Window creation and message-loop state are controlled from `PhotinoWindow`. | `PhotinoApplication.Run(window)` shows the main window; explicit window creation/showing is available through `PhotinoWindow.Show()`. |
 | Window lifetime is centered around individual `PhotinoWindow` instances. | `PhotinoApplication` tracks open windows through `MainWindow` and `Windows`. |
-| `PhotinoWindow.Invoke(...)` dispatches through native window-level invoke helpers. | `PhotinoWindow.Invoke(...)` dispatches through `PhotinoApplication.Current.Dispatcher`. |
+| `PhotinoWindow.Invoke(...)` dispatches through native window-level invoke helpers. | UI-thread dispatching is centralized through `PhotinoApplication.Current.Dispatcher`, including `CheckAccess`, `Invoke`, `TryInvoke`, `BeginInvoke`, and `InvokeAsync`. |
 | Shutdown behavior is implicit around the native message loop. | Shutdown behavior is controlled by `PhotinoShutdownMode` and `PhotinoApplication.Shutdown(...)`. |
 
 ```csharp
@@ -47,6 +47,8 @@ var window = new PhotinoWindow()
 
 return app.Run(window);
 ```
+
+`PhotinoDispatcher` provides application-level UI-thread dispatching. It supports synchronous dispatch through `Invoke(...)` / `TryInvoke(...)`, asynchronous fire-and-forget dispatch through `BeginInvoke(...)`, task-based dispatch through `InvokeAsync(...)`, dispatcher access checks through `CheckAccess()` / `VerifyAccess()`, and `UnhandledException` notifications for exceptions raised by asynchronous dispatcher callbacks.
 
 ### Window events
 
