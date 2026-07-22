@@ -41,6 +41,7 @@ public partial class PhotinoWindow
         Zoom = 100,
         MaxHeight = int.MaxValue,
         MaxWidth = int.MaxValue,
+        WindowState = PhotinoWindowState.Normal
     };
 
     private const string DefaultTitle = "PhotinoX";
@@ -538,40 +539,30 @@ public partial class PhotinoWindow
         }
     }
 
-
     /// <summary>
-    /// This property returns or sets the fullscreen status of the window.
-    /// When set to true, the native window will cover the entire screen, similar to kiosk mode.
-    /// By default, this is set to false.
+    /// Gets or sets the native window state.
     /// </summary>
-    public bool FullScreen // TODO remove
+    public PhotinoWindowState WindowState
     {
         get
         {
             if (_nativeInstance == IntPtr.Zero)
-                return _startupParameters.FullScreen;
+                return _startupParameters.WindowState;
 
-            byte fullScreen = 0;
-            Invoke(() => Photino_GetFullScreen(_nativeInstance, out fullScreen));
-            return fullScreen != 0;
+            PhotinoWindowState state = default;
+            Invoke(() => Photino_GetWindowState(_nativeInstance, out state));
+            return state;
         }
         set
         {
             ThrowIfClosed();
 
+            ThrowIfNotValidWindowState(value);
+
             if (_nativeInstance == IntPtr.Zero)
-            {
-                _startupParameters.FullScreen = value;
-                if (value)
-                {
-                    _startupParameters.Maximized = false;
-                    _startupParameters.Minimized = false;
-                }
-            }
+                _startupParameters.WindowState = value;
             else
-            {
-                Invoke(() => Photino_SetFullScreen(_nativeInstance, (byte)(value ? 1 : 0)));
-            }
+                Invoke(() => Photino_SetWindowState(_nativeInstance, value));
         }
     }
 
@@ -1289,6 +1280,7 @@ public partial class PhotinoWindow
         _startupParameters.CustomSchemeHandler = OnCustomScheme;
         _startupParameters.ClosedHandler = OnClosed;
         _startupParameters.FullScreenChangedHandler = OnFullScreenChanged;
+        _startupParameters.StateChangedHandler = OnStateChanged;
     }
 
     /// <summary>

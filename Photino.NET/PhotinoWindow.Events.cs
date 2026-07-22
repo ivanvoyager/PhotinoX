@@ -207,6 +207,22 @@ public partial class PhotinoWindow
     }
 
     /// <summary>
+    /// Occurs when the native window state changes.
+    /// </summary>
+    public event EventHandler<PhotinoWindowStateChangedEventArgs>? StateChanged;
+
+    /// <summary>
+    /// Invokes registered handlers when the native window state changes.
+    /// </summary>
+    /// <param name="oldState">The previous native window state.</param>
+    /// <param name="newState">The new native window state.</param>
+    internal void OnStateChanged(PhotinoWindowState oldState, PhotinoWindowState newState)
+    {
+        WindowState = newState;
+        StateChanged?.Invoke(this, new PhotinoWindowStateChangedEventArgs(oldState, newState));
+    }
+
+    /// <summary>
     /// Occurs when the native window sends a message to the host application.
     /// </summary>
     public event EventHandler<string>? WebMessageReceived;

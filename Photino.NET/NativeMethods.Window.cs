@@ -147,6 +147,15 @@ internal static partial class NativeMethods
 
     [LibraryImport(DLL_NAME)]
     [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
+    internal static partial void Photino_GetWindowState(IntPtr instance, out PhotinoWindowState state);
+
+    [LibraryImport(DLL_NAME)]
+    [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
+    internal static partial void Photino_SetWindowState(IntPtr instance, PhotinoWindowState state);
+
+
+    [LibraryImport(DLL_NAME)]
+    [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
     internal static partial void Photino_GetResizable(IntPtr instance, out byte resizable);
 
     [LibraryImport(DLL_NAME)]

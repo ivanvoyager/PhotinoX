@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>PhotinoX Window Diagnostics</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<header>
+    <div>
+        <h1>PhotinoX Window Diagnostics</h1>
+        <p>Window event and state diagnostics.</p>
+    </div>
+    <div id="window-info" class="window-info">Waiting for host...</div>
+</header>
+
+<main>
+    <aside class="controls">
+        <section class="panel">
+            <h2>Event filters</h2>
+            <div class="toolbar">
+                <button id="select-all-events" type="button">Select all</button>
+                <button id="clear-all-events" type="button">Clear all</button>
+            </div>
+            <div id="event-options" class="checkbox-grid"></div>
+        </section>
+
+        <section class="panel">
+            <h2>Options</h2>
+            <label class="inline-check">
+                <input id="cancel-closing" type="checkbox">
+                Cancel close in Closing handler
+            </label>
+            <label class="inline-check">
+                <input id="log-actions" type="checkbox">
+                Log action requests
+            </label>
+        </section>
+
+        <section class="panel">
+            <h2>Current window</h2>
+            <div class="button-grid">
+                <button type="button" data-target="self" data-action="show">Show</button>
+                <button type="button" data-target="self" data-action="activate">Activate</button>
+                <button type="button" data-target="self" data-action="bringToFront">Bring to front</button>
+                <button type="button" data-target="self" data-action="maximize">Maximize</button>
+                <button type="button" data-target="self" data-action="minimize">Minimize</button>
+                <button type="button" data-target="self" data-action="restore">Restore</button>
+                <button type="button" data-target="self" data-action="toggleFullScreen">Toggle fullscreen</button>
+                <button type="button" data-target="self" data-action="stateSequence">State sequence</button>
+                <button type="button" data-target="self" data-action="close" class="danger">Close</button>
+            </div>
+        </section>
+
+        <section class="panel">
+            <h2>Child window</h2>
+            <div class="button-grid">
+                <button type="button" data-target="child" data-action="show">Show</button>
+                <button type="button" data-target="child" data-action="activate">Activate</button>
+                <button type="button" data-target="child" data-action="bringToFront">Bring to front</button>
+                <button type="button" data-target="child" data-action="maximize">Maximize</button>
+                <button type="button" data-target="child" data-action="minimize">Minimize</button>
+                <button type="button" data-target="child" data-action="restore">Restore</button>
+                <button type="button" data-target="child" data-action="toggleFullScreen">Toggle fullscreen</button>
+                <button type="button" data-target="child" data-action="stateSequence">State sequence</button>
+                <button type="button" data-target="child" data-action="close" class="danger">Close</button>
+            </div>
+        </section>
+
+        <section class="panel state-panel">
+            <h2>State</h2>
+            <dl id="state-output" class="state-list"></dl>
+        </section>
+    </aside>
+
+    <section class="panel log-panel">
+        <div class="log-header">
+            <h2>Log</h2>
+            <div class="toolbar">
+                <button id="clear-log" type="button">Clear</button>
+                <button id="copy-log" type="button">Copy</button>
+            </div>
+        </div>
+        <pre id="log-output"></pre>
+    </section>
+</main>
+
+<script src="app.js"></script>
+</body>
+</html>
