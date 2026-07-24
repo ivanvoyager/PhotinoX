@@ -5,8 +5,8 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <Description>Lightweight .NET wrapper for native OS WebView windows (Windows/WebView2, macOS/WKWebView, Linux/WebKitGTK 4.1). 
-Maintained fork of Photino.NET.</Description>
+    <Description>Lightweight .NET wrapper for native OS WebView windows (Windows/WebView2, macOS/WKWebView, Linux/WebKitGTK 4.1).
+      Maintained fork of Photino.NET.</Description>
     <RootNamespace>Photino.NET</RootNamespace>
     <GenerateDocumentationFile>True</GenerateDocumentationFile>
     <NoWarn>$(NoWarn);1591;NETSDK1233</NoWarn>
@@ -17,7 +17,13 @@ Maintained fork of Photino.NET.</Description>
     <PackageReference Include="PhotinoX.Native" Version="4.3.2" />
   </ItemGroup>
 
-  <PropertyGroup Condition="'$(PhotinoX_UseLocalProjects)' == 'true' AND '$(OS)' == 'Windows_NT'">
+  <PropertyGroup Condition="'$(PhotinoX_UseLocalProjects)' == 'true'">
+    <OSPlatform Condition="$([MSBuild]::IsOSPlatform('Windows'))">Windows</OSPlatform>
+    <OSPlatform Condition="$([MSBuild]::IsOSPlatform('OSX'))">OSX</OSPlatform>
+    <OSPlatform Condition="$([MSBuild]::IsOSPlatform('Linux'))">Linux</OSPlatform>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(PhotinoX_UseLocalProjects)' == 'true' AND '$(OSPlatform)' == 'Windows'">
     <NativePlatform Condition="'$(Platform)' == 'x64'">x64</NativePlatform>
     <NativePlatform Condition="'$(Platform)' == 'ARM64'">ARM64</NativePlatform>
     <NativePlatform Condition="'$(Platform)' == 'AnyCPU'">x64</NativePlatform>
@@ -28,16 +34,71 @@ Maintained fork of Photino.NET.</Description>
     <NativeOutputDir>..\..\PhotinoX.Native\Photino.Native\$(NativePlatform)\$(Configuration)\</NativeOutputDir>
   </PropertyGroup>
 
-  <ItemGroup Condition="'$(PhotinoX_UseLocalProjects)' == 'true' AND '$(OS)' == 'Windows_NT' AND '$(NativePlatform)' != ''">
-    <None Include="$(NativeOutputDir)PhotinoX.Native.dll" Link="PhotinoX.Native.dll" TargetPath="PhotinoX.Native.dll" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" Condition="Exists('$(NativeOutputDir)PhotinoX.Native.dll')">
+  <ItemGroup Condition="'$(PhotinoX_UseLocalProjects)' == 'true' AND '$(OSPlatform)' == 'Windows' AND '$(NativePlatform)' != ''">
+    <None Include="$(NativeOutputDir)PhotinoX.Native.dll"
+          Link="PhotinoX.Native.dll"
+          TargetPath="PhotinoX.Native.dll"
+          CopyToOutputDirectory="PreserveNewest"
+          CopyToPublishDirectory="PreserveNewest"
+          Condition="Exists('$(NativeOutputDir)PhotinoX.Native.dll')">
       <Visible>false</Visible>
     </None>
 
-    <None Include="$(NativeOutputDir)PhotinoX.Native.pdb" Link="PhotinoX.Native.pdb" TargetPath="PhotinoX.Native.pdb" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" Condition="'$(Configuration)' == 'Debug' AND Exists('$(NativeOutputDir)PhotinoX.Native.pdb')">
+    <None Include="$(NativeOutputDir)PhotinoX.Native.pdb"
+          Link="PhotinoX.Native.pdb"
+          TargetPath="PhotinoX.Native.pdb"
+          CopyToOutputDirectory="PreserveNewest"
+          CopyToPublishDirectory="PreserveNewest"
+          Condition="'$(Configuration)' == 'Debug' AND Exists('$(NativeOutputDir)PhotinoX.Native.pdb')">
       <Visible>false</Visible>
     </None>
 
-    <None Include="$(NativeOutputDir)runtimes\win-$(NativeRidArch)\native\WebView2Loader.dll" Link="WebView2Loader.dll" TargetPath="WebView2Loader.dll" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" Condition="Exists('$(NativeOutputDir)runtimes\win-$(NativeRidArch)\native\WebView2Loader.dll')">
+    <None Include="$(NativeOutputDir)runtimes\win-$(NativeRidArch)\native\WebView2Loader.dll"
+          Link="WebView2Loader.dll"
+          TargetPath="WebView2Loader.dll"
+          CopyToOutputDirectory="PreserveNewest"
+          CopyToPublishDirectory="PreserveNewest"
+          Condition="Exists('$(NativeOutputDir)runtimes\win-$(NativeRidArch)\native\WebView2Loader.dll')">
+      <Visible>false</Visible>
+    </None>
+  </ItemGroup>
+
+  <PropertyGroup Condition="'$(PhotinoX_UseLocalProjects)' == 'true' AND '$(OSPlatform)' == 'OSX'">
+    <NativeOutputDir>../../PhotinoX.Native/lib/x64/</NativeOutputDir>
+  </PropertyGroup>
+
+  <ItemGroup Condition="'$(PhotinoX_UseLocalProjects)' == 'true' AND '$(OSPlatform)' == 'OSX'">
+    <None Include="$(NativeOutputDir)PhotinoX.Native.dylib"
+          Link="PhotinoX.Native.dylib"
+          TargetPath="PhotinoX.Native.dylib"
+          CopyToOutputDirectory="PreserveNewest"
+          CopyToPublishDirectory="PreserveNewest"
+          Condition="Exists('$(NativeOutputDir)PhotinoX.Native.dylib')">
+      <Visible>false</Visible>
+    </None>
+  </ItemGroup>
+
+  <PropertyGroup Condition="'$(PhotinoX_UseLocalProjects)' == 'true' AND '$(OSPlatform)' == 'Linux'">
+    <HostArchitecture>$([System.Runtime.InteropServices.RuntimeInformation]::OSArchitecture)</HostArchitecture>
+
+    <NativePlatform Condition="'$(Platform)' == 'x64'">x64</NativePlatform>
+    <NativePlatform Condition="'$(Platform)' == 'ARM64'">arm64</NativePlatform>
+
+    <NativePlatform Condition="'$(Platform)' == 'AnyCPU' AND '$(HostArchitecture)' == 'Arm64'">arm64</NativePlatform>
+    <NativePlatform Condition="'$(Platform)' == 'AnyCPU' AND '$(HostArchitecture)' == 'X64'">x64</NativePlatform>
+
+    <NativePlatform Condition="'$(Platform)' == 'AnyCPU' AND '$(NativePlatform)' == ''">x64</NativePlatform>
+
+    <NativeOutputDir>../../PhotinoX.Native/lib/$(NativePlatform)/</NativeOutputDir>
+  </PropertyGroup>
+
+  <ItemGroup Condition="'$(PhotinoX_UseLocalProjects)' == 'true' AND '$(OSPlatform)' == 'Linux' AND '$(NativePlatform)' != ''">
+    <None Include="$(NativeOutputDir)PhotinoX.Native.so"
+          Link="PhotinoX.Native.so"
+          TargetPath="PhotinoX.Native.so"
+          CopyToOutputDirectory="PreserveNewest"
+          CopyToPublishDirectory="PreserveNewest"
+          Condition="Exists('$(NativeOutputDir)PhotinoX.Native.so')">
       <Visible>false</Visible>
     </None>
   </ItemGroup>
