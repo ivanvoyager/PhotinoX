@@ -138,6 +138,8 @@ The managed API is built on the updated `PhotinoX.Native` runtime, including saf
 
 On Windows, fullscreen is handled as a native restore-aware state transition: the previous window style and placement are preserved before entering fullscreen and restored when leaving fullscreen. Startup state is synchronized without raising user callbacks before window creation completes.
 
+On Linux Wayland, top-level window position is compositor-controlled. Move notifications and position restore are best-effort; state and size tracking remain supported.
+
 ## Core (ecosystem)
 
 - [**PhotinoX.Native**](https://github.com/ivanvoyager/PhotinoX.Native) - native binaries for Windows/macOS/Linux.

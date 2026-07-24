@@ -212,7 +212,7 @@ internal static class Program
                 return;
 
             var context = string.Equals(target, "child", StringComparison.OrdinalIgnoreCase)
-                ? GetOrCreateChild(showIfCreated: false)
+                ? GetOrCreateChild()
                 : this;
 
             if (context is null)
@@ -232,7 +232,7 @@ internal static class Program
                 switch (action)
                 {
                     case "show":
-                        GetOrCreateChild(showIfCreated: true);
+                        context.Window.Show();
                         break;
 
                     case "activate":
@@ -280,7 +280,7 @@ internal static class Program
             context.SendState();
         }
 
-        private DiagnosticWindow? GetOrCreateChild(bool showIfCreated)
+        private DiagnosticWindow? GetOrCreateChild(bool showIfCreated = false)
         {
             if (_child is { Window.IsClosed: false })
             {
