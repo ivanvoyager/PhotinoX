@@ -218,7 +218,6 @@ public partial class PhotinoWindow
     /// <param name="newState">The new native window state.</param>
     internal void OnStateChanged(PhotinoWindowState oldState, PhotinoWindowState newState)
     {
-        WindowState = newState;
         StateChanged?.Invoke(this, new PhotinoWindowStateChangedEventArgs(oldState, newState));
     }
 
