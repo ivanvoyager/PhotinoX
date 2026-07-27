@@ -487,6 +487,49 @@ public sealed partial class PhotinoDispatcher
     }
 
     /// <summary>
+    /// Asynchronously executes the specified <see cref="Action"/> on the dispatcher thread.
+    /// </summary>
+    /// <param name="callback">The action to execute.</param>
+    /// <returns>
+    /// A <see cref="Task"/> that completes when the action has finished executing, or faults if the action cannot be scheduled.
+    /// </returns>
+    /// <exception cref="ArgumentNullException">
+    /// Thrown when <paramref name="callback"/> is <c>null</c>.
+    /// </exception>
+    /// <remarks>
+    /// Exceptions thrown by the callback are captured by the returned task.
+    /// </remarks>
+    public Task InvokeAsync(Action callback)
+    {
+        ArgumentNullException.ThrowIfNull(callback);
+
+        var invokeState = new InvokeAsyncActionState
+        {
+            Completion = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously),
+            Callback = callback
+        };
+
+        bool success = BeginInvokeNative(static value =>
+        {
+            var state = (InvokeAsyncActionState)value!;
+            try
+            {
+                state.Callback();
+                state.Completion.SetResult();
+            }
+            catch (Exception ex)
+            {
+                state.Completion.SetException(ex);
+            }
+        }, invokeState);
+        Debug.Assert(success);
+        if (!success)
+            invokeState.Completion.SetException(CreateFailedException());
+
+        return invokeState.Completion.Task;
+    }
+
+    /// <summary>
     /// Asynchronously executes the specified <see cref="SendOrPostCallback"/> on the dispatcher thread.
     /// </summary>
     /// <param name="callback">The callback to execute.</param>
@@ -532,34 +575,38 @@ public sealed partial class PhotinoDispatcher
     }
 
     /// <summary>
-    /// Asynchronously executes the specified <see cref="Action"/> on the dispatcher thread.
+    /// Asynchronously executes the specified state-based <see cref="Action{T}"/> on the dispatcher thread.
     /// </summary>
+    /// <typeparam name="TState">The callback state type.</typeparam>
     /// <param name="callback">The action to execute.</param>
+    /// <param name="state">The state passed to <paramref name="callback"/>.</param>
     /// <returns>
-    /// A <see cref="Task"/> that completes when the action has finished executing, or faults if the action cannot be scheduled.
+    /// A <see cref="Task"/> that completes when the action has finished executing, or faults if the callback cannot be scheduled.
     /// </returns>
     /// <exception cref="ArgumentNullException">
     /// Thrown when <paramref name="callback"/> is <c>null</c>.
     /// </exception>
     /// <remarks>
+    /// This overload allows callers to pass state explicitly and avoid closure allocations.
     /// Exceptions thrown by the callback are captured by the returned task.
     /// </remarks>
-    public Task InvokeAsync(Action callback)
+    public Task InvokeAsync<TState>(Action<TState> callback, TState state)
     {
         ArgumentNullException.ThrowIfNull(callback);
 
-        var invokeState = new InvokeAsyncActionState
+        var invokeState = new InvokeAsyncActionState<TState>
         {
             Completion = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously),
-            Callback = callback
+            Callback = callback,
+            State = state
         };
 
         bool success = BeginInvokeNative(static value =>
         {
-            var state = (InvokeAsyncActionState)value!;
+            var state = (InvokeAsyncActionState<TState>)value!;
             try
             {
-                state.Callback();
+                state.Callback(state.State);
                 state.Completion.SetResult();
             }
             catch (Exception ex)
@@ -604,6 +651,54 @@ public sealed partial class PhotinoDispatcher
             try
             {
                 TResult result = state.Callback();
+                state.Completion.SetResult(result);
+            }
+            catch (Exception ex)
+            {
+                state.Completion.SetException(ex);
+            }
+        }, invokeState);
+        Debug.Assert(success);
+        if (!success)
+            invokeState.Completion.SetException(CreateFailedException());
+
+        return invokeState.Completion.Task;
+    }
+
+    /// <summary>
+    /// Asynchronously executes the specified state-based <see cref="Func{T,TResult}"/> on the dispatcher thread.
+    /// </summary>
+    /// <typeparam name="TState">The callback state type.</typeparam>
+    /// <typeparam name="TResult">The result type.</typeparam>
+    /// <param name="callback">The function to execute.</param>
+    /// <param name="state">The state passed to <paramref name="callback"/>.</param>
+    /// <returns>
+    /// A <see cref="Task{TResult}"/> that completes when the function has finished executing, or faults if the callback cannot be scheduled.
+    /// </returns>
+    /// <exception cref="ArgumentNullException">
+    /// Thrown when <paramref name="callback"/> is <c>null</c>.
+    /// </exception>
+    /// <remarks>
+    /// This overload allows callers to pass state explicitly and avoid closure allocations.
+    /// Exceptions thrown by the callback are captured by the returned task.
+    /// </remarks>
+    public Task<TResult> InvokeAsync<TState, TResult>(Func<TState, TResult> callback, TState state)
+    {
+        ArgumentNullException.ThrowIfNull(callback);
+
+        var invokeState = new InvokeAsyncFuncState<TState, TResult>
+        {
+            Completion = new TaskCompletionSource<TResult>(TaskCreationOptions.RunContinuationsAsynchronously),
+            Callback = callback,
+            State = state
+        };
+
+        bool success = BeginInvokeNative(static value =>
+        {
+            var state = (InvokeAsyncFuncState<TState, TResult>)value!;
+            try
+            {
+                TResult result = state.Callback(state.State);
                 state.Completion.SetResult(result);
             }
             catch (Exception ex)

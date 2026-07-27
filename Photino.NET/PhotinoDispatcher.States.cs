@@ -34,10 +34,24 @@ partial class PhotinoDispatcher
         public required Action Callback;
     }
 
+    private sealed class InvokeAsyncActionState<TState>
+    {
+        public required TaskCompletionSource Completion;
+        public required Action<TState> Callback;
+        public TState State = default!;
+    }
+
     private sealed class InvokeAsyncFuncState<TResult>
     {
         public required TaskCompletionSource<TResult> Completion;
         public required Func<TResult> Callback;
+    }
+
+    private sealed class InvokeAsyncFuncState<TState, TResult>
+    {
+        public required TaskCompletionSource<TResult> Completion;
+        public required Func<TState, TResult> Callback;
+        public TState State = default!;
     }
 
     private sealed class InvokeAsyncTaskState
