@@ -1,4 +1,6 @@
 ﻿using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
+using System.Runtime.CompilerServices;
 
 namespace Photino.NET;
 
@@ -74,8 +76,12 @@ public sealed partial class PhotinoDispatcher
     /// </summary>
     /// <param name="callback">The action to execute.</param>
     /// <returns><c>true</c> if the callback was scheduled; otherwise, <c>false</c>.</returns>
+    /// <exception cref="ArgumentNullException">
+    /// Thrown when <paramref name="callback"/> is <c>null</c>.
+    /// </exception>
     /// <remarks>
-    /// This method does not throw if the callback cannot be scheduled. Scheduling failures are reported through diagnostics and dispatcher statistics.
+    /// This method does not throw for dispatcher scheduling failures. Scheduling failures are reported through diagnostics and dispatcher statistics.
+    /// Exceptions thrown by <paramref name="callback"/> are reported through <see cref="UnhandledException"/>.
     /// </remarks>
     public bool BeginInvoke(Action callback)
     {
@@ -92,8 +98,12 @@ public sealed partial class PhotinoDispatcher
     /// <param name="callback">The callback to execute.</param>
     /// <param name="state">The object passed to the callback.</param>
     /// <returns><c>true</c> if the callback was scheduled; otherwise, <c>false</c>.</returns>
+    /// <exception cref="ArgumentNullException">
+    /// Thrown when <paramref name="callback"/> is <c>null</c>.
+    /// </exception>
     /// <remarks>
-    /// This method does not throw if the callback cannot be scheduled. Scheduling failures are reported through diagnostics and dispatcher statistics.
+    /// This method does not throw for dispatcher scheduling failures. Scheduling failures are reported through diagnostics and dispatcher statistics.
+    /// Exceptions thrown by <paramref name="callback"/> are reported through <see cref="UnhandledException"/>.
     /// </remarks>
     public bool BeginInvoke(SendOrPostCallback callback, object? state)
     {
@@ -108,11 +118,45 @@ public sealed partial class PhotinoDispatcher
     /// Executes the specified <see cref="Action"/> on the dispatcher thread.
     /// </summary>
     /// <param name="callback">The action to execute.</param>
-    /// <returns><c>true</c> if the callback was executed; otherwise, <c>false</c>.</returns>
+    /// <exception cref="ArgumentNullException">
+    /// Thrown when <paramref name="callback"/> is <c>null</c>.
+    /// </exception>
+    /// <exception cref="InvalidOperationException">
+    /// Thrown when the callback cannot be scheduled on the dispatcher thread.
+    /// </exception>
     /// <remarks>
-    /// Exceptions thrown by <paramref name="callback"/> are propagated to the caller. Dispatcher scheduling failures are reported through diagnostics and dispatcher statistics.
+    /// Exceptions thrown by <paramref name="callback"/> are propagated to the caller.
     /// </remarks>
-    public bool Invoke(Action callback)
+    public void Invoke(Action callback)
+    {
+        ArgumentNullException.ThrowIfNull(callback);
+
+        if (CheckAccess())
+        {
+            callback();
+            return;
+        }
+
+        bool success = InvokeNative(callback);
+        Debug.Assert(success);
+
+        if (!success)
+            throw CreateFailedException();
+    }
+
+    /// <summary>
+    /// Attempts to execute the specified <see cref="Action"/> on the dispatcher thread.
+    /// </summary>
+    /// <param name="callback">The action to execute.</param>
+    /// <returns><c>true</c> if the callback was executed; otherwise, <c>false</c>.</returns>
+    /// <exception cref="ArgumentNullException">
+    /// Thrown when <paramref name="callback"/> is <c>null</c>.
+    /// </exception>
+    /// <remarks>
+    /// Exceptions thrown by <paramref name="callback"/> are propagated to the caller.
+    /// Dispatcher scheduling failures are returned as <c>false</c> and reported through diagnostics and dispatcher statistics.
+    /// </remarks>
+    public bool TryInvoke(Action callback)
     {
         ArgumentNullException.ThrowIfNull(callback);
 
@@ -128,6 +172,44 @@ public sealed partial class PhotinoDispatcher
     }
 
     /// <summary>
+    /// Executes the specified <see cref="Func{TResult}"/> on the dispatcher thread and returns its result.
+    /// </summary>
+    /// <typeparam name="TResult">The result type.</typeparam>
+    /// <param name="callback">The function to execute.</param>
+    /// <returns>The value returned by <paramref name="callback"/>.</returns>
+    /// <exception cref="ArgumentNullException">
+    /// Thrown when <paramref name="callback"/> is <c>null</c>.
+    /// </exception>
+    /// <exception cref="InvalidOperationException">
+    /// Thrown when the callback cannot be scheduled on the dispatcher thread.
+    /// </exception>
+    /// <remarks>
+    /// Exceptions thrown by <paramref name="callback"/> are propagated to the caller.
+    /// </remarks>
+    public TResult Invoke<TResult>(Func<TResult> callback)
+    {
+        ArgumentNullException.ThrowIfNull(callback);
+
+        if (CheckAccess())
+            return callback();
+
+        var state = new InvokeFuncState<TResult> { Callback = callback };
+
+        bool success = InvokeNative(static value =>
+        {
+            var state = (InvokeFuncState<TResult>)value!;
+            state.Result = state.Callback();
+        }, state);
+
+        Debug.Assert(success);
+
+        if (!success)
+            throw CreateFailedException();
+
+        return state.Result;
+    }
+
+    /// <summary>
     /// Attempts to execute the specified <see cref="Func{TResult}"/> on the dispatcher thread.
     /// </summary>
     /// <typeparam name="TResult">The result type.</typeparam>
@@ -137,9 +219,12 @@ public sealed partial class PhotinoDispatcher
     /// Otherwise, contains the default value of <typeparamref name="TResult"/>.
     /// </param>
     /// <returns><c>true</c> if the callback was executed; otherwise, <c>false</c>.</returns>
+    /// <exception cref="ArgumentNullException">
+    /// Thrown when <paramref name="callback"/> is <c>null</c>.
+    /// </exception>
     /// <remarks>
     /// Exceptions thrown by <paramref name="callback"/> are propagated to the caller.
-    /// Dispatcher scheduling failures are reported through diagnostics and dispatcher statistics.
+    /// Dispatcher scheduling failures are returned as <c>false</c> and reported through diagnostics and dispatcher statistics.
     /// </remarks>
     public bool TryInvoke<TResult>(Func<TResult> callback, out TResult result)
     {
@@ -165,6 +250,51 @@ public sealed partial class PhotinoDispatcher
     }
 
     /// <summary>
+    /// Executes the specified state-based <see cref="Func{T,TResult}"/> on the dispatcher thread and returns its result.
+    /// </summary>
+    /// <typeparam name="TState">The callback state type.</typeparam>
+    /// <typeparam name="TResult">The result type.</typeparam>
+    /// <param name="callback">The function to execute.</param>
+    /// <param name="state">The state passed to <paramref name="callback"/>.</param>
+    /// <returns>The value returned by <paramref name="callback"/>.</returns>
+    /// <exception cref="ArgumentNullException">
+    /// Thrown when <paramref name="callback"/> is <c>null</c>.
+    /// </exception>
+    /// <exception cref="InvalidOperationException">
+    /// Thrown when the callback cannot be scheduled on the dispatcher thread.
+    /// </exception>
+    /// <remarks>
+    /// This overload allows callers to pass state explicitly and avoid closure allocations.
+    /// Exceptions thrown by <paramref name="callback"/> are propagated to the caller.
+    /// </remarks>
+    public TResult Invoke<TState, TResult>(Func<TState, TResult> callback, TState state)
+    {
+        ArgumentNullException.ThrowIfNull(callback);
+
+        if (CheckAccess())
+            return callback(state);
+
+        var invokeState = new InvokeFuncState<TState, TResult>
+        {
+            Callback = callback,
+            State = state
+        };
+
+        bool success = InvokeNative(static value =>
+        {
+            var state = (InvokeFuncState<TState, TResult>)value!;
+            state.Result = state.Callback(state.State);
+        }, invokeState);
+
+        Debug.Assert(success);
+
+        if (!success)
+            throw CreateFailedException();
+
+        return invokeState.Result;
+    }
+
+    /// <summary>
     /// Attempts to execute the specified state-based <see cref="Func{T,TResult}"/> on the dispatcher thread.
     /// </summary>
     /// <typeparam name="TState">The callback state type.</typeparam>
@@ -176,15 +306,15 @@ public sealed partial class PhotinoDispatcher
     /// Otherwise, contains the default value of <typeparamref name="TResult"/>.
     /// </param>
     /// <returns><c>true</c> if the callback was executed; otherwise, <c>false</c>.</returns>
+    /// <exception cref="ArgumentNullException">
+    /// Thrown when <paramref name="callback"/> is <c>null</c>.
+    /// </exception>
     /// <remarks>
     /// This overload allows callers to pass state explicitly and avoid closure allocations.
     /// Exceptions thrown by <paramref name="callback"/> are propagated to the caller.
-    /// Dispatcher scheduling failures are reported through diagnostics and dispatcher statistics.
+    /// Dispatcher scheduling failures are returned as <c>false</c> and reported through diagnostics and dispatcher statistics.
     /// </remarks>
-    public bool TryInvoke<TState, TResult>(
-        Func<TState, TResult> callback,
-        TState state,
-        out TResult result)
+    public bool TryInvoke<TState, TResult>(Func<TState, TResult> callback, TState state, out TResult result)
     {
         ArgumentNullException.ThrowIfNull(callback);
 
@@ -216,13 +346,47 @@ public sealed partial class PhotinoDispatcher
     /// Executes the specified <see cref="SendOrPostCallback"/> on the dispatcher thread.
     /// </summary>
     /// <param name="callback">The callback to execute.</param>
-    /// <param name="state">The object passed to the callback.</param>
-    /// <returns><c>true</c> if the callback was executed; otherwise, <c>false</c>.</returns>
+    /// <param name="state">The object passed to <paramref name="callback"/>.</param>
+    /// <exception cref="ArgumentNullException">
+    /// Thrown when <paramref name="callback"/> is <c>null</c>.
+    /// </exception>
+    /// <exception cref="InvalidOperationException">
+    /// Thrown when the callback cannot be scheduled on the dispatcher thread.
+    /// </exception>
     /// <remarks>
     /// Exceptions thrown by <paramref name="callback"/> are propagated to the caller.
-    /// Dispatcher scheduling failures are reported through diagnostics and dispatcher statistics.
     /// </remarks>
-    public bool Invoke(SendOrPostCallback callback, object? state)
+    public void Invoke(SendOrPostCallback callback, object? state)
+    {
+        ArgumentNullException.ThrowIfNull(callback);
+
+        if (CheckAccess())
+        {
+            callback(state);
+            return;
+        }
+
+        bool success = InvokeNative(callback, state);
+        Debug.Assert(success);
+
+        if (!success)
+            throw CreateFailedException();
+    }
+
+    /// <summary>
+    /// Attempts to execute the specified <see cref="SendOrPostCallback"/> on the dispatcher thread.
+    /// </summary>
+    /// <param name="callback">The callback to execute.</param>
+    /// <param name="state">The object passed to <paramref name="callback"/>.</param>
+    /// <returns><c>true</c> if the callback was executed; otherwise, <c>false</c>.</returns>
+    /// <exception cref="ArgumentNullException">
+    /// Thrown when <paramref name="callback"/> is <c>null</c>.
+    /// </exception>
+    /// <remarks>
+    /// Exceptions thrown by <paramref name="callback"/> are propagated to the caller.
+    /// Dispatcher scheduling failures are returned as <c>false</c> and reported through diagnostics and dispatcher statistics.
+    /// </remarks>
+    public bool TryInvoke(SendOrPostCallback callback, object? state)
     {
         ArgumentNullException.ThrowIfNull(callback);
 
@@ -245,6 +409,12 @@ public sealed partial class PhotinoDispatcher
     /// <returns>
     /// A <see cref="Task"/> that completes when the callback has finished executing, or faults if the callback cannot be scheduled.
     /// </returns>
+    /// <exception cref="ArgumentNullException">
+    /// Thrown when <paramref name="callback"/> is <c>null</c>.
+    /// </exception>
+    /// <remarks>
+    /// Exceptions thrown by the callback are captured by the returned task.
+    /// </remarks>
     public Task InvokeAsync(SendOrPostCallback callback, object? state)
     {
         ArgumentNullException.ThrowIfNull(callback);
@@ -283,6 +453,12 @@ public sealed partial class PhotinoDispatcher
     /// <returns>
     /// A <see cref="Task"/> that completes when the action has finished executing, or faults if the action cannot be scheduled.
     /// </returns>
+    /// <exception cref="ArgumentNullException">
+    /// Thrown when <paramref name="callback"/> is <c>null</c>.
+    /// </exception>
+    /// <remarks>
+    /// Exceptions thrown by the callback are captured by the returned task.
+    /// </remarks>
     public Task InvokeAsync(Action callback)
     {
         ArgumentNullException.ThrowIfNull(callback);
@@ -321,6 +497,12 @@ public sealed partial class PhotinoDispatcher
     /// <returns>
     /// A <see cref="Task{TResult}"/> that completes when the function has finished executing, or faults if the function cannot be scheduled.
     /// </returns>
+    /// <exception cref="ArgumentNullException">
+    /// Thrown when <paramref name="callback"/> is <c>null</c>.
+    /// </exception>
+    /// <remarks>
+    /// Exceptions thrown by the callback are captured by the returned task.
+    /// </remarks>
     public Task<TResult> InvokeAsync<TResult>(Func<TResult> callback)
     {
         ArgumentNullException.ThrowIfNull(callback);
@@ -358,6 +540,12 @@ public sealed partial class PhotinoDispatcher
     /// <returns>
     /// A <see cref="Task"/> that completes when the task returned by <paramref name="callback"/> completes, or faults if the callback cannot be scheduled.
     /// </returns>
+    /// <exception cref="ArgumentNullException">
+    /// Thrown when <paramref name="callback"/> is <c>null</c>.
+    /// </exception>
+    /// <remarks>
+    /// Exceptions thrown by the callback or by the task it returns are captured by the returned task.
+    /// </remarks>
     public Task InvokeAsync(Func<Task> callback)
     {
         ArgumentNullException.ThrowIfNull(callback);
@@ -396,6 +584,12 @@ public sealed partial class PhotinoDispatcher
     /// <returns>
     /// A <see cref="Task{TResult}"/> that completes when the task returned by <paramref name="callback"/> completes, or faults if the callback cannot be scheduled.
     /// </returns>
+    /// <exception cref="ArgumentNullException">
+    /// Thrown when <paramref name="callback"/> is <c>null</c>.
+    /// </exception>
+    /// <remarks>
+    /// Exceptions thrown by the callback or by the task it returns are captured by the returned task.
+    /// </remarks>
     public Task<TResult> InvokeAsync<TResult>(Func<Task<TResult>> callback)
     {
         ArgumentNullException.ThrowIfNull(callback);
@@ -454,11 +648,15 @@ public sealed partial class PhotinoDispatcher
         return new InvalidOperationException("Failed to schedule the callback on the dispatcher thread.");
     }
 
+    [DoesNotReturn]
+    [MethodImpl(MethodImplOptions.NoInlining)]
     private static void ThrowCurrentThreadDoesNotHaveDispatcherAccess()
     {
         throw new InvalidOperationException("The current thread does not have access to the dispatcher.");
     }
 
+    [DoesNotReturn]
+    [MethodImpl(MethodImplOptions.NoInlining)]
     private static void ThrowWindowMustBeCreatedOnDispatcherThread()
     {
         throw new InvalidOperationException("Photino windows must be created on the dispatcher thread.");

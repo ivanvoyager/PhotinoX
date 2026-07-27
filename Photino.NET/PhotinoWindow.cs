@@ -87,19 +87,19 @@ public partial class PhotinoWindow
             IntPtr handle;
             if (Platform.IsWindows)
             {
-                Dispatcher.TryInvoke(static nativeInstance => Photino_getHwnd_win32(nativeInstance), _nativeInstance, out handle);
+                handle = Dispatcher.Invoke(static nativeInstance => Photino_getHwnd_win32(nativeInstance), _nativeInstance);
                 return handle;
             }
 
             if (Platform.IsLinux)
             {
-                Dispatcher.TryInvoke(static nativeInstance => Photino_getGtkWidget_linux(nativeInstance), _nativeInstance, out handle);
+                handle = Dispatcher.Invoke(static nativeInstance => Photino_getGtkWidget_linux(nativeInstance), _nativeInstance);
                 return handle;
             }
 
             if (Platform.IsMacOS)
             {
-                Dispatcher.TryInvoke(static nativeInstance => Photino_getNSWindow_mac(nativeInstance), _nativeInstance, out handle);
+                handle = Dispatcher.Invoke(static nativeInstance => Photino_getNSWindow_mac(nativeInstance), _nativeInstance);
                 return handle;
             }
 
@@ -130,13 +130,11 @@ public partial class PhotinoWindow
                 Monitors = []
             };
 
-            bool invoked = Dispatcher.TryInvoke(static value =>
+            bool enumerated = Dispatcher.Invoke(static state =>
             {
-                var state = (GetMonitorsState)value!;
                 using var scope = new GCHandleScope(state, out var stateHandle);
                 return Photino_GetAllMonitors(state.NativeInstance, s_getAllMonitorsCallback, stateHandle);
-            }, state, out bool enumerated);
-            Debug.Assert(invoked);
+            }, state);
             Debug.Assert(enumerated);
 
             return state.Monitors;
