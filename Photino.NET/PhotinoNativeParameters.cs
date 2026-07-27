@@ -172,8 +172,14 @@ internal struct PhotinoNativeParameters
     /// <summary>WINDOWS: OPTIONAL: If true, toast notifications are allowed on Windows by calling ShowNotification. Requires registering the app with Windows which is not always desirable as it creates shortcuts, etc. Default is true.</summary>
     [MarshalAs(UnmanagedType.I1)] internal bool NotificationsEnabled; //#52
 
+    /// <summary>
+    /// WINDOWS: OPTIONAL: If true and ParentInstance is set, creates a native owner relationship
+    /// between this window and its logical parent. Default is false.
+    /// </summary>
+    [MarshalAs(UnmanagedType.I1)] internal bool UseNativeWindowOwner; //#53
+
     /// <summary>Set when GetParamErrors() is called, prior to initializing the native window. It is a check to make sure the struct matches what C++ is expecting.</summary>
-    [MarshalAs(UnmanagedType.I4)] internal int Size; //#53
+    [MarshalAs(UnmanagedType.I4)] internal int Size; //#54
 
 
     ///<summary>Checks the parameters to ensure they are valid before window creation. Called by PhotinoWindow prior to initializing native window.</summary>

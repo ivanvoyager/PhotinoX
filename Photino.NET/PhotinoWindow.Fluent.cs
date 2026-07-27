@@ -196,6 +196,27 @@ partial class PhotinoWindow
         return this;
     }
 
+    /// <summary>
+    /// Sets whether this window should use a native owner relationship with its logical parent where supported.
+    /// Currently supported on Windows only. Default is false.
+    /// </summary>
+    /// <remarks>
+    /// This option only has an effect before native window initialization and when the window has a parent.
+    /// On Windows, owned windows stay above their owner and follow native owner-window behavior.
+    /// </remarks>
+    /// <param name="useNativeWindowOwner">
+    /// <see langword="true"/> to use the native owner relationship; otherwise, <see langword="false"/>.
+    /// </param>
+    /// <returns>
+    /// Returns the current <see cref="PhotinoWindow"/> instance.
+    /// </returns>
+    public PhotinoWindow SetUseNativeWindowOwner(bool useNativeWindowOwner)
+    {
+        Log($".{nameof(SetUseNativeWindowOwner)}({useNativeWindowOwner})");
+        UseNativeWindowOwner = useNativeWindowOwner;
+        return this;
+    }
+
     #endregion
 
     #region Geometry

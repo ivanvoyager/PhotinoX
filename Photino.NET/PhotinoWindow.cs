@@ -540,6 +540,21 @@ public partial class PhotinoWindow
     }
 
     /// <summary>
+    /// Gets or sets whether this window should use a native owner relationship with its logical parent where supported.
+    /// Currently supported on Windows only. Default is false.
+    /// </summary>
+    public bool UseNativeWindowOwner
+    {
+        get => _startupParameters.UseNativeWindowOwner;
+        set
+        {
+            ThrowIfClosedOrInitialized();
+
+            _startupParameters.UseNativeWindowOwner = value;
+        }
+    }
+
+    /// <summary>
     /// Gets or sets the native window state.
     /// </summary>
     public PhotinoWindowState WindowState
