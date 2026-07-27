@@ -172,6 +172,91 @@ public sealed partial class PhotinoDispatcher
     }
 
     /// <summary>
+    /// Executes the specified state-based <see cref="Action{T}"/> on the dispatcher thread.
+    /// </summary>
+    /// <typeparam name="TState">The callback state type.</typeparam>
+    /// <param name="callback">The action to execute.</param>
+    /// <param name="state">The state passed to <paramref name="callback"/>.</param>
+    /// <exception cref="ArgumentNullException">
+    /// Thrown when <paramref name="callback"/> is <c>null</c>.
+    /// </exception>
+    /// <exception cref="InvalidOperationException">
+    /// Thrown when the callback cannot be scheduled on the dispatcher thread.
+    /// </exception>
+    /// <remarks>
+    /// This overload allows callers to pass state explicitly and avoid closure allocations.
+    /// Exceptions thrown by <paramref name="callback"/> are propagated to the caller.
+    /// </remarks>
+    public void Invoke<TState>(Action<TState> callback, TState state)
+    {
+        ArgumentNullException.ThrowIfNull(callback);
+
+        if (CheckAccess())
+        {
+            callback(state);
+            return;
+        }
+
+        var invokeState = new InvokeActionState<TState>
+        {
+            Callback = callback,
+            State = state
+        };
+
+        bool success = InvokeNative(static value =>
+        {
+            var state = (InvokeActionState<TState>)value!;
+            state.Callback(state.State);
+        }, invokeState);
+
+        Debug.Assert(success);
+
+        if (!success)
+            throw CreateFailedException();
+    }
+
+    /// <summary>
+    /// Attempts to execute the specified state-based <see cref="Action{T}"/> on the dispatcher thread.
+    /// </summary>
+    /// <typeparam name="TState">The callback state type.</typeparam>
+    /// <param name="callback">The action to execute.</param>
+    /// <param name="state">The state passed to <paramref name="callback"/>.</param>
+    /// <returns><c>true</c> if the callback was executed; otherwise, <c>false</c>.</returns>
+    /// <exception cref="ArgumentNullException">
+    /// Thrown when <paramref name="callback"/> is <c>null</c>.
+    /// </exception>
+    /// <remarks>
+    /// This overload allows callers to pass state explicitly and avoid closure allocations.
+    /// Exceptions thrown by <paramref name="callback"/> are propagated to the caller.
+    /// Dispatcher scheduling failures are returned as <c>false</c> and reported through diagnostics and dispatcher statistics.
+    /// </remarks>
+    public bool TryInvoke<TState>(Action<TState> callback, TState state)
+    {
+        ArgumentNullException.ThrowIfNull(callback);
+
+        if (CheckAccess())
+        {
+            callback(state);
+            return true;
+        }
+
+        var invokeState = new InvokeActionState<TState>
+        {
+            Callback = callback,
+            State = state
+        };
+
+        bool success = InvokeNative(static value =>
+        {
+            var state = (InvokeActionState<TState>)value!;
+            state.Callback(state.State);
+        }, invokeState);
+
+        Debug.Assert(success);
+        return success;
+    }
+
+    /// <summary>
     /// Executes the specified <see cref="Func{TResult}"/> on the dispatcher thread and returns its result.
     /// </summary>
     /// <typeparam name="TResult">The result type.</typeparam>

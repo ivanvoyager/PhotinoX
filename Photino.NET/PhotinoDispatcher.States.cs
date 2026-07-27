@@ -2,6 +2,12 @@
 
 partial class PhotinoDispatcher
 {
+    private sealed class InvokeActionState<TState>
+    {
+        public required Action<TState> Callback;
+        public TState State = default!;
+    }
+
     private sealed class InvokeFuncState<TResult>
     {
         public required Func<TResult> Callback;
