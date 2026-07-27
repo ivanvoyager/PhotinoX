@@ -262,10 +262,6 @@ internal static class Program
                     case "close":
                         context.Window.Close();
                         break;
-
-                    case "stateSequence":
-                        context.RunStateSequence();
-                        break;
                 }
             }
             catch (Exception ex)
@@ -315,16 +311,6 @@ internal static class Program
 
             SendState();
             return _child;
-        }
-
-        private void RunStateSequence()
-        {
-            Window.Maximize();
-            Window.Restore();
-            Window.Minimize();
-            Window.Restore();
-            Window.SetFullScreen(true);
-            Window.SetFullScreen(false);
         }
 
         private void SendInitialPayload()
