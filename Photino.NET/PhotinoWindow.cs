@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Drawing;
 using System.Runtime.InteropServices;
 using Photino.NET.Utils;
@@ -83,22 +84,22 @@ public partial class PhotinoWindow
         {
             ThrowIfClosedOrNotInitialized();
 
-            var handle = IntPtr.Zero;
+            IntPtr handle;
             if (Platform.IsWindows)
             {
-                Invoke(() => handle = Photino_getHwnd_win32(_nativeInstance));
+                Dispatcher.TryInvoke(static nativeInstance => Photino_getHwnd_win32(nativeInstance), _nativeInstance, out handle);
                 return handle;
             }
 
             if (Platform.IsLinux)
             {
-                Invoke(() => handle = Photino_getGtkWidget_linux(_nativeInstance));
+                Dispatcher.TryInvoke(static nativeInstance => Photino_getGtkWidget_linux(nativeInstance), _nativeInstance, out handle);
                 return handle;
             }
 
             if (Platform.IsMacOS)
             {
-                Invoke(() => handle = Photino_getNSWindow_mac(_nativeInstance));
+                Dispatcher.TryInvoke(static nativeInstance => Photino_getNSWindow_mac(nativeInstance), _nativeInstance, out handle);
                 return handle;
             }
 
@@ -123,17 +124,22 @@ public partial class PhotinoWindow
         {
             ThrowIfClosedOrNotInitialized();
 
-            var monitors = new List<Monitor>();
-
-            Invoke(() => Photino_GetAllMonitors(_nativeInstance, Callback));
-
-            return monitors;
-
-            int Callback(in NativeMonitor monitor)
+            var state = new GetMonitorsState
             {
-                monitors.Add(new Monitor(monitor));
-                return 1;
-            }
+                NativeInstance = _nativeInstance,
+                Monitors = []
+            };
+
+            bool invoked = Dispatcher.TryInvoke(static value =>
+            {
+                var state = (GetMonitorsState)value!;
+                using var scope = new GCHandleScope(state, out var stateHandle);
+                return Photino_GetAllMonitors(state.NativeInstance, s_getAllMonitorsCallback, stateHandle);
+            }, state, out bool enumerated);
+            Debug.Assert(invoked);
+            Debug.Assert(enumerated);
+
+            return state.Monitors;
         }
     }
 

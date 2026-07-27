@@ -165,6 +165,54 @@ public sealed partial class PhotinoDispatcher
     }
 
     /// <summary>
+    /// Attempts to execute the specified state-based <see cref="Func{T,TResult}"/> on the dispatcher thread.
+    /// </summary>
+    /// <typeparam name="TState">The callback state type.</typeparam>
+    /// <typeparam name="TResult">The result type.</typeparam>
+    /// <param name="callback">The function to execute.</param>
+    /// <param name="state">The state passed to <paramref name="callback"/>.</param>
+    /// <param name="result">
+    /// When this method returns <c>true</c>, contains the value returned by <paramref name="callback"/>.
+    /// Otherwise, contains the default value of <typeparamref name="TResult"/>.
+    /// </param>
+    /// <returns><c>true</c> if the callback was executed; otherwise, <c>false</c>.</returns>
+    /// <remarks>
+    /// This overload allows callers to pass state explicitly and avoid closure allocations.
+    /// Exceptions thrown by <paramref name="callback"/> are propagated to the caller.
+    /// Dispatcher scheduling failures are reported through diagnostics and dispatcher statistics.
+    /// </remarks>
+    public bool TryInvoke<TState, TResult>(
+        Func<TState, TResult> callback,
+        TState state,
+        out TResult result)
+    {
+        ArgumentNullException.ThrowIfNull(callback);
+
+        if (CheckAccess())
+        {
+            result = callback(state);
+            return true;
+        }
+
+        var invokeState = new InvokeFuncState<TState, TResult>
+        {
+            Callback = callback,
+            State = state
+        };
+
+        bool success = InvokeNative(static value =>
+        {
+            var state = (InvokeFuncState<TState, TResult>)value!;
+            state.Result = state.Callback(state.State);
+        }, invokeState);
+
+        Debug.Assert(success);
+
+        result = invokeState.Result;
+        return success;
+    }
+
+    /// <summary>
     /// Executes the specified <see cref="SendOrPostCallback"/> on the dispatcher thread.
     /// </summary>
     /// <param name="callback">The callback to execute.</param>

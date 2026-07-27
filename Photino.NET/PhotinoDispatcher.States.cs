@@ -8,6 +8,13 @@ partial class PhotinoDispatcher
         public TResult Result = default!;
     }
 
+    private sealed class InvokeFuncState<TState, TResult>
+    {
+        public required Func<TState, TResult> Callback;
+        public TState State = default!;
+        public TResult Result = default!;
+    }
+
     private sealed class InvokeAsyncState
     {
         public required TaskCompletionSource Completion;

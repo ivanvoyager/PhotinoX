@@ -115,7 +115,8 @@ internal static partial class NativeMethods
 
     [LibraryImport(DLL_NAME)]
     [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
-    internal static partial void Photino_GetAllMonitors(IntPtr instance, GetAllMonitorsCallback callback);
+    [return: MarshalAs(UnmanagedType.I1)]
+    internal static partial bool Photino_GetAllMonitors(IntPtr instance, GetAllMonitorsCallback callback, IntPtr state);
 
 
     [LibraryImport(DLL_NAME)]
