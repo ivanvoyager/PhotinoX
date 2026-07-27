@@ -151,11 +151,16 @@ public sealed partial class PhotinoDispatcher
             return true;
         }
 
-        TResult localResult = default!;
-        bool success = InvokeNative(() => localResult = callback());
+        var state = new InvokeFuncState<TResult> { Callback = callback };
+
+        bool success = InvokeNative(static value =>
+        {
+            var state = (InvokeFuncState<TResult>)value!;
+            state.Result = state.Callback();
+        }, state);
         Debug.Assert(success);
 
-        result = localResult;
+        result = state.Result;
         return success;
     }
 
@@ -196,26 +201,31 @@ public sealed partial class PhotinoDispatcher
     {
         ArgumentNullException.ThrowIfNull(callback);
 
-        var tcs = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
-
-        bool success = BeginInvokeNative(static x =>
+        var invokeState = new InvokeAsyncState
         {
-            (TaskCompletionSource<bool> tcs, SendOrPostCallback callback, object? state) = ((TaskCompletionSource<bool>, SendOrPostCallback, object?))x!;
+            Completion = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously),
+            Callback = callback,
+            State = state
+        };
+
+        bool success = BeginInvokeNative(static value =>
+        {
+            var state = (InvokeAsyncState)value!;
             try
             {
-                callback(state);
-                tcs.SetResult(true);
+                state.Callback(state.State);
+                state.Completion.SetResult();
             }
             catch (Exception ex)
             {
-                tcs.SetException(ex);
+                state.Completion.SetException(ex);
             }
-        }, (tcs, callback, state));
+        }, invokeState);
         Debug.Assert(success);
         if (!success)
-            tcs.SetException(CreateFailedException());
+            invokeState.Completion.SetException(CreateFailedException());
 
-        return tcs.Task;
+        return invokeState.Completion.Task;
     }
 
     /// <summary>
@@ -229,26 +239,30 @@ public sealed partial class PhotinoDispatcher
     {
         ArgumentNullException.ThrowIfNull(callback);
 
-        var tcs = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
-
-        bool success = BeginInvokeNative(static x =>
+        var invokeState = new InvokeAsyncActionState
         {
-            (TaskCompletionSource<bool> tcs, Action callback) = ((TaskCompletionSource<bool>, Action))x!;
+            Completion = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously),
+            Callback = callback
+        };
+
+        bool success = BeginInvokeNative(static value =>
+        {
+            var state = (InvokeAsyncActionState)value!;
             try
             {
-                callback();
-                tcs.SetResult(true);
+                state.Callback();
+                state.Completion.SetResult();
             }
             catch (Exception ex)
             {
-                tcs.SetException(ex);
+                state.Completion.SetException(ex);
             }
-        }, (tcs, callback));
+        }, invokeState);
         Debug.Assert(success);
         if (!success)
-            tcs.SetException(CreateFailedException());
+            invokeState.Completion.SetException(CreateFailedException());
 
-        return tcs.Task;
+        return invokeState.Completion.Task;
     }
 
     /// <summary>
@@ -263,26 +277,30 @@ public sealed partial class PhotinoDispatcher
     {
         ArgumentNullException.ThrowIfNull(callback);
 
-        var tcs = new TaskCompletionSource<TResult>(TaskCreationOptions.RunContinuationsAsynchronously);
-
-        bool success = BeginInvokeNative(static x =>
+        var invokeState = new InvokeAsyncFuncState<TResult>
         {
-            (TaskCompletionSource<TResult> tcs, Func<TResult> callback) = ((TaskCompletionSource<TResult>, Func<TResult>))x!;
+            Completion = new TaskCompletionSource<TResult>(TaskCreationOptions.RunContinuationsAsynchronously),
+            Callback = callback
+        };
+
+        bool success = BeginInvokeNative(static value =>
+        {
+            var state = (InvokeAsyncFuncState<TResult>)value!;
             try
             {
-                TResult result = callback();
-                tcs.SetResult(result);
+                TResult result = state.Callback();
+                state.Completion.SetResult(result);
             }
             catch (Exception ex)
             {
-                tcs.SetException(ex);
+                state.Completion.SetException(ex);
             }
-        }, (tcs, callback));
+        }, invokeState);
         Debug.Assert(success);
         if (!success)
-            tcs.SetException(CreateFailedException());
+            invokeState.Completion.SetException(CreateFailedException());
 
-        return tcs.Task;
+        return invokeState.Completion.Task;
     }
 
     /// <summary>
@@ -296,26 +314,30 @@ public sealed partial class PhotinoDispatcher
     {
         ArgumentNullException.ThrowIfNull(callback);
 
-        var tcs = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
-
-        bool success = BeginInvokeNative(async static x =>
+        var invokeState = new InvokeAsyncTaskState
         {
-            (TaskCompletionSource<bool> tcs, Func<Task> callback) = ((TaskCompletionSource<bool>, Func<Task>))x!;
+            Completion = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously),
+            Callback = callback
+        };
+
+        bool success = BeginInvokeNative(async static value =>
+        {
+            var state = (InvokeAsyncTaskState)value!;
             try
             {
-                await callback().ConfigureAwait(false);
-                tcs.SetResult(true);
+                await state.Callback().ConfigureAwait(false);
+                state.Completion.SetResult();
             }
             catch (Exception ex)
             {
-                tcs.SetException(ex);
+                state.Completion.SetException(ex);
             }
-        }, (tcs, callback));
+        }, invokeState);
         Debug.Assert(success);
         if (!success)
-            tcs.SetException(CreateFailedException());
+            invokeState.Completion.SetException(CreateFailedException());
 
-        return tcs.Task;
+        return invokeState.Completion.Task;
     }
 
     /// <summary>
@@ -330,26 +352,30 @@ public sealed partial class PhotinoDispatcher
     {
         ArgumentNullException.ThrowIfNull(callback);
 
-        var tcs = new TaskCompletionSource<TResult>(TaskCreationOptions.RunContinuationsAsynchronously);
-
-        bool success = BeginInvokeNative(async static x =>
+        var invokeState = new InvokeAsyncTaskState<TResult>
         {
-            (TaskCompletionSource<TResult> tcs, Func<Task<TResult>> callback) = ((TaskCompletionSource<TResult>, Func<Task<TResult>>))x!;
+            Completion = new TaskCompletionSource<TResult>(TaskCreationOptions.RunContinuationsAsynchronously),
+            Callback = callback
+        };
+
+        bool success = BeginInvokeNative(async static value =>
+        {
+            var state = (InvokeAsyncTaskState<TResult>)value!;
             try
             {
-                TResult result = await callback().ConfigureAwait(false);
-                tcs.SetResult(result);
+                TResult result = await state.Callback().ConfigureAwait(false);
+                state.Completion.SetResult(result);
             }
             catch (Exception ex)
             {
-                tcs.SetException(ex);
+                state.Completion.SetException(ex);
             }
-        }, (tcs, callback));
+        }, invokeState);
         Debug.Assert(success);
         if (!success)
-            tcs.SetException(CreateFailedException());
+            invokeState.Completion.SetException(CreateFailedException());
 
-        return tcs.Task;
+        return invokeState.Completion.Task;
     }
 
     internal void OnUnhandledException(Exception exception)

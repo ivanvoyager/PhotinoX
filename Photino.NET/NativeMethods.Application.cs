@@ -15,17 +15,23 @@ internal static partial class NativeMethods
         public Exception? Exception;
     }
 
-    private sealed class SendOrPostInvokeState
+    private sealed class SendInvokeState
     {
         public required SendOrPostCallback Callback;
         public object? State;
         public Exception? Exception;
     }
 
+    private sealed class PostInvokeState
+    {
+        public required SendOrPostCallback Callback;
+        public object? State;
+    }
+
     private static readonly InvokeStateCallback s_invokeCallback = OnInvoke;
-    private static readonly InvokeStateCallback s_beginInvokeCallback = OnBeginInvoke;
-    private static readonly InvokeStateCallback s_sendOrPostInvokeCallback = OnSendOrPostInvoke;
-    private static readonly InvokeStateCallback s_sendOrPostBeginInvokeCallback = OnSendOrPostBeginInvoke;
+    private static readonly InvokeStateCallback s_invokeStateCallback = OnInvokeState;
+    private static readonly InvokeStateCallback s_postCallback = OnPost;
+    private static readonly InvokeStateCallback s_postStateCallback = OnPostState;
 
     private static int s_invokeCount;
     private static int s_beginInvokeCount;
@@ -69,6 +75,8 @@ internal static partial class NativeMethods
     [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
     [return: MarshalAs(UnmanagedType.I1)]
     private static partial bool PhotinoApplication_BeginInvoke(InvokeStateCallback callback, IntPtr state);
+
+    #region Sync helpers
 
     internal static bool InvokeNative(Action callback)
     {
@@ -123,6 +131,68 @@ internal static partial class NativeMethods
         }
     }
 
+    internal static bool InvokeNative(SendOrPostCallback callback, object? state)
+    {
+        ArgumentNullException.ThrowIfNull(callback);
+
+        var invokeState = new SendInvokeState
+        {
+            Callback = callback,
+            State = state
+        };
+
+        var handle = GCHandle.Alloc(invokeState);
+
+        bool result;
+
+        Interlocked.Increment(ref s_invokeCount);
+        try
+        {
+            result = PhotinoApplication_Invoke(s_invokeStateCallback, GCHandle.ToIntPtr(handle));
+        }
+        catch
+        {
+            Interlocked.Increment(ref s_invokeFailureCount);
+            throw;
+        }
+        finally
+        {
+            Interlocked.Decrement(ref s_invokeCount);
+            handle.Free();
+        }
+
+        if (!result)
+            Interlocked.Increment(ref s_invokeFailureCount);
+
+        if (invokeState.Exception is not null)
+            ExceptionDispatchInfo.Capture(invokeState.Exception).Throw();
+
+        return result;
+    }
+
+    private static void OnInvokeState(IntPtr value)
+    {
+        Debug.Assert(value != IntPtr.Zero);
+        if (value == IntPtr.Zero)
+            return;
+
+        var handle = GCHandle.FromIntPtr(value);
+        var state = (SendInvokeState)handle.Target!;
+
+        try
+        {
+            state.Callback(state.State);
+        }
+        catch (Exception ex)
+        {
+            state.Exception = ex;
+        }
+    }
+
+    #endregion
+
+    #region Async helpers
+
     internal static bool BeginInvokeNative(Action callback)
     {
         ArgumentNullException.ThrowIfNull(callback);
@@ -131,7 +201,7 @@ internal static partial class NativeMethods
         Interlocked.Increment(ref s_beginInvokeCount);
         try
         {
-            if (PhotinoApplication_BeginInvoke(s_beginInvokeCallback, GCHandle.ToIntPtr(handle)))
+            if (PhotinoApplication_BeginInvoke(s_postCallback, GCHandle.ToIntPtr(handle)))
             {
                 return true;
             }
@@ -157,7 +227,7 @@ internal static partial class NativeMethods
         return false;
     }
 
-    private static void OnBeginInvoke(IntPtr state)
+    private static void OnPost(IntPtr state)
     {
         Debug.Assert(state != IntPtr.Zero);
         if (state == IntPtr.Zero)
@@ -180,73 +250,21 @@ internal static partial class NativeMethods
         }
     }
 
-    internal static bool InvokeNative(SendOrPostCallback callback, object? state)
+    internal static bool BeginInvokeNative(SendOrPostCallback callback, object? state)
     {
         ArgumentNullException.ThrowIfNull(callback);
 
-        var invokeState = new SendOrPostInvokeState
+        var invokeState = new PostInvokeState
         {
             Callback = callback,
             State = state
         };
 
         var handle = GCHandle.Alloc(invokeState);
-
-        bool result;
-
-        Interlocked.Increment(ref s_invokeCount);
-        try
-        {
-            result = PhotinoApplication_Invoke(s_sendOrPostInvokeCallback, GCHandle.ToIntPtr(handle));
-        }
-        catch
-        {
-            Interlocked.Increment(ref s_invokeFailureCount);
-            throw;
-        }
-        finally
-        {
-            Interlocked.Decrement(ref s_invokeCount);
-            handle.Free();
-        }
-
-        if (!result)
-            Interlocked.Increment(ref s_invokeFailureCount);
-
-        if (invokeState.Exception is not null)
-            ExceptionDispatchInfo.Capture(invokeState.Exception).Throw();
-
-        return result;
-    }
-
-    private static void OnSendOrPostInvoke(IntPtr value)
-    {
-        Debug.Assert(value != IntPtr.Zero);
-        if (value == IntPtr.Zero)
-            return;
-
-        var handle = GCHandle.FromIntPtr(value);
-        var state = (SendOrPostInvokeState)handle.Target!;
-
-        try
-        {
-            state.Callback(state.State);
-        }
-        catch (Exception ex)
-        {
-            state.Exception = ex;
-        }
-    }
-
-    internal static bool BeginInvokeNative(SendOrPostCallback callback, object? state)
-    {
-        ArgumentNullException.ThrowIfNull(callback);
-
-        var handle = GCHandle.Alloc((callback, state));
         Interlocked.Increment(ref s_beginInvokeCount);
         try
         {
-            if (PhotinoApplication_BeginInvoke(s_sendOrPostBeginInvokeCallback, GCHandle.ToIntPtr(handle)))
+            if (PhotinoApplication_BeginInvoke(s_postStateCallback, GCHandle.ToIntPtr(handle)))
             {
                 return true;
             }
@@ -272,7 +290,7 @@ internal static partial class NativeMethods
         return false;
     }
 
-    private static void OnSendOrPostBeginInvoke(IntPtr value)
+    private static void OnPostState(IntPtr value)
     {
         Debug.Assert(value != IntPtr.Zero);
         if (value == IntPtr.Zero)
@@ -281,8 +299,8 @@ internal static partial class NativeMethods
         var handle = GCHandle.FromIntPtr(value);
         try
         {
-            (SendOrPostCallback callback, object? state) = ((SendOrPostCallback, object?))handle.Target!;
-            callback(state);
+            var state = (PostInvokeState)handle.Target!;
+            state.Callback(state.State);
         }
         catch (Exception ex)
         {
@@ -308,4 +326,6 @@ internal static partial class NativeMethods
             Debug.Fail(message);
         }
     }
+
+    #endregion
 }
