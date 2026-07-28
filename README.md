@@ -48,7 +48,7 @@ var window = new PhotinoWindow()
 return app.Run(window);
 ```
 
-`PhotinoDispatcher` provides application-level UI-thread dispatching. It supports synchronous dispatch through `Invoke(...)` / `TryInvoke(...)`, asynchronous fire-and-forget dispatch through `BeginInvoke(...)`, task-based dispatch through `InvokeAsync(...)`, dispatcher access checks through `CheckAccess()` / `VerifyAccess()`, and `UnhandledException` notifications for exceptions raised by asynchronous dispatcher callbacks.
+`PhotinoDispatcher` provides application-level UI-thread dispatching. `Invoke(...)` executes work on the dispatcher thread and throws when scheduling fails, while `TryInvoke(...)` returns `false` for scheduling failures. `BeginInvoke(...)` reports scheduling success as `bool`, and `InvokeAsync(...)` returns a task that faults if scheduling fails. State-based overloads are available for callbacks that need to pass explicit state without capturing closures. The dispatcher also exposes `CheckAccess()` / `VerifyAccess()` and `UnhandledException` notifications for exceptions raised by asynchronous dispatcher callbacks.
 
 ### Window events
 
@@ -111,6 +111,8 @@ Notable lifecycle and API changes in PhotinoX:
 
 `WindowState` replaces the previous `FullScreen`, `Maximized`, and `Minimized` properties with a single cross-platform state model. It supports `Normal`, `Minimized`, `Maximized`, and `FullScreen`, and is also used for startup state configuration.
 
+`MainMonitor` represents the monitor that currently contains the native window. `Monitors` enumerates all available monitors and does not define which monitor is considered current.
+
 Window state tracking is native-driven: `StateChanged`, `Maximized`, `Minimized`, `Restored`, `FullScreenEntered`, and `FullScreenExited` are raised from actual state transitions, not from transient resize messages. This avoids duplicate or misleading `Restored` notifications during operations such as resizing or minimizing from fullscreen.
 
 `Maximize()`, `Minimize()`, and `Restore()` are new command-style APIs. Existing helpers such as `SetFullScreen(...)`, `SetMaximized(...)`, and `SetMinimized(...)` remain available and update the same underlying native state.
@@ -120,6 +122,8 @@ Window state tracking is native-driven: `StateChanged`, `Maximized`, `Minimized`
 Custom scheme registration is stricter and more predictable. Scheme names are validated, and reserved schemes such as `http`, `https`, and `file` are rejected.
 
 Startup content selection is explicit: `Load(...)` sets URL content and clears raw string content, while `LoadString(...)` sets raw string content and clears URL content.
+
+`Load(string)` treats only explicit URI strings such as `http://`, `https://`, `file://`, and registered custom schemes as URI navigation. Other strings are resolved as local file paths.
 
 | Area | Behavior |
 |---|---|

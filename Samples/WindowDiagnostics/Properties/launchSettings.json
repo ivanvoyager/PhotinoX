@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "WindowDiagnostics": {
+      "commandName": "Project",
+      "debugEngines": "managed,native"
+    }
+  }
+}
