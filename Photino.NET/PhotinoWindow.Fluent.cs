@@ -911,7 +911,8 @@ partial class PhotinoWindow
         // This needs validation!
         // ––––––––––––––––––––––
         // Open a scheme string path
-        if (Uri.TryCreate(path, UriKind.Absolute, out var uri) &&
+        if (path.Contains("://", StringComparison.Ordinal) &&
+            Uri.TryCreate(path, UriKind.Absolute, out var uri) &&
             (uri.Scheme == Uri.UriSchemeHttp ||
              uri.Scheme == Uri.UriSchemeHttps ||
              uri.Scheme == Uri.UriSchemeFile ||
