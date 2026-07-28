@@ -121,7 +121,7 @@ internal struct PhotinoNativeParameters
     /// <summary>OPTIONAL: If true, window is created without a title bar or borders. This allows owner-drawn title bars and borders. Default is false.</summary>
     [MarshalAs(UnmanagedType.I1)] internal bool Chromeless; //#35
 
-    /// <summary>OPTIONAL: If true, window can be displayed with transparent background. Chromeless must be set to true. Html document's body background must have alpha-based value. Default is false.</summary>
+    /// <summary>OPTIONAL: If true, window can be displayed with transparent background where supported. Chromeless windows and alpha-based page backgrounds are typically required for full-window transparency. Default is false.</summary>
     [MarshalAs(UnmanagedType.I1)] internal bool Transparent; //#36
 
     /// <summary>OPTIONAL: If true, user can access the browser control's context menu. Default is true.</summary>
@@ -133,7 +133,7 @@ internal struct PhotinoNativeParameters
     /// <summary>OPTIONAL: If true, user can access the browser control's dev tools. Default is true.</summary>
     [MarshalAs(UnmanagedType.I1)] internal bool DevToolsEnabled; //#39
 
-    /// <summary>OPTIONAL: If true, native window cannot be resized by the user. Can still be resized by the program. Default is true.</summary>
+    /// <summary>OPTIONAL: If true, native window can be resized by the user. Default is true.</summary>
     [MarshalAs(UnmanagedType.I1)] internal bool Resizable; //#40
 
     /// <summary>OPTIONAL: If true, native window appears in front of other windows and cannot be hidden behind them. Default is false.</summary>
@@ -197,7 +197,34 @@ internal struct PhotinoNativeParameters
             (errors ??= []).Add($"Invalid WindowState value: {(int)WindowState}.");
 
         if (!string.IsNullOrWhiteSpace(windowIconFile) && !File.Exists(windowIconFile))
-            (errors ??= []).Add($"WindowIconFile: {windowIconFile} cannot be found");
+            (errors ??= []).Add($"WindowIconFile: {windowIconFile} cannot be found.");
+
+        if (CenterOnInitialize && UseOsDefaultLocation)
+            (errors ??= []).Add("CenterOnInitialize cannot be used with UseOsDefaultLocation.");
+
+        if (Width < 0)
+            (errors ??= []).Add($"Width cannot be negative. Width: {Width}.");
+
+        if (Height < 0)
+            (errors ??= []).Add($"Height cannot be negative. Height: {Height}.");
+
+        if (MinWidth < 0)
+            (errors ??= []).Add($"MinWidth cannot be negative. MinWidth: {MinWidth}.");
+
+        if (MinHeight < 0)
+            (errors ??= []).Add($"MinHeight cannot be negative. MinHeight: {MinHeight}.");
+
+        if (MaxWidth < 0)
+            (errors ??= []).Add($"MaxWidth cannot be negative. MaxWidth: {MaxWidth}.");
+
+        if (MaxHeight < 0)
+            (errors ??= []).Add($"MaxHeight cannot be negative. MaxHeight: {MaxHeight}.");
+
+        if (MinWidth > MaxWidth)
+            (errors ??= []).Add($"MinWidth cannot be greater than MaxWidth. MinWidth: {MinWidth}, MaxWidth: {MaxWidth}.");
+
+        if (MinHeight > MaxHeight)
+            (errors ??= []).Add($"MinHeight cannot be greater than MaxHeight. MinHeight: {MinHeight}, MaxHeight: {MaxHeight}.");
 
         if (Platform.IsWindows && Chromeless && (UseOsDefaultLocation || UseOsDefaultSize))
             (errors ??= []).Add("Chromeless cannot be used with UseOsDefaultLocation or UseOsDefaultSize on Windows. Size and location must be specified.");

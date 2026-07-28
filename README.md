@@ -134,7 +134,7 @@ Startup content selection is explicit: `Load(...)` sets URL content and clears r
 
 ### Compatibility
 
-These changes may require source-level updates for applications that use older Photino.NET event names, `WaitForClose()`-based startup, focus-in/focus-out event handlers, old bool-returning close handlers, the previous separate fullscreen/maximized/minimized state model now replaced by `WindowState`, or code that relied on duplicate `Restored` notifications from transient native resize messages.
+These changes may require source-level updates for applications that use older Photino.NET event names, `WaitForClose()`-based startup, focus-in/focus-out event handlers, old bool-returning close handlers, the previous separate fullscreen/maximized/minimized state model now replaced by `WindowState`.
 
 ### Native runtime foundation
 

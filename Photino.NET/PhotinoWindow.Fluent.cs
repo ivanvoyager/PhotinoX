@@ -562,6 +562,7 @@ partial class PhotinoWindow
         if (_nativeInstance == IntPtr.Zero)
         {
             _startupParameters.CenterOnInitialize = true;
+            _startupParameters.UseOsDefaultLocation = false;
         }
         else
         {
@@ -752,7 +753,7 @@ partial class PhotinoWindow
     /// Enables or disables native window transparency.
     /// </summary>
     /// <remarks>
-    /// Transparency requires a chromeless window and page content with an alpha-based background.
+    /// Transparency is most useful with a chromeless window and page content with an alpha-based background.
     /// </remarks>
     /// <param name="enabled">
     /// <see langword="true"/> to enable transparency; otherwise, <see langword="false"/>.

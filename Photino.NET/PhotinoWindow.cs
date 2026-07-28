@@ -208,7 +208,10 @@ public partial class PhotinoWindow
         set
         {
             ThrowIfClosedOrInitialized();
+
             _startupParameters.CenterOnInitialize = value;
+            if (value)
+                _startupParameters.UseOsDefaultLocation = false;
         }
     }
 
@@ -768,6 +771,8 @@ public partial class PhotinoWindow
             {
                 _startupParameters.Left = value.X;
                 _startupParameters.Top = value.Y;
+                _startupParameters.UseOsDefaultLocation = false;
+                _startupParameters.CenterOnInitialize = false;
                 return;
             }
 
@@ -1005,6 +1010,7 @@ public partial class PhotinoWindow
             {
                 _startupParameters.Width = value.Width;
                 _startupParameters.Height = value.Height;
+                _startupParameters.UseOsDefaultSize = false;
                 return;
             }
 
@@ -1276,7 +1282,10 @@ public partial class PhotinoWindow
         set
         {
             ThrowIfClosedOrInitialized();
+
             _startupParameters.UseOsDefaultLocation = value;
+            if (value)
+                _startupParameters.CenterOnInitialize = false;
         }
     }
 
@@ -1532,7 +1541,7 @@ public partial class PhotinoWindow
                 break;
         }
 
-        _startupParameters.Title = _title;
+        _startupParameters.Title = _title ?? DefaultTitle;
         _startupParameters.NativeParent = Parent?._nativeInstance ?? IntPtr.Zero;
 
         // Validate startup parameters
