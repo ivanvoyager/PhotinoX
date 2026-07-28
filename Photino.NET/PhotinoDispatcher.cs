@@ -87,9 +87,7 @@ public sealed partial class PhotinoDispatcher
     {
         ArgumentNullException.ThrowIfNull(callback);
 
-        bool success = BeginInvokeNative(callback);
-        Debug.Assert(success);
-        return success;
+        return BeginInvokeNative(callback);
     }
 
     /// <summary>
@@ -109,9 +107,7 @@ public sealed partial class PhotinoDispatcher
     {
         ArgumentNullException.ThrowIfNull(callback);
 
-        bool success = BeginInvokeNative(callback, state);
-        Debug.Assert(success);
-        return success;
+        return BeginInvokeNative(callback, state);
     }
 
     /// <summary>
@@ -166,9 +162,7 @@ public sealed partial class PhotinoDispatcher
             return true;
         }
 
-        bool success = InvokeNative(callback);
-        Debug.Assert(success);
-        return success;
+        return InvokeNative(callback);
     }
 
     /// <summary>
@@ -252,7 +246,6 @@ public sealed partial class PhotinoDispatcher
             state.Callback(state.State);
         }, invokeState);
 
-        Debug.Assert(success);
         return success;
     }
 
@@ -328,7 +321,6 @@ public sealed partial class PhotinoDispatcher
             var state = (InvokeFuncState<TResult>)value!;
             state.Result = state.Callback();
         }, state);
-        Debug.Assert(success);
 
         result = state.Result;
         return success;
@@ -421,8 +413,6 @@ public sealed partial class PhotinoDispatcher
             state.Result = state.Callback(state.State);
         }, invokeState);
 
-        Debug.Assert(success);
-
         result = invokeState.Result;
         return success;
     }
@@ -481,9 +471,7 @@ public sealed partial class PhotinoDispatcher
             return true;
         }
 
-        bool success = InvokeNative(callback, state);
-        Debug.Assert(success);
-        return success;
+        return InvokeNative(callback, state);
     }
 
     /// <summary>
@@ -522,7 +510,7 @@ public sealed partial class PhotinoDispatcher
                 state.Completion.SetException(ex);
             }
         }, invokeState);
-        Debug.Assert(success);
+
         if (!success)
             invokeState.Completion.SetException(CreateFailedException());
 
@@ -567,7 +555,7 @@ public sealed partial class PhotinoDispatcher
                 state.Completion.SetException(ex);
             }
         }, invokeState);
-        Debug.Assert(success);
+
         if (!success)
             invokeState.Completion.SetException(CreateFailedException());
 
@@ -614,7 +602,7 @@ public sealed partial class PhotinoDispatcher
                 state.Completion.SetException(ex);
             }
         }, invokeState);
-        Debug.Assert(success);
+
         if (!success)
             invokeState.Completion.SetException(CreateFailedException());
 
@@ -658,7 +646,7 @@ public sealed partial class PhotinoDispatcher
                 state.Completion.SetException(ex);
             }
         }, invokeState);
-        Debug.Assert(success);
+
         if (!success)
             invokeState.Completion.SetException(CreateFailedException());
 
@@ -706,7 +694,7 @@ public sealed partial class PhotinoDispatcher
                 state.Completion.SetException(ex);
             }
         }, invokeState);
-        Debug.Assert(success);
+
         if (!success)
             invokeState.Completion.SetException(CreateFailedException());
 
@@ -749,7 +737,7 @@ public sealed partial class PhotinoDispatcher
                 state.Completion.SetException(ex);
             }
         }, invokeState);
-        Debug.Assert(success);
+
         if (!success)
             invokeState.Completion.SetException(CreateFailedException());
 
@@ -793,7 +781,7 @@ public sealed partial class PhotinoDispatcher
                 state.Completion.SetException(ex);
             }
         }, invokeState);
-        Debug.Assert(success);
+
         if (!success)
             invokeState.Completion.SetException(CreateFailedException());
 

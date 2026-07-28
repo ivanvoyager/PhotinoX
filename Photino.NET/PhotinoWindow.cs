@@ -137,16 +137,22 @@ public partial class PhotinoWindow
             }, state);
             Debug.Assert(enumerated);
 
+            if (!enumerated)
+                throw new InvalidOperationException("Failed to enumerate native monitors.");
+
             return state.Monitors;
         }
     }
 
     /// <summary>
-    /// Retrieves the primary monitor information from the native window instance.
+    /// Gets information about the monitor that currently contains the native window.
     /// </summary>
-    /// <exception cref="InvalidOperationException">Thrown when the window is not initialized or has already been closed.</exception>
+    /// <exception cref="InvalidOperationException">
+    /// Thrown when the window is not initialized, has already been closed,
+    /// or the native window monitor cannot be resolved.
+    /// </exception>
     /// <returns>
-    /// Returns a Monitor object representing the main monitor. The main monitor is the first monitor in the list of available monitors.
+    /// Returns a <see cref="Monitor"/> object representing the monitor that currently contains the native window.
     /// </returns>
     public Monitor MainMonitor
     {
@@ -154,7 +160,13 @@ public partial class PhotinoWindow
         {
             ThrowIfClosedOrNotInitialized();
 
-            return Monitors[0];
+            return Dispatcher.Invoke(static nativeInstance =>
+            {
+                if (!Photino_GetWindowMonitor(nativeInstance, out NativeMonitor monitor))
+                    throw new InvalidOperationException("Failed to get the native window monitor.");
+
+                return new Monitor(monitor);
+            }, _nativeInstance);
         }
     }
 
@@ -170,8 +182,7 @@ public partial class PhotinoWindow
         {
             ThrowIfClosedOrNotInitialized();
 
-            uint dpi = 0;
-            Invoke(() => dpi = Photino_GetScreenDpi(_nativeInstance));
+            uint dpi = Dispatcher.Invoke(static nativeInstance => Photino_GetScreenDpi(nativeInstance), _nativeInstance);
             return dpi;
         }
     }
@@ -241,24 +252,31 @@ public partial class PhotinoWindow
             if (_nativeInstance == IntPtr.Zero)
                 return _startupParameters.Transparent;
 
-            byte enabled = 0;
-            Invoke(() => Photino_GetTransparentEnabled(_nativeInstance, out enabled));
-            return enabled != 0;
+            return Dispatcher.Invoke(static nativeInstance =>
+            {
+                Photino_GetTransparentEnabled(nativeInstance, out byte enabled);
+                return enabled != 0;
+            }, _nativeInstance);
         }
         set
         {
             ThrowIfClosed();
 
             if (_nativeInstance == IntPtr.Zero)
-                _startupParameters.Transparent = value;
-            else
             {
-                if (Platform.IsWindows)
-                    throw new InvalidOperationException("Transparent can only be set on Windows before the native window is instantiated.");
-
-                Log($"Invoking Photino_SetTransparentEnabled({value})");
-                Invoke(() => Photino_SetTransparentEnabled(_nativeInstance, (byte)(value ? 1 : 0)));
+                _startupParameters.Transparent = value;
+                return;
             }
+
+            if (Platform.IsWindows)
+                throw new InvalidOperationException("Transparent can only be set on Windows before the native window is instantiated.");
+
+            Log($"Invoking {nameof(Photino_SetTransparentEnabled)}({value})");
+
+            Dispatcher.Invoke(static state =>
+            {
+                Photino_SetTransparentEnabled(state.NativeInstance, (byte)(state.Value ? 1 : 0));
+            }, (NativeInstance: _nativeInstance, Value: value));
         }
     }
 
@@ -273,18 +291,26 @@ public partial class PhotinoWindow
             if (_nativeInstance == IntPtr.Zero)
                 return _startupParameters.ContextMenuEnabled;
 
-            byte enabled = 0;
-            Invoke(() => Photino_GetContextMenuEnabled(_nativeInstance, out enabled));
-            return enabled != 0;
+            return Dispatcher.Invoke(static nativeInstance =>
+            {
+                Photino_GetContextMenuEnabled(nativeInstance, out byte enabled);
+                return enabled != 0;
+            }, _nativeInstance);
         }
         set
         {
             ThrowIfClosed();
 
             if (_nativeInstance == IntPtr.Zero)
+            {
                 _startupParameters.ContextMenuEnabled = value;
-            else
-                Invoke(() => Photino_SetContextMenuEnabled(_nativeInstance, (byte)(value ? 1 : 0)));
+                return;
+            }
+
+            Dispatcher.Invoke(static state =>
+            {
+                Photino_SetContextMenuEnabled(state.NativeInstance, (byte)(state.Value ? 1 : 0));
+            }, (NativeInstance: _nativeInstance, Value: value));
         }
     }
 
@@ -299,18 +325,26 @@ public partial class PhotinoWindow
             if (_nativeInstance == IntPtr.Zero)
                 return _startupParameters.ZoomEnabled;
 
-            byte enabled = 0;
-            Invoke(() => Photino_GetZoomEnabled(_nativeInstance, out enabled));
-            return enabled != 0;
+            return Dispatcher.Invoke(static nativeInstance =>
+            {
+                Photino_GetZoomEnabled(nativeInstance, out byte enabled);
+                return enabled != 0;
+            }, _nativeInstance);
         }
         set
         {
             ThrowIfClosed();
 
             if (_nativeInstance == IntPtr.Zero)
+            {
                 _startupParameters.ZoomEnabled = value;
-            else
-                Invoke(() => Photino_SetZoomEnabled(_nativeInstance, (byte)(value ? 1 : 0)));
+                return;
+            }
+
+            Dispatcher.Invoke(static state =>
+            {
+                Photino_SetZoomEnabled(state.NativeInstance, (byte)(state.Value ? 1 : 0));
+            }, (NativeInstance: _nativeInstance, Value: value));
         }
     }
 
@@ -325,18 +359,26 @@ public partial class PhotinoWindow
             if (_nativeInstance == IntPtr.Zero)
                 return _startupParameters.DevToolsEnabled;
 
-            byte enabled = 0;
-            Invoke(() => Photino_GetDevToolsEnabled(_nativeInstance, out enabled));
-            return enabled != 0;
+            return Dispatcher.Invoke(static nativeInstance =>
+            {
+                Photino_GetDevToolsEnabled(nativeInstance, out byte enabled);
+                return enabled != 0;
+            }, _nativeInstance);
         }
         set
         {
             ThrowIfClosed();
 
             if (_nativeInstance == IntPtr.Zero)
+            {
                 _startupParameters.DevToolsEnabled = value;
-            else
-                Invoke(() => Photino_SetDevToolsEnabled(_nativeInstance, (byte)(value ? 1 : 0)));
+                return;
+            }
+
+            Dispatcher.Invoke(static state =>
+            {
+                Photino_SetDevToolsEnabled(state.NativeInstance, (byte)(state.Value ? 1 : 0));
+            }, (NativeInstance: _nativeInstance, Value: value));
         }
     }
 
@@ -347,17 +389,17 @@ public partial class PhotinoWindow
             if (_nativeInstance == IntPtr.Zero)
                 return _startupParameters.MediaAutoplayEnabled;
 
-            byte enabled = 0;
-            Invoke(() => Photino_GetMediaAutoplayEnabled(_nativeInstance, out enabled));
-            return enabled != 0;
+            return Dispatcher.Invoke(static nativeInstance =>
+            {
+                Photino_GetMediaAutoplayEnabled(nativeInstance, out byte enabled);
+                return enabled != 0;
+            }, _nativeInstance);
         }
         set
         {
             ThrowIfClosedOrInitialized();
-            if (MediaAutoplayEnabled != value)
-            {
-                _startupParameters.MediaAutoplayEnabled = value;
-            }
+
+            _startupParameters.MediaAutoplayEnabled = value;
         }
     }
 
@@ -368,13 +410,12 @@ public partial class PhotinoWindow
             if (_nativeInstance == IntPtr.Zero)
                 return _startupParameters.UserAgent;
 
-            string? userAgent = null;
-            Invoke(() =>
+            return Dispatcher.Invoke(static nativeInstance =>
             {
-                var ptr = Photino_GetUserAgent(_nativeInstance);
+                var ptr = Photino_GetUserAgent(nativeInstance);
                 try
                 {
-                    userAgent = ptr != IntPtr.Zero
+                    return ptr != IntPtr.Zero
                         ? Marshal.PtrToStringUTF8(ptr)
                         : null;
                 }
@@ -383,16 +424,13 @@ public partial class PhotinoWindow
                     if (ptr != IntPtr.Zero)
                         Photino_FreeString(ptr);
                 }
-            });
-            return userAgent;
+            }, _nativeInstance);
         }
         set
         {
             ThrowIfClosedOrInitialized();
-            if (UserAgent != value)
-            {
-                _startupParameters.UserAgent = value;
-            }
+
+            _startupParameters.UserAgent = value;
         }
     }
 
@@ -403,17 +441,17 @@ public partial class PhotinoWindow
             if (_nativeInstance == IntPtr.Zero)
                 return _startupParameters.FileSystemAccessEnabled;
 
-            byte enabled = 0;
-            Invoke(() => Photino_GetFileSystemAccessEnabled(_nativeInstance, out enabled));
-            return enabled != 0;
+            return Dispatcher.Invoke(static nativeInstance =>
+            {
+                Photino_GetFileSystemAccessEnabled(nativeInstance, out byte enabled);
+                return enabled != 0;
+            }, _nativeInstance);
         }
         set
         {
             ThrowIfClosedOrInitialized();
-            if (FileSystemAccessEnabled != value)
-            {
-                _startupParameters.FileSystemAccessEnabled = value;
-            }
+
+            _startupParameters.FileSystemAccessEnabled = value;
         }
     }
 
@@ -424,17 +462,17 @@ public partial class PhotinoWindow
             if (_nativeInstance == IntPtr.Zero)
                 return _startupParameters.WebSecurityEnabled;
 
-            byte enabled = 0;
-            Invoke(() => Photino_GetWebSecurityEnabled(_nativeInstance, out enabled));
-            return enabled != 0;
+            return Dispatcher.Invoke(static nativeInstance =>
+            {
+                Photino_GetWebSecurityEnabled(nativeInstance, out byte enabled);
+                return enabled != 0;
+            }, _nativeInstance);
         }
         set
         {
             ThrowIfClosedOrInitialized();
-            if (WebSecurityEnabled != value)
-            {
-                _startupParameters.WebSecurityEnabled = value;
-            }
+
+            _startupParameters.WebSecurityEnabled = value;
         }
     }
 
@@ -445,17 +483,17 @@ public partial class PhotinoWindow
             if (_nativeInstance == IntPtr.Zero)
                 return _startupParameters.JavascriptClipboardAccessEnabled;
 
-            byte enabled = 0;
-            Invoke(() => Photino_GetJavascriptClipboardAccessEnabled(_nativeInstance, out enabled));
-            return enabled != 0;
+            return Dispatcher.Invoke(static nativeInstance =>
+            {
+                Photino_GetJavascriptClipboardAccessEnabled(nativeInstance, out byte enabled);
+                return enabled != 0;
+            }, _nativeInstance);
         }
         set
         {
             ThrowIfClosedOrInitialized();
-            if (JavascriptClipboardAccessEnabled != value)
-            {
-                _startupParameters.JavascriptClipboardAccessEnabled = value;
-            }
+
+            _startupParameters.JavascriptClipboardAccessEnabled = value;
         }
     }
 
@@ -466,17 +504,17 @@ public partial class PhotinoWindow
             if (_nativeInstance == IntPtr.Zero)
                 return _startupParameters.MediaStreamEnabled;
 
-            byte enabled = 0;
-            Invoke(() => Photino_GetMediaStreamEnabled(_nativeInstance, out enabled));
-            return enabled != 0;
+            return Dispatcher.Invoke(static nativeInstance =>
+            {
+                Photino_GetMediaStreamEnabled(nativeInstance, out byte enabled);
+                return enabled != 0;
+            }, _nativeInstance);
         }
         set
         {
             ThrowIfClosedOrInitialized();
-            if (MediaStreamEnabled != value)
-            {
-                _startupParameters.MediaStreamEnabled = value;
-            }
+
+            _startupParameters.MediaStreamEnabled = value;
         }
     }
 
@@ -487,17 +525,17 @@ public partial class PhotinoWindow
             if (_nativeInstance == IntPtr.Zero)
                 return _startupParameters.SmoothScrollingEnabled;
 
-            byte enabled = 0;
-            Invoke(() => Photino_GetSmoothScrollingEnabled(_nativeInstance, out enabled));
-            return enabled != 0;
+            return Dispatcher.Invoke(static nativeInstance =>
+            {
+                Photino_GetSmoothScrollingEnabled(nativeInstance, out byte enabled);
+                return enabled != 0;
+            }, _nativeInstance);
         }
         set
         {
             ThrowIfClosedOrInitialized();
-            if (SmoothScrollingEnabled != value)
-            {
-                _startupParameters.SmoothScrollingEnabled = value;
-            }
+
+            _startupParameters.SmoothScrollingEnabled = value;
         }
     }
 
@@ -508,17 +546,17 @@ public partial class PhotinoWindow
             if (_nativeInstance == IntPtr.Zero)
                 return _startupParameters.IgnoreCertificateErrorsEnabled;
 
-            byte enabled = 0;
-            Invoke(() => Photino_GetIgnoreCertificateErrorsEnabled(_nativeInstance, out enabled));
-            return enabled != 0;
+            return Dispatcher.Invoke(static nativeInstance =>
+            {
+                Photino_GetIgnoreCertificateErrorsEnabled(nativeInstance, out byte enabled);
+                return enabled != 0;
+            }, _nativeInstance);
         }
         set
         {
             ThrowIfClosedOrInitialized();
-            if (IgnoreCertificateErrorsEnabled != value)
-            {
-                _startupParameters.IgnoreCertificateErrorsEnabled = value;
-            }
+
+            _startupParameters.IgnoreCertificateErrorsEnabled = value;
         }
     }
 
@@ -529,17 +567,17 @@ public partial class PhotinoWindow
             if (_nativeInstance == IntPtr.Zero)
                 return _startupParameters.NotificationsEnabled;
 
-            byte enabled = 0;
-            Invoke(() => Photino_GetNotificationsEnabled(_nativeInstance, out enabled));
-            return enabled != 0;
+            return Dispatcher.Invoke(static nativeInstance =>
+            {
+                Photino_GetNotificationsEnabled(nativeInstance, out byte enabled);
+                return enabled != 0;
+            }, _nativeInstance);
         }
         set
         {
             ThrowIfClosedOrInitialized();
-            if (NotificationsEnabled != value)
-            {
-                _startupParameters.NotificationsEnabled = value;
-            }
+
+            _startupParameters.NotificationsEnabled = value;
         }
     }
 
@@ -568,9 +606,11 @@ public partial class PhotinoWindow
             if (_nativeInstance == IntPtr.Zero)
                 return _startupParameters.WindowState;
 
-            PhotinoWindowState state = default;
-            Invoke(() => Photino_GetWindowState(_nativeInstance, out state));
-            return state;
+            return Dispatcher.Invoke(static nativeInstance =>
+            {
+                Photino_GetWindowState(nativeInstance, out PhotinoWindowState state);
+                return state;
+            }, _nativeInstance);
         }
         set
         {
@@ -579,9 +619,15 @@ public partial class PhotinoWindow
             ThrowIfNotValidWindowState(value);
 
             if (_nativeInstance == IntPtr.Zero)
+            {
                 _startupParameters.WindowState = value;
-            else
-                Invoke(() => Photino_SetWindowState(_nativeInstance, value));
+                return;
+            }
+
+            Dispatcher.Invoke(static state =>
+            {
+                Photino_SetWindowState(state.NativeInstance, state.Value);
+            }, (NativeInstance: _nativeInstance, Value: value));
         }
     }
 
@@ -599,17 +645,17 @@ public partial class PhotinoWindow
             if (_nativeInstance == IntPtr.Zero)
                 return _startupParameters.GrantBrowserPermissions;
 
-            byte grant = 0;
-            Invoke(() => Photino_GetGrantBrowserPermissions(_nativeInstance, out grant));
-            return grant != 0;
+            return Dispatcher.Invoke(static nativeInstance =>
+            {
+                Photino_GetGrantBrowserPermissions(nativeInstance, out byte grant);
+                return grant != 0;
+            }, _nativeInstance);
         }
         set
         {
             ThrowIfClosedOrInitialized();
-            if (GrantBrowserPermissions != value)
-            {
-                _startupParameters.GrantBrowserPermissions = value;
-            }
+
+            _startupParameters.GrantBrowserPermissions = value;
         }
     }
 
@@ -651,13 +697,12 @@ public partial class PhotinoWindow
             if (_nativeInstance == IntPtr.Zero)
                 return _startupParameters.WindowIconFile;
 
-            string? iconFile = null;
-            Invoke(() =>
+            return Dispatcher.Invoke(static nativeInstance =>
             {
-                var ptr = Photino_GetIconFile(_nativeInstance);
+                var ptr = Photino_GetIconFile(nativeInstance);
                 try
                 {
-                    iconFile = ptr != IntPtr.Zero
+                    return ptr != IntPtr.Zero
                         ? Marshal.PtrToStringUTF8(ptr)
                         : null;
                 }
@@ -666,8 +711,7 @@ public partial class PhotinoWindow
                     if (ptr != IntPtr.Zero)
                         Photino_FreeString(ptr);
                 }
-            });
-            return iconFile;
+            }, _nativeInstance);
         }
         set
         {
@@ -686,9 +730,15 @@ public partial class PhotinoWindow
             }
 
             if (_nativeInstance == IntPtr.Zero)
+            {
                 _startupParameters.WindowIconFile = iconFile;
-            else
-                Invoke(() => Photino_SetIconFile(_nativeInstance, iconFile));
+                return;
+            }
+
+            Dispatcher.Invoke(static state =>
+            {
+                Photino_SetIconFile(state.NativeInstance, state.IconFile);
+            }, (NativeInstance: _nativeInstance, IconFile: iconFile));
         }
     }
 
@@ -704,10 +754,11 @@ public partial class PhotinoWindow
             if (_nativeInstance == IntPtr.Zero)
                 return new Point(_startupParameters.Left, _startupParameters.Top);
 
-            var left = 0;
-            var top = 0;
-            Invoke(() => Photino_GetPosition(_nativeInstance, out left, out top));
-            return new Point(left, top);
+            return Dispatcher.Invoke(static nativeInstance =>
+            {
+                Photino_GetPosition(nativeInstance, out int left, out int top);
+                return new Point(left, top);
+            }, _nativeInstance);
         }
         set
         {
@@ -717,9 +768,13 @@ public partial class PhotinoWindow
             {
                 _startupParameters.Left = value.X;
                 _startupParameters.Top = value.Y;
+                return;
             }
-            else
-                Invoke(() => Photino_SetPosition(_nativeInstance, value.X, value.Y));
+
+            Dispatcher.Invoke(static state =>
+            {
+                Photino_SetPosition(state.NativeInstance, state.X, state.Y);
+            }, (NativeInstance: _nativeInstance, X: value.X, Y: value.Y));
         }
     }
 
@@ -752,19 +807,24 @@ public partial class PhotinoWindow
         {
             ThrowIfClosed();
 
-            if (MaxWidth != value.X || MaxHeight != value.Y)
-            {
-                if (_nativeInstance == IntPtr.Zero)
-                {
-                    _startupParameters.MaxWidth = value.X;
-                    _startupParameters.MaxHeight = value.Y;
-                }
-                else
-                    Invoke(() => Photino_SetMaxSize(_nativeInstance, value.X, value.Y));
+            if (MaxWidth == value.X && MaxHeight == value.Y)
+                return;
 
-                _maxWidth = value.X;
-                _maxHeight = value.Y;
+            if (_nativeInstance == IntPtr.Zero)
+            {
+                _startupParameters.MaxWidth = value.X;
+                _startupParameters.MaxHeight = value.Y;
             }
+            else
+            {
+                Dispatcher.Invoke(static state =>
+                {
+                    Photino_SetMaxSize(state.NativeInstance, state.Width, state.Height);
+                }, (NativeInstance: _nativeInstance, Width: value.X, Height: value.Y));
+            }
+
+            _maxWidth = value.X;
+            _maxHeight = value.Y;
         }
     }
 
@@ -818,19 +878,24 @@ public partial class PhotinoWindow
         {
             ThrowIfClosed();
 
-            if (MinWidth != value.X || MinHeight != value.Y)
-            {
-                if (_nativeInstance == IntPtr.Zero)
-                {
-                    _startupParameters.MinWidth = value.X;
-                    _startupParameters.MinHeight = value.Y;
-                }
-                else
-                    Invoke(() => Photino_SetMinSize(_nativeInstance, value.X, value.Y));
+            if (MinWidth == value.X && MinHeight == value.Y)
+                return;
 
-                _minWidth = value.X;
-                _minHeight = value.Y;
+            if (_nativeInstance == IntPtr.Zero)
+            {
+                _startupParameters.MinWidth = value.X;
+                _startupParameters.MinHeight = value.Y;
             }
+            else
+            {
+                Dispatcher.Invoke(static state =>
+                {
+                    Photino_SetMinSize(state.NativeInstance, state.Width, state.Height);
+                }, (NativeInstance: _nativeInstance, Width: value.X, Height: value.Y));
+            }
+
+            _minWidth = value.X;
+            _minHeight = value.Y;
         }
     }
 
@@ -891,18 +956,26 @@ public partial class PhotinoWindow
             if (_nativeInstance == IntPtr.Zero)
                 return _startupParameters.Resizable;
 
-            byte resizable = 0;
-            Invoke(() => Photino_GetResizable(_nativeInstance, out resizable));
-            return resizable != 0;
+            return Dispatcher.Invoke(static nativeInstance =>
+            {
+                Photino_GetResizable(nativeInstance, out byte resizable);
+                return resizable != 0;
+            }, _nativeInstance);
         }
         set
         {
             ThrowIfClosed();
 
             if (_nativeInstance == IntPtr.Zero)
+            {
                 _startupParameters.Resizable = value;
-            else
-                Invoke(() => Photino_SetResizable(_nativeInstance, (byte)(value ? 1 : 0)));
+                return;
+            }
+
+            Dispatcher.Invoke(static state =>
+            {
+                Photino_SetResizable(state.NativeInstance, (byte)(state.Value ? 1 : 0));
+            }, (NativeInstance: _nativeInstance, Value: value));
         }
     }
 
@@ -918,10 +991,11 @@ public partial class PhotinoWindow
             if (_nativeInstance == IntPtr.Zero)
                 return new Size(_startupParameters.Width, _startupParameters.Height);
 
-            var width = 0;
-            var height = 0;
-            Invoke(() => Photino_GetSize(_nativeInstance, out width, out height));
-            return new Size(width, height);
+            return Dispatcher.Invoke(static nativeInstance =>
+            {
+                Photino_GetSize(nativeInstance, out int width, out int height);
+                return new Size(width, height);
+            }, _nativeInstance);
         }
         set
         {
@@ -929,11 +1003,15 @@ public partial class PhotinoWindow
 
             if (_nativeInstance == IntPtr.Zero)
             {
-                _startupParameters.Height = value.Height;
                 _startupParameters.Width = value.Width;
+                _startupParameters.Height = value.Height;
+                return;
             }
-            else
-                Invoke(() => Photino_SetSize(_nativeInstance, value.Width, value.Height));
+
+            Dispatcher.Invoke(static state =>
+            {
+                Photino_SetSize(state.NativeInstance, state.Width, state.Height);
+            }, (NativeInstance: _nativeInstance, Width: value.Width, Height: value.Height));
         }
     }
 
@@ -1097,33 +1175,33 @@ public partial class PhotinoWindow
         {
             ThrowIfClosed();
 
-            if (_title != value)
+            if (_title == value)
+                return;
+
+            if (_nativeInstance == IntPtr.Zero)
             {
-                if (_nativeInstance == IntPtr.Zero)
-                {
-                    _startupParameters.Title = value;
-                    _title = value;
-                }
-                else
-                {
-                    Invoke(() =>
-                    {
-                        Photino_SetTitle(_nativeInstance, value);
-                        var ptr = Photino_GetTitle(_nativeInstance);
-                        try
-                        {
-                            _title = ptr != IntPtr.Zero
-                                ? Marshal.PtrToStringUTF8(ptr)
-                                : null;
-                        }
-                        finally
-                        {
-                            if (ptr != IntPtr.Zero)
-                                Photino_FreeString(ptr);
-                        }
-                    });
-                }
+                _startupParameters.Title = value;
+                _title = value;
+                return;
             }
+
+            _title = Dispatcher.Invoke(static state =>
+            {
+                Photino_SetTitle(state.NativeInstance, state.Value);
+
+                var ptr = Photino_GetTitle(state.NativeInstance);
+                try
+                {
+                    return ptr != IntPtr.Zero
+                        ? Marshal.PtrToStringUTF8(ptr)
+                        : null;
+                }
+                finally
+                {
+                    if (ptr != IntPtr.Zero)
+                        Photino_FreeString(ptr);
+                }
+            }, (NativeInstance: _nativeInstance, Value: value));
         }
     }
 
@@ -1156,18 +1234,26 @@ public partial class PhotinoWindow
             if (_nativeInstance == IntPtr.Zero)
                 return _startupParameters.Topmost;
 
-            byte topmost = 0;
-            Invoke(() => Photino_GetTopmost(_nativeInstance, out topmost));
-            return topmost != 0;
+            return Dispatcher.Invoke(static nativeInstance =>
+            {
+                Photino_GetTopmost(nativeInstance, out byte topmost);
+                return topmost != 0;
+            }, _nativeInstance);
         }
         set
         {
             ThrowIfClosed();
 
             if (_nativeInstance == IntPtr.Zero)
+            {
                 _startupParameters.Topmost = value;
-            else
-                Invoke(() => Photino_SetTopmost(_nativeInstance, (byte)(value ? 1 : 0)));
+                return;
+            }
+
+            Dispatcher.Invoke(static state =>
+            {
+                Photino_SetTopmost(state.NativeInstance, (byte)(state.Value ? 1 : 0));
+            }, (NativeInstance: _nativeInstance, Value: value));
         }
     }
 
@@ -1247,18 +1333,26 @@ public partial class PhotinoWindow
             if (_nativeInstance == IntPtr.Zero)
                 return _startupParameters.Zoom;
 
-            var zoom = 0;
-            Invoke(() => Photino_GetZoom(_nativeInstance, out zoom));
-            return zoom;
+            return Dispatcher.Invoke(static nativeInstance =>
+            {
+                Photino_GetZoom(nativeInstance, out int zoom);
+                return zoom;
+            }, _nativeInstance);
         }
         set
         {
             ThrowIfClosed();
 
             if (_nativeInstance == IntPtr.Zero)
+            {
                 _startupParameters.Zoom = value;
-            else
-                Invoke(() => Photino_SetZoom(_nativeInstance, value));
+                return;
+            }
+
+            Dispatcher.Invoke(static state =>
+            {
+                Photino_SetZoom(state.NativeInstance, state.Value);
+            }, (NativeInstance: _nativeInstance, Value: value));
         }
     }
 
@@ -1277,7 +1371,8 @@ public partial class PhotinoWindow
     /// </summary>
     /// <remarks>
     /// This class represents a native window with a native browser control taking up the entire client area.
-    /// If a parent window is specified, this window will be created as a child of the specified parent window.
+    /// If a parent window is specified, it is used as a logical parent.
+    /// Native owner behavior is controlled separately by <see cref="UseNativeWindowOwner"/>.
     /// </remarks>
     /// <param name="parent">The parent PhotinoWindow. This is optional and defaults to null.</param>
     public PhotinoWindow(PhotinoWindow? parent = null)
@@ -1333,11 +1428,12 @@ public partial class PhotinoWindow
     /// </exception>
     public bool Activate()
     {
-        Log(".Activate()");
+        Log($".{nameof(Activate)}()");
         ThrowIfClosedOrNotInitialized();
-        var activated = false;
-        Invoke(() => activated = Photino_Activate(_nativeInstance));
-        return activated;
+
+        return Dispatcher.Invoke(
+            static nativeInstance => Photino_Activate(nativeInstance),
+            _nativeInstance);
     }
 
     /// <summary>
@@ -1353,7 +1449,7 @@ public partial class PhotinoWindow
 
         if (_nativeInstance != IntPtr.Zero)
         {
-            Invoke(() => Photino_Show(_nativeInstance));
+            Dispatcher.Invoke(static nativeInstance => Photino_Show(nativeInstance), _nativeInstance);
             return;
         }
 
@@ -1376,6 +1472,7 @@ public partial class PhotinoWindow
 
         PrepareAndValidateStartupParameters();
         ThrowIfInitializedForCall();
+
         try
         {
             _nativeInstance = Photino_ctor(ref _startupParameters);
@@ -1389,9 +1486,7 @@ public partial class PhotinoWindow
                 lastError = Marshal.GetLastWin32Error();
 
             Log($"Error #{lastError}{Environment.NewLine}{ex}");
-            throw new ExternalException(
-                $"Native code exception. Error # {lastError}. See inner exception for details.", ex)
-            { HResult = lastError };
+            throw new ExternalException($"Native code exception. Error # {lastError}. See inner exception for details.", ex) { HResult = lastError };
         }
 
         if (_nativeInstance != IntPtr.Zero)
@@ -1406,9 +1501,10 @@ public partial class PhotinoWindow
     /// </exception>
     public void Close()
     {
-        Log(".Close()");
+        Log($".{nameof(Close)}()");
         ThrowIfClosedOrNotInitialized();
-        Invoke(() => Photino_Close(_nativeInstance));
+
+        Dispatcher.Invoke(static nativeInstance => Photino_Close(nativeInstance), _nativeInstance);
     }
 
     internal void InternalClose()
@@ -1417,7 +1513,8 @@ public partial class PhotinoWindow
             return;
 
         _suppressClosing = true;
-        Invoke(() => Photino_Close(_nativeInstance));
+
+        Dispatcher.Invoke(static nativeInstance => Photino_Close(nativeInstance), _nativeInstance);
     }
 
     private void PrepareAndValidateStartupParameters()
@@ -1460,9 +1557,13 @@ public partial class PhotinoWindow
     /// <param name="message">Message as string</param>
     public void SendWebMessage(string message)
     {
-        Log($".SendWebMessage({message})");
+        Log($".{nameof(SendWebMessage)}({message})");
         ThrowIfClosedOrNotInitialized();
-        Invoke(() => Photino_SendWebMessage(_nativeInstance, message));
+
+        Dispatcher.Invoke(static state =>
+        {
+            Photino_SendWebMessage(state.NativeInstance, state.Message);
+        }, (NativeInstance: _nativeInstance, Message: message));
     }
 
     /// <summary>
@@ -1482,10 +1583,13 @@ public partial class PhotinoWindow
     /// </exception>
     public Task SendWebMessageAsync(string message)
     {
-        return Task.Run(() =>
+        Log($".{nameof(SendWebMessageAsync)}({message})");
+        ThrowIfClosedOrNotInitialized();
+
+        return Dispatcher.InvokeAsync(static state =>
         {
-            SendWebMessage(message);
-        });
+            Photino_SendWebMessage(state.NativeInstance, state.Message);
+        }, (NativeInstance: _nativeInstance, Message: message));
     }
 
     /// <summary>
@@ -1498,9 +1602,13 @@ public partial class PhotinoWindow
     /// <param name="body">The text of the notification</param>
     public void SendNotification(string title, string body)
     {
-        Log($".SendNotification({title}, {body})");
+        Log($".{nameof(SendNotification)}({title}, {body})");
         ThrowIfClosedOrNotInitialized();
-        Invoke(() => Photino_ShowNotification(_nativeInstance, title, body));
+
+        Dispatcher.Invoke(static state =>
+        {
+            Photino_ShowNotification(state.NativeInstance, state.Title, state.Body);
+        }, (NativeInstance: _nativeInstance, Title: title, Body: body));
     }
 
     /// <summary>

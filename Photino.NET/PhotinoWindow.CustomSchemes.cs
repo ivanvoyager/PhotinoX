@@ -74,7 +74,8 @@ public partial class PhotinoWindow
     {
         ThrowIfClosed();
 
-        if (string.IsNullOrWhiteSpace(scheme)) throw new ArgumentException("A scheme must be provided (for example 'app' or 'custom').", nameof(scheme));
+        if (string.IsNullOrWhiteSpace(scheme))
+            throw new ArgumentException("A scheme must be provided (for example 'app' or 'custom').", nameof(scheme));
 
         _ = handler ?? throw new ArgumentException($"A handler with a signature matching {nameof(NetCustomSchemeDelegate)} must be supplied.", nameof(handler));
 
@@ -88,7 +89,7 @@ public partial class PhotinoWindow
 
         if (_nativeInstance == IntPtr.Zero)
         {
-            if (!CustomSchemes.TryGetValue(scheme, out _))
+            if (!CustomSchemes.ContainsKey(scheme))
             {
                 if (CustomSchemes.Count >= MaxCustomSchemeNames)
                     throw new InvalidOperationException($"No more than {MaxCustomSchemeNames} custom schemes can be set prior to initialization. Additional handlers can be added after initialization.");
@@ -98,8 +99,11 @@ public partial class PhotinoWindow
         {
             if (!CustomSchemes.ContainsKey(scheme))
             {
-                var added = false;
-                Invoke(() => added = Photino_AddCustomSchemeName(_nativeInstance, scheme));
+                bool added = Dispatcher.Invoke(static state =>
+                {
+                    return Photino_AddCustomSchemeName(state.NativeInstance, state.Scheme);
+                }, (NativeInstance: _nativeInstance, Scheme: scheme));
+
                 if (!added)
                     throw new InvalidOperationException($"Failed to register custom scheme: '{scheme}'.");
             }

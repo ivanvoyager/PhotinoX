@@ -72,6 +72,12 @@ internal static class Program
             var context = new DiagnosticWindow(window, id, parent?.Id);
             context.RegisterHandlers();
 
+            window.RegisterCreatedHandler((s, e) =>
+            {
+                var monitors = window.Monitors;
+                var monitor = window.MainMonitor;
+            });
+
             return context;
         }
 

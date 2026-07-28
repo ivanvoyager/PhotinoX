@@ -32,7 +32,7 @@ partial class PhotinoWindow
         }
         else
         {
-            Invoke(() => Photino_Maximize(_nativeInstance));
+            Dispatcher.Invoke(static nativeInstance => Photino_Maximize(nativeInstance), _nativeInstance);
         }
 
         return this;
@@ -61,7 +61,7 @@ partial class PhotinoWindow
         }
         else
         {
-            Invoke(() => Photino_Minimize(_nativeInstance));
+            Dispatcher.Invoke(static nativeInstance => Photino_Minimize(nativeInstance), _nativeInstance);
         }
 
         return this;
@@ -87,7 +87,7 @@ partial class PhotinoWindow
         }
         else
         {
-            Invoke(() => Photino_Restore(_nativeInstance));
+            Dispatcher.Invoke(static nativeInstance => Photino_Restore(nativeInstance), _nativeInstance);
         }
 
         return this;
@@ -352,48 +352,38 @@ partial class PhotinoWindow
             Log($"  New location: {location}");
         }
 
+        Rectangle? workArea = null;
+
         // If the window is outside the work area,
         // recalculate the position and continue.
-        //When window isn't initialized yet, cannot determine screen size.
+        // When window isn't initialized yet, cannot determine screen size.
         if (allowOutsideWorkArea == false && _nativeInstance != IntPtr.Zero)
         {
-            int horizontalWindowEdge = location.X + Width;
-            int verticalWindowEdge = location.Y + Height;
+            var size = Size;
+            workArea = MainMonitor.WorkArea;
 
-            int horizontalWorkAreaEdge = MainMonitor.WorkArea.Width;
-            int verticalWorkAreaEdge = MainMonitor.WorkArea.Height;
+            int horizontalWindowEdge = location.X + size.Width;
+            int verticalWindowEdge = location.Y + size.Height;
+
+            int horizontalWorkAreaEdge = workArea.Value.Width;
+            int verticalWorkAreaEdge = workArea.Value.Height;
 
             bool isOutsideHorizontalWorkArea = horizontalWindowEdge > horizontalWorkAreaEdge;
             bool isOutsideVerticalWorkArea = verticalWindowEdge > verticalWorkAreaEdge;
 
-            var locationInsideWorkArea = new Point(
-                isOutsideHorizontalWorkArea ? horizontalWorkAreaEdge - Width : location.X,
-                isOutsideVerticalWorkArea ? verticalWorkAreaEdge - Height : location.Y
+            location = new Point(
+                isOutsideHorizontalWorkArea ? horizontalWorkAreaEdge - size.Width : location.X,
+                isOutsideVerticalWorkArea ? verticalWorkAreaEdge - size.Height : location.Y
             );
-
-            location = locationInsideWorkArea;
         }
 
-        // Bug:
-        // For some reason the vertical position is not handled correctly.
-        // Whenever a positive value is set, the window appears at the
-        // very bottom of the screen and the only visible thing is the
-        // application window title bar. As a workaround we make a
-        // negative value out of the vertical position to "pull" the window up.
-        // Note:
-        // This behavior seems to be a macOS thing. In the Photino.Native
-        // project files it is commented to be expected behavior for macOS.
-        // There is some code trying to mitigate this problem, but it might
-        // not work as expected. Further investigation is necessary.
-        // Update:
-        // This behavior seems to have changed with macOS Sonoma.
-        // Therefore, we determine the version of macOS and only apply the
-        // workaround for older versions.
+        // Convert top-based Y coordinates for older macOS/AppKit positioning behavior.
         if (_nativeInstance != IntPtr.Zero && Platform.IsMacOS && Platform.MacOS.IsPreSonoma)
         {
-            var workArea = MainMonitor.WorkArea.Size;
+            workArea ??= MainMonitor.WorkArea;
+
             location.Y = location.Y >= 0
-                ? location.Y - workArea.Height
+                ? location.Y - workArea.Value.Height
                 : location.Y;
         }
 
@@ -570,9 +560,13 @@ partial class PhotinoWindow
         ThrowIfClosed();
 
         if (_nativeInstance == IntPtr.Zero)
+        {
             _startupParameters.CenterOnInitialize = true;
+        }
         else
-            Invoke(() => Photino_Center(_nativeInstance));
+        {
+            Dispatcher.Invoke(static nativeInstance => Photino_Center(nativeInstance), _nativeInstance);
+        }
 
         return this;
     }
@@ -633,7 +627,10 @@ partial class PhotinoWindow
         }
         else
         {
-            Invoke(() => Photino_SetFullScreen(_nativeInstance, (byte)(fullScreen ? 1 : 0)));
+            Dispatcher.Invoke(static state =>
+            {
+                Photino_SetFullScreen(state.NativeInstance, (byte)(state.FullScreen ? 1 : 0));
+            }, (NativeInstance: _nativeInstance, FullScreen: fullScreen));
         }
 
         return this;
@@ -662,7 +659,7 @@ partial class PhotinoWindow
         }
         else
         {
-            Invoke(() => Photino_SetMaximized(_nativeInstance, 0));
+            Dispatcher.Invoke(static nativeInstance => Photino_SetMaximized(nativeInstance, 0), _nativeInstance);
         }
 
         return this;
@@ -691,7 +688,7 @@ partial class PhotinoWindow
         }
         else
         {
-            Invoke(() => Photino_SetMinimized(_nativeInstance, 0));
+            Dispatcher.Invoke(static nativeInstance => Photino_SetMinimized(nativeInstance, 0), _nativeInstance);
         }
 
         return this;
@@ -792,7 +789,9 @@ partial class PhotinoWindow
     {
         Log($".{nameof(BeginWindowDrag)}()");
         ThrowIfClosedOrNotInitialized();
-        Invoke(() => Photino_BeginWindowDrag(_nativeInstance));
+
+        Dispatcher.Invoke(static nativeInstance => Photino_BeginWindowDrag(nativeInstance), _nativeInstance);
+
         return this;
     }
 
@@ -820,7 +819,12 @@ partial class PhotinoWindow
     {
         Log($".{nameof(BeginWindowResize)}({edge})");
         ThrowIfClosedOrNotInitialized();
-        Invoke(() => Photino_BeginWindowResize(_nativeInstance, edge));
+
+        Dispatcher.Invoke(static state =>
+        {
+            Photino_BeginWindowResize(state.NativeInstance, state.Edge);
+        }, (NativeInstance: _nativeInstance, Edge: edge));
+
         return this;
     }
 
@@ -870,7 +874,10 @@ partial class PhotinoWindow
             if (!uri.IsAbsoluteUri)
                 throw new ArgumentException("Runtime navigation URI must be absolute.", nameof(uri));
 
-            Invoke(() => Photino_NavigateToUrl(_nativeInstance, uri.ToString()));
+            Dispatcher.Invoke(static state =>
+            {
+                Photino_NavigateToUrl(state.NativeInstance, state.Url);
+            }, (NativeInstance: _nativeInstance, Url: uri.ToString()));
         }
 
         return this;
@@ -957,7 +964,12 @@ partial class PhotinoWindow
             _startupParameters.StartUrl = null;
         }
         else
-            Invoke(() => Photino_NavigateToString(_nativeInstance, content));
+        {
+            Dispatcher.Invoke(static state =>
+            {
+                Photino_NavigateToString(state.NativeInstance, state.Content);
+            }, (NativeInstance: _nativeInstance, Content: content));
+        }
 
         return this;
     }
@@ -1270,9 +1282,13 @@ partial class PhotinoWindow
         ThrowIfClosedOrNotInitialized();
 
         if (Platform.IsWindows)
-            Invoke(() => Photino_ClearBrowserAutoFill(_nativeInstance));
+        {
+            Dispatcher.Invoke(static nativeInstance => Photino_ClearBrowserAutoFill(nativeInstance), _nativeInstance);
+        }
         else
+        {
             Log($"{nameof(ClearBrowserAutoFill)} is only supported on the Windows platform");
+        }
 
         return this;
     }

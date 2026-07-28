@@ -83,7 +83,11 @@ public partial class PhotinoWindow
     /// <param name="filters">Array of (Name, Extensions) filter definitions.</param>
     /// <param name="defaultFileName">Default file name.</param>
     /// <returns>The selected file path, or <c>null</c>.</returns>
-    public string? ShowSaveFile(string title = "Save file", string? defaultPath = null, (string Name, string[] Extensions)[]? filters = null, string? defaultFileName = null)
+    public string? ShowSaveFile(
+        string title = "Save file",
+        string? defaultPath = null,
+        (string Name, string[] Extensions)[]? filters = null,
+        string? defaultFileName = null)
     {
         ThrowIfClosedOrNotInitialized();
 
@@ -91,24 +95,36 @@ public partial class PhotinoWindow
         filters ??= [];
         defaultFileName ??= string.Empty;
 
-        string? result = null;
         var nativeFilters = GetNativeFilters(filters);
 
-        Invoke(() =>
+        return Dispatcher.Invoke(static state =>
         {
-            var ptrResult = Photino_ShowSaveFile(_nativeInstance, title, defaultPath, nativeFilters, nativeFilters.Length, defaultFileName);
+            var ptrResult = Photino_ShowSaveFile(
+                state.NativeInstance,
+                state.Title,
+                state.DefaultPath,
+                state.NativeFilters,
+                state.NativeFiltersLength,
+                state.DefaultFileName);
+
             try
             {
-                result = ptrResult != IntPtr.Zero ? Marshal.PtrToStringUTF8(ptrResult) : null;
+                return ptrResult != IntPtr.Zero
+                    ? Marshal.PtrToStringUTF8(ptrResult)
+                    : null;
             }
             finally
             {
                 if (ptrResult != IntPtr.Zero)
                     Photino_FreeString(ptrResult);
             }
-        });
-
-        return result;
+        }, (
+            NativeInstance: _nativeInstance,
+            Title: title,
+            DefaultPath: defaultPath,
+            NativeFilters: nativeFilters,
+            NativeFiltersLength: nativeFilters.Length,
+            DefaultFileName: defaultFileName));
     }
 
     /// <summary>
@@ -142,13 +158,28 @@ public partial class PhotinoWindow
     /// <param name="buttons">Available interaction buttons <see cref="PhotinoDialogButtons"/></param>
     /// <param name="icon">Icon of the dialog <see cref="PhotinoDialogIcon"/></param>
     /// <returns><see cref="PhotinoDialogResult" /></returns>
-    public PhotinoDialogResult ShowMessage(string title, string text, PhotinoDialogButtons buttons = PhotinoDialogButtons.Ok, PhotinoDialogIcon icon = PhotinoDialogIcon.Info)
+    public PhotinoDialogResult ShowMessage(
+        string title,
+        string text,
+        PhotinoDialogButtons buttons = PhotinoDialogButtons.Ok,
+        PhotinoDialogIcon icon = PhotinoDialogIcon.Info)
     {
         ThrowIfClosedOrNotInitialized();
 
-        var result = PhotinoDialogResult.Cancel;
-        Invoke(() => result = Photino_ShowMessage(_nativeInstance, title, text, buttons, icon));
-        return result;
+        return Dispatcher.Invoke(static state =>
+        {
+            return Photino_ShowMessage(
+                state.NativeInstance,
+                state.Title,
+                state.Text,
+                state.Buttons,
+                state.Icon);
+        }, (
+            NativeInstance: _nativeInstance,
+            Title: title,
+            Text: text,
+            Buttons: buttons,
+            Icon: icon));
     }
 
     /// <summary>
@@ -160,25 +191,47 @@ public partial class PhotinoWindow
     /// <param name="multiSelect">Whether multiple selections are allowed</param>
     /// <param name="filters">Array of (Name, Extensions) filter definitions.</param>
     /// <returns>Array of paths</returns>
-    private string[] ShowOpenDialog(bool foldersOnly, string title, string? defaultPath, bool multiSelect, (string Name, string[] Extensions)[]? filters)
+    private string[] ShowOpenDialog(
+        bool foldersOnly,
+        string title,
+        string? defaultPath,
+        bool multiSelect,
+        (string Name, string[] Extensions)[]? filters)
     {
         ThrowIfClosedOrNotInitialized();
 
         defaultPath ??= Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
         filters ??= [];
 
-        var results = Array.Empty<string>();
         var nativeFilters = GetNativeFilters(filters, foldersOnly);
 
-        Invoke(() =>
+        return Dispatcher.Invoke(static state =>
         {
-            var ptrResults = foldersOnly ?
-                Photino_ShowOpenFolder(_nativeInstance, title, defaultPath, multiSelect, out var resultCount) :
-                Photino_ShowOpenFile(_nativeInstance, title, defaultPath, multiSelect, nativeFilters, nativeFilters.Length, out resultCount);
-            results = PtrToStringUtf8ArrayAndFree(ptrResults, resultCount);
-        });
+            var ptrResults = state.FoldersOnly
+                ? Photino_ShowOpenFolder(
+                    state.NativeInstance,
+                    state.Title,
+                    state.DefaultPath,
+                    state.MultiSelect,
+                    out var resultCount)
+                : Photino_ShowOpenFile(
+                    state.NativeInstance,
+                    state.Title,
+                    state.DefaultPath,
+                    state.MultiSelect,
+                    state.NativeFilters,
+                    state.NativeFiltersLength,
+                    out resultCount);
 
-        return results;
+            return PtrToStringUtf8ArrayAndFree(ptrResults, resultCount);
+        }, (
+            NativeInstance: _nativeInstance,
+            FoldersOnly: foldersOnly,
+            Title: title,
+            DefaultPath: defaultPath,
+            MultiSelect: multiSelect,
+            NativeFilters: nativeFilters,
+            NativeFiltersLength: nativeFilters.Length));
     }
 
     /// <summary>

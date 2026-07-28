@@ -1,4 +1,5 @@
-﻿using System.Drawing;
+﻿using System.Diagnostics;
+using System.Drawing;
 using System.Runtime.InteropServices;
 
 namespace Photino.NET;
@@ -7,7 +8,7 @@ namespace Photino.NET;
 /// Represents a 2D rectangle in a native (integer-based) coordinate system.
 /// </summary>
 [StructLayout(LayoutKind.Sequential)]
-public struct NativeRect
+internal struct NativeRect
 {
     public int x, y;
     public int width, height;
@@ -19,7 +20,7 @@ public struct NativeRect
 /// unmanaged access to the underlying memory.
 /// </summary>
 [StructLayout(LayoutKind.Sequential)]
-public struct NativeMonitor
+internal struct NativeMonitor
 {
     public NativeRect monitor;
     public NativeRect work;
@@ -29,6 +30,7 @@ public struct NativeMonitor
 /// <summary>
 /// Represents information about a monitor.
 /// </summary>
+[DebuggerDisplay("{ToString(),nq}")]
 public readonly struct Monitor
 {
     /// <summary>
@@ -66,7 +68,10 @@ public readonly struct Monitor
     /// <param name="work">The working area as <see cref="NativeRect"/></param>
     /// <param name="scale">The scale factor of the monitor. Standard value is 1.0.</param>
     internal Monitor(NativeRect monitor, NativeRect work, double scale)
-        : this(new Rectangle(monitor.x, monitor.y, monitor.width, monitor.height), new Rectangle(work.x, work.y, work.width, work.height), scale)
+        : this(
+            new Rectangle(monitor.x, monitor.y, monitor.width, monitor.height),
+            new Rectangle(work.x, work.y, work.width, work.height),
+            scale)
     { }
     
     /// <summary>
@@ -76,4 +81,10 @@ public readonly struct Monitor
     internal Monitor(NativeMonitor nativeMonitor)
         : this(nativeMonitor.monitor, nativeMonitor.work, nativeMonitor.scale)
     { }
+
+    /// <inheritdoc />
+    public override string ToString()
+    {
+        return $"{nameof(MonitorArea)}={MonitorArea}, {nameof(WorkArea)}={WorkArea}, {nameof(Scale)}={Scale:0.###}";
+    }
 }
