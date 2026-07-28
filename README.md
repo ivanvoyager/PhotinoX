@@ -7,23 +7,38 @@
 [![License](https://img.shields.io/github/license/ivanvoyager/PhotinoX?label=license)](https://github.com/ivanvoyager/PhotinoX/blob/master/LICENSE)
 [![NuGet Downloads](https://img.shields.io/nuget/dt/PhotinoX.svg)](https://www.nuget.org/packages/PhotinoX)
 
-Lightweight **.NET wrapper** for native OS WebView windows:
+Lightweight **.NET wrapper** for building desktop applications with native OS WebViews:
 - **Windows**: WebView2
 - **macOS**: WKWebView
 - **Linux**: WebKitGTK 4.1
 
-PhotinoX is a maintained fork of Photino.NET focused on predictable cross-platform desktop behavior, native runtime stability, and a cleaner managed API surface.
+PhotinoX is a maintained fork of Photino.NET positioned between Electron/Tauri-style WebView desktop runtimes and traditional .NET UI frameworks such as WPF, Avalonia, and .NET MAUI. It focuses on predictable cross-platform desktop behavior, native runtime stability, and a cleaner managed API surface.
 
 ## What is PhotinoX?
 
 PhotinoX builds on the original Photino design: native desktop windows hosted by modern **Web UI technologies** (Blazor, React, Vue, Angular, etc.), without bundling a full Chromium runtime.  
 It relies entirely on **OS‑native WebView engines**, keeping apps small and efficient.
 
+The core model is native-first: `PhotinoX.Native` owns the platform windowing and WebView integration, while the .NET layer exposes that native runtime through `PhotinoApplication`, `PhotinoDispatcher`, and `PhotinoWindow`.
+
+```text
+.NET managed API
+    ↓
+PhotinoApplication / PhotinoDispatcher / PhotinoWindow
+    ↓
+PhotinoX.Native
+    ↓
+OS-native WebView:
+    Windows: WebView2
+    macOS: WKWebView
+    Linux: WebKitGTK 4.1
+```
+
 > **Note:** PhotinoX is an independent fork of [tryphotino/photino.NET](https://github.com/tryphotino/photino.NET) under the Apache‑2.0 license and is **not affiliated** with the original project or organization.
 
 ## How PhotinoX differs from Photino.NET
 
-PhotinoX differs from the original Photino.NET project in several managed API areas: an explicit `PhotinoApplication` model, UI-thread dispatching through `PhotinoDispatcher`, simplified window event names, clearer window state operations, and a cleaner fluent `PhotinoWindow` API.
+Compared with the original Photino.NET managed API, PhotinoX introduces an explicit `PhotinoApplication` model, centralized UI-thread dispatching through `PhotinoDispatcher`, simplified window event names, native-driven window state tracking, and explicit window lifecycle APIs.
 
 ### Application model
 
@@ -87,7 +102,7 @@ Window event names are simplified to remove redundant `Window` prefixes and alig
 
 ### Window API
 
-`PhotinoWindow` now uses explicit `Show()`-based window creation, a more consistent fluent API, unified `WindowState` tracking, clearer window state operations, platform-specific native handles, and simplified lifecycle events.
+`PhotinoWindow` now uses explicit `Show()`-based window creation, unified `WindowState` tracking, explicit lifecycle state, and simplified lifecycle events.
 
 | Previous API | New API / direction |
 |---|---|
