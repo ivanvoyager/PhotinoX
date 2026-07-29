@@ -1,5 +1,7 @@
-﻿using System.Runtime.CompilerServices;
+﻿using System.Diagnostics;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Text;
 
 namespace Photino.NET;
 
@@ -56,34 +58,53 @@ internal static partial class NativeMethods
         }
     }
 
-    internal static IntPtr CopyUtf8StringToNative(string? value)
+    internal static unsafe IntPtr CopyUtf8StringToNative(string? value)
     {
         if (string.IsNullOrEmpty(value))
             return IntPtr.Zero;
 
-        var bytes = System.Text.Encoding.UTF8.GetBytes(value);
-        var buffer = Photino_AllocateString(bytes.Length + 1);
+        var byteCount = Encoding.UTF8.GetByteCount(value);
 
+        var buffer = Photino_AllocateString(byteCount + 1);
         if (buffer == IntPtr.Zero)
             throw new OutOfMemoryException();
 
-        Marshal.Copy(bytes, 0, buffer, bytes.Length);
-        Marshal.WriteByte(buffer, bytes.Length, 0);
+        try
+        {
+            var bytes = new Span<byte>((void*)buffer, byteCount + 1);
 
-        return buffer;
+            var written = Encoding.UTF8.GetBytes(value, bytes[..byteCount]);
+            Debug.Assert(written == byteCount);
+
+            bytes[byteCount] = 0;
+
+            return buffer;
+        }
+        catch
+        {
+            Photino_FreeString(buffer);
+            throw;
+        }
     }
 
-    internal static IntPtr CopyBytesToNative(byte[] bytes)
+    internal static unsafe IntPtr CopyBytesToNative(byte[] bytes)
     {
         if (bytes.Length == 0)
             return IntPtr.Zero;
 
         var buffer = Photino_AllocateMemory(bytes.Length);
-
         if (buffer == IntPtr.Zero)
             throw new OutOfMemoryException();
 
-        Marshal.Copy(bytes, 0, buffer, bytes.Length);
-        return buffer;
+        try
+        {
+            bytes.AsSpan().CopyTo(new Span<byte>((void*)buffer, bytes.Length));
+            return buffer;
+        }
+        catch
+        {
+            Photino_FreeMemory(buffer);
+            throw;
+        }
     }
 }

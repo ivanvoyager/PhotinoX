@@ -5,8 +5,7 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <Description>Lightweight .NET wrapper for native OS WebView windows (Windows/WebView2, macOS/WKWebView, Linux/WebKitGTK 4.1).
-      Maintained fork of Photino.NET.</Description>
+    <Description>Lightweight .NET wrapper for building desktop applications with native OS WebViews (Windows/WebView2, macOS/WKWebView, Linux/WebKitGTK 4.1). Maintained fork of Photino.NET.</Description>
     <RootNamespace>Photino.NET</RootNamespace>
     <GenerateDocumentationFile>True</GenerateDocumentationFile>
     <NoWarn>$(NoWarn);1591;NETSDK1233</NoWarn>
