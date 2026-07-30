@@ -16,6 +16,7 @@ internal class Program
         var mainWindow = new PhotinoWindow()
             .SetTitle("Chromeless Demo")
             .SetChromeless(true)
+            .SetLinuxChromelessDragRegion(36, 110)
             .SetResizable(true)
             .SetUseOsDefaultLocation(false)
             .SetUseOsDefaultSize(false)

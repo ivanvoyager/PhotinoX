@@ -122,6 +122,7 @@ Notable lifecycle and API changes in PhotinoX:
 | Window state commands | `Maximize`, `Minimize`, `Restore`, `SetWindowState` |
 | Existing state helpers | `SetFullScreen`, `SetMaximized`, `SetMinimized` |
 | Chromeless window helpers | `BeginWindowDrag`, `BeginWindowResize` |
+| Linux chromeless native hit-test settings | `SetLinuxChromelessDragRegion`, `SetLinuxChromelessResizeBorderThickness`, `LinuxChromelessSettings` |
 | Window/platform state | `IsInitialized`, `IsClosed`, cross-platform `WindowHandle` |
 
 `WindowState` replaces the previous `FullScreen`, `Maximized`, and `Minimized` properties with a single cross-platform state model. It supports `Normal`, `Minimized`, `Maximized`, and `FullScreen`, and is also used for startup state configuration.
@@ -131,6 +132,8 @@ Notable lifecycle and API changes in PhotinoX:
 Window state tracking is native-driven: `StateChanged`, `Maximized`, `Minimized`, `Restored`, `FullScreenEntered`, and `FullScreenExited` are raised from actual state transitions, not from transient resize messages. This avoids duplicate or misleading `Restored` notifications during operations such as resizing or minimizing from fullscreen.
 
 `Maximize()`, `Minimize()`, and `Restore()` are new command-style APIs. Existing helpers such as `SetFullScreen(...)`, `SetMaximized(...)`, and `SetMinimized(...)` remain available and update the same underlying native state.
+
+Chromeless windows can use `BeginWindowDrag(...)` and `BeginWindowResize(...)` for custom title bar and resize implementations. On Linux, native chromeless drag and resize hit-test regions are configured through `SetLinuxChromelessDragRegion(...)`, `SetLinuxChromelessResizeBorderThickness(...)`, or the `LinuxChromelessSettings` property. These Linux-specific settings are ignored on Windows and macOS.
 
 ### Custom schemes and startup content
 
@@ -157,7 +160,7 @@ The managed API is built on the updated `PhotinoX.Native` runtime, including saf
 
 On Windows, fullscreen is handled as a native restore-aware state transition: the previous window style and placement are preserved before entering fullscreen and restored when leaving fullscreen. Startup state is synchronized without raising user callbacks before window creation completes.
 
-On Linux Wayland, top-level window position is compositor-controlled. Move notifications and position restore are best-effort; state and size tracking remain supported.
+On Linux Wayland, top-level window position is compositor-controlled. Move notifications and position restore are best-effort; state and size tracking remain supported. Chromeless drag and resize use native GTK event-driven hit testing configured from the managed Linux chromeless settings.
 
 ## Core (ecosystem)
 

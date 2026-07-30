@@ -1,6 +1,5 @@
 ﻿using System.Diagnostics;
 using System.Runtime.InteropServices;
-using Photino.NET.Utils;
 using ClosingCallback = Photino.NET.NativeDelegates.BoolCallback;
 using ClosedCallback = Photino.NET.NativeDelegates.VoidCallback;
 using FocusInCallback = Photino.NET.NativeDelegates.VoidCallback;
@@ -178,8 +177,31 @@ internal struct PhotinoNativeParameters
     /// </summary>
     [MarshalAs(UnmanagedType.I1)] internal bool UseNativeWindowOwner; //#53
 
+    /// <summary>
+    /// LINUX: OPTIONAL: Height, in logical pixels, of the native chromeless drag region measured from the WebView top edge.
+    /// Set to 0 to disable native Linux chromeless drag. Default is 0.
+    /// </summary>
+    [MarshalAs(UnmanagedType.I4)] internal int ChromelessDragRegionHeight; //#54
+
+    /// <summary>
+    /// LINUX: OPTIONAL: Left inset, in logical pixels, excluded from the native chromeless drag region. Default is 0.
+    /// </summary>
+    [MarshalAs(UnmanagedType.I4)] internal int ChromelessDragRegionLeftInset; //#55
+
+    /// <summary>
+    /// LINUX: OPTIONAL: Right inset, in logical pixels, excluded from the native chromeless drag region.
+    /// Use this to exclude custom title bar buttons from native drag. Default is 0.
+    /// </summary>
+    [MarshalAs(UnmanagedType.I4)] internal int ChromelessDragRegionRightInset; //#56
+
+    /// <summary>
+    /// LINUX: OPTIONAL: Thickness, in logical pixels, of the native chromeless resize border measured from the WebView edges.
+    /// Set to 0 to disable native Linux chromeless resize borders. Default is 8.
+    /// </summary>
+    [MarshalAs(UnmanagedType.I4)] internal int ChromelessResizeBorderThickness; //#57
+
     /// <summary>Set when GetParamErrors() is called, prior to initializing the native window. It is a check to make sure the struct matches what C++ is expecting.</summary>
-    [MarshalAs(UnmanagedType.I4)] internal int Size; //#54
+    [MarshalAs(UnmanagedType.I4)] internal int Size; //#58
 
 
     ///<summary>Checks the parameters to ensure they are valid before window creation. Called by PhotinoWindow prior to initializing native window.</summary>
@@ -229,9 +251,22 @@ internal struct PhotinoNativeParameters
         if (Platform.IsWindows && Chromeless && (UseOsDefaultLocation || UseOsDefaultSize))
             (errors ??= []).Add("Chromeless cannot be used with UseOsDefaultLocation or UseOsDefaultSize on Windows. Size and location must be specified.");
 
+        if (ChromelessDragRegionHeight < 0)
+            (errors ??= []).Add($"ChromelessDragRegionHeight cannot be negative. ChromelessDragRegionHeight: {ChromelessDragRegionHeight}.");
+
+        if (ChromelessDragRegionLeftInset < 0)
+            (errors ??= []).Add($"ChromelessDragRegionLeftInset cannot be negative. ChromelessDragRegionLeftInset: {ChromelessDragRegionLeftInset}.");
+
+        if (ChromelessDragRegionRightInset < 0)
+            (errors ??= []).Add($"ChromelessDragRegionRightInset cannot be negative. ChromelessDragRegionRightInset: {ChromelessDragRegionRightInset}.");
+
+        if (ChromelessResizeBorderThickness < 0)
+            (errors ??= []).Add($"ChromelessResizeBorderThickness cannot be negative. ChromelessResizeBorderThickness: {ChromelessResizeBorderThickness}.");
+
         try
         {
             Size = Marshal.SizeOf<PhotinoNativeParameters>();
+            Debug.Assert(Size == 384);
         }
         catch (Exception ex)
         {

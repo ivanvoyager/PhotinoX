@@ -1,7 +1,6 @@
 using System.Diagnostics;
 using System.Drawing;
 using System.Runtime.InteropServices;
-using Photino.NET.Utils;
 
 namespace Photino.NET;
 
@@ -42,7 +41,8 @@ public partial class PhotinoWindow
         Zoom = 100,
         MaxHeight = int.MaxValue,
         MaxWidth = int.MaxValue,
-        WindowState = PhotinoWindowState.Normal
+        WindowState = PhotinoWindowState.Normal,
+        ChromelessResizeBorderThickness = 8
     };
 
     private const string DefaultTitle = "PhotinoX";
@@ -236,6 +236,33 @@ public partial class PhotinoWindow
         {
             ThrowIfClosedOrInitialized();
             _startupParameters.Chromeless = value;
+        }
+    }
+
+    /// <summary>
+    /// Gets or sets Linux-only native hit-test settings for chromeless windows.
+    /// </summary>
+    /// <remarks>
+    /// These settings are ignored on Windows and macOS.
+    /// </remarks>
+    public Platform.Linux.ChromelessSettings LinuxChromelessSettings
+    {
+        get
+        {
+            return new Platform.Linux.ChromelessSettings(
+                dragRegionHeight: _startupParameters.ChromelessDragRegionHeight,
+                dragRegionLeftInset: _startupParameters.ChromelessDragRegionLeftInset,
+                dragRegionRightInset: _startupParameters.ChromelessDragRegionRightInset,
+                resizeBorderThickness: _startupParameters.ChromelessResizeBorderThickness);
+        }
+        set
+        {
+            ThrowIfClosedOrInitialized();
+
+            _startupParameters.ChromelessDragRegionHeight = value.DragRegionHeight;
+            _startupParameters.ChromelessDragRegionLeftInset = value.DragRegionLeftInset;
+            _startupParameters.ChromelessDragRegionRightInset = value.DragRegionRightInset;
+            _startupParameters.ChromelessResizeBorderThickness = value.ResizeBorderThickness;
         }
     }
 

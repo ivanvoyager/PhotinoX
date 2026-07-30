@@ -1,6 +1,5 @@
 ﻿using System.Diagnostics;
 using System.Runtime.InteropServices;
-using Photino.NET.Utils;
 
 namespace Photino.NET;
 

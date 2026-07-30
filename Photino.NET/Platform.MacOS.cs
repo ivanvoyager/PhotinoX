@@ -1,6 +1,6 @@
 ﻿using System.Runtime.InteropServices;
 
-namespace Photino.NET.Utils;
+namespace Photino.NET;
 
 partial class Platform
 {

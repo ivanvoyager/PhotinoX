@@ -1,5 +1,4 @@
 ﻿using System.Drawing;
-using Photino.NET.Utils;
 
 namespace Photino.NET;
 
@@ -734,9 +733,13 @@ partial class PhotinoWindow
     /// By default, this is set to false.
     /// </summary>
     /// <remarks>
-    /// The user has to supply titlebar, border, dragging and resizing manually.
+    /// The application must provide its own title bar and window controls.
     /// Use <see cref="BeginWindowDrag()"/> and <see cref="BeginWindowResize(PhotinoWindowEdge)"/>
-    /// to drive dragging and resizing from a custom title bar and border.
+    /// to drive custom chrome interactions where supported.
+    /// On Linux, native chromeless drag and resize are configured through
+    /// <see cref="SetLinuxChromelessDragRegion(int, int, int)"/>,
+    /// <see cref="SetLinuxChromelessResizeBorderThickness(int)"/>, or
+    /// <see cref="LinuxChromelessSettings"/>.
     /// </remarks>
     /// <returns>
     /// Returns the current <see cref="PhotinoWindow"/> instance.
@@ -746,6 +749,67 @@ partial class PhotinoWindow
     {
         Log($".{nameof(SetChromeless)}({chromeless})");
         Chromeless = chromeless;
+        return this;
+    }
+
+    /// <summary>
+    /// Sets the Linux-only native chromeless drag region.
+    /// </summary>
+    /// <param name="height">
+    /// Height, in logical pixels, of the native drag region measured from the WebView top edge.
+    /// Set to 0 to disable native Linux chromeless drag.
+    /// </param>
+    /// <param name="rightInset">
+    /// Right inset, in logical pixels, excluded from the native drag region.
+    /// This is the common case for excluding custom title bar buttons from native drag.
+    /// </param>
+    /// <param name="leftInset">
+    /// Left inset, in logical pixels, excluded from the native drag region.
+    /// </param>
+    /// <remarks>
+    /// Linux only. Ignored on Windows and macOS.
+    ///
+    /// The native drag region is:
+    /// y &lt; height,
+    /// x &gt;= leftInset,
+    /// x &lt; WebView width - rightInset.
+    ///
+    /// The parameter order is optimized for the common custom-title-bar layout where
+    /// window buttons are placed on the right side.
+    /// </remarks>
+    public PhotinoWindow SetLinuxChromelessDragRegion(int height, int rightInset = 0, int leftInset = 0)
+    {
+        Log($".{nameof(SetLinuxChromelessDragRegion)}({height}, {rightInset}, {leftInset})");
+
+        LinuxChromelessSettings = LinuxChromelessSettings with
+        {
+            DragRegionHeight = height,
+            DragRegionRightInset = rightInset,
+            DragRegionLeftInset = leftInset
+        };
+
+        return this;
+    }
+
+    /// <summary>
+    /// Sets the Linux-only native chromeless resize border thickness.
+    /// </summary>
+    /// <param name="thickness">
+    /// Thickness, in logical pixels, of the native resize border measured from the WebView edges.
+    /// Set to 0 to disable native Linux chromeless resize borders.
+    /// </param>
+    /// <remarks>
+    /// Linux only. Ignored on Windows and macOS.
+    /// </remarks>
+    public PhotinoWindow SetLinuxChromelessResizeBorderThickness(int thickness)
+    {
+        Log($".{nameof(SetLinuxChromelessResizeBorderThickness)}({thickness})");
+
+        LinuxChromelessSettings = LinuxChromelessSettings with
+        {
+            ResizeBorderThickness = thickness
+        };
+
         return this;
     }
 
@@ -770,13 +834,22 @@ partial class PhotinoWindow
 
     /// <summary>
     /// Starts an OS-level drag of the window from the current mouse position, as if
-    /// the user had pressed on a native title bar. Call this from a pointer-down
-    /// handler on a custom title bar to make a chromeless window draggable.
+    /// the user had pressed on a native title bar.
     /// </summary>
     /// <remarks>
+    /// Call this from a pointer-down handler on a custom title bar to make a
+    /// chromeless window draggable.
+    ///
     /// The mouse button must still be pressed when this is called; the drag follows
-    /// the cursor until the button is released. Currently implemented on Windows;
-    /// on Linux and macOS this is a no-op pending platform support.
+    /// the cursor until the button is released.
+    ///
+    /// Implemented on Windows and macOS.
+    ///
+    /// On Linux, this generic WebView-message entry point is a no-op because GTK and
+    /// Wayland require the originating trusted native button event. For Linux
+    /// chromeless windows, configure the native drag region through
+    /// <see cref="SetLinuxChromelessDragRegion(int, int, int)"/> or
+    /// <see cref="LinuxChromelessSettings"/>.
     /// </remarks>
     /// <exception cref="InvalidOperationException">
     /// Thrown when the window is not initialized or has already been closed.
@@ -786,6 +859,7 @@ partial class PhotinoWindow
     /// </returns>
     /// <seealso cref="BeginWindowResize(PhotinoWindowEdge)" />
     /// <seealso cref="SetChromeless(bool)" />
+    /// <seealso cref="SetLinuxChromelessDragRegion(int, int, int)" />
     public PhotinoWindow BeginWindowDrag()
     {
         Log($".{nameof(BeginWindowDrag)}()");
@@ -798,14 +872,25 @@ partial class PhotinoWindow
 
     /// <summary>
     /// Starts an OS-level resize of the window from the given edge or corner, as if
-    /// the user had dragged that part of a native window border. Call this from a
-    /// pointer-down handler on a custom resize grip to make a chromeless window
-    /// resizable.
+    /// the user had dragged that part of a native window border.
     /// </summary>
     /// <remarks>
+    /// Call this from a pointer-down handler on a custom resize grip to make a
+    /// chromeless window resizable.
+    ///
     /// The mouse button must still be pressed when this is called; the resize follows
-    /// the cursor until the button is released. Currently implemented on Windows;
-    /// on Linux and macOS this is a no-op pending platform support.
+    /// the cursor until the button is released.
+    ///
+    /// Implemented on Windows and macOS.
+    ///
+    /// On Linux, this generic WebView-message entry point is a no-op because GTK and
+    /// Wayland require the originating trusted native button event. For Linux
+    /// chromeless windows, configure native resize borders through
+    /// <see cref="SetLinuxChromelessResizeBorderThickness(int)"/> or
+    /// <see cref="LinuxChromelessSettings"/>.
+    ///
+    /// If the window is not resizable, user-initiated resize is ignored. Programmatic
+    /// size changes through window size APIs remain allowed.
     /// </remarks>
     /// <exception cref="InvalidOperationException">
     /// Thrown when the window is not initialized or has already been closed.
@@ -816,6 +901,7 @@ partial class PhotinoWindow
     /// <param name="edge">The edge or corner to resize from.</param>
     /// <seealso cref="BeginWindowDrag()" />
     /// <seealso cref="SetChromeless(bool)" />
+    /// <seealso cref="SetLinuxChromelessResizeBorderThickness(int)" />
     public PhotinoWindow BeginWindowResize(PhotinoWindowEdge edge)
     {
         Log($".{nameof(BeginWindowResize)}({edge})");
