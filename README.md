@@ -133,7 +133,7 @@ Window state tracking is native-driven: `StateChanged`, `Maximized`, `Minimized`
 
 `Maximize()`, `Minimize()`, and `Restore()` are new command-style APIs. Existing helpers such as `SetFullScreen(...)`, `SetMaximized(...)`, and `SetMinimized(...)` remain available and update the same underlying native state.
 
-Chromeless windows can use `BeginWindowDrag(...)` and `BeginWindowResize(...)` for custom title bar and resize implementations. On Linux, native chromeless drag and resize hit-test regions are configured through `SetLinuxChromelessDragRegion(...)`, `SetLinuxChromelessResizeBorderThickness(...)`, or the `LinuxChromelessSettings` property. These Linux-specific settings are ignored on Windows and macOS.
+Chromeless windows can use `BeginWindowDrag()` and `BeginWindowResize(...)` for custom title bar and resize implementations on Windows and macOS. On Linux, native chromeless drag and resize hit-test regions are configured through `SetLinuxChromelessDragRegion(...)`, `SetLinuxChromelessResizeBorderThickness(...)`, or the `LinuxChromelessSettings` property. These Linux-specific settings are ignored on Windows and macOS.
 
 ### Custom schemes and startup content
 
