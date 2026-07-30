@@ -1,5 +1,4 @@
 ﻿using System.Drawing;
-using Photino.NET.Utils;
 
 namespace Photino.NET;
 
@@ -746,6 +745,63 @@ partial class PhotinoWindow
     {
         Log($".{nameof(SetChromeless)}({chromeless})");
         Chromeless = chromeless;
+        return this;
+    }
+
+    /// <summary>
+    /// Sets the Linux-only native chromeless drag region.
+    /// </summary>
+    /// <param name="height">
+    /// Height, in logical pixels, of the native drag region measured from the WebView top edge.
+    /// Set to 0 to disable native Linux chromeless drag.
+    /// </param>
+    /// <param name="rightInset">
+    /// Right inset, in logical pixels, excluded from the native drag region.
+    /// Use this to exclude custom title bar buttons from native drag.
+    /// </param>
+    /// <param name="leftInset">
+    /// Left inset, in logical pixels, excluded from the native drag region.
+    /// </param>
+    /// <remarks>
+    /// Linux only. Ignored on Windows and macOS.
+    /// The native drag region is:
+    /// y &lt; height,
+    /// x &gt;= leftInset,
+    /// x &lt; WebView width - rightInset.
+    /// </remarks>
+    public PhotinoWindow SetLinuxChromelessDragRegion(int height, int rightInset = 0, int leftInset = 0)
+    {
+        Log($".{nameof(SetLinuxChromelessDragRegion)}({height}, {rightInset}, {leftInset})");
+
+        LinuxChromelessSettings = LinuxChromelessSettings with
+        {
+            DragRegionHeight = height,
+            DragRegionRightInset = rightInset,
+            DragRegionLeftInset = leftInset
+        };
+
+        return this;
+    }
+
+    /// <summary>
+    /// Sets the Linux-only native chromeless resize border thickness.
+    /// </summary>
+    /// <param name="thickness">
+    /// Thickness, in logical pixels, of the native resize border measured from the WebView edges.
+    /// Set to 0 to disable native Linux chromeless resize borders.
+    /// </param>
+    /// <remarks>
+    /// Linux only. Ignored on Windows and macOS.
+    /// </remarks>
+    public PhotinoWindow SetLinuxChromelessResizeBorderThickness(int thickness)
+    {
+        Log($".{nameof(SetLinuxChromelessResizeBorderThickness)}({thickness})");
+
+        LinuxChromelessSettings = LinuxChromelessSettings with
+        {
+            ResizeBorderThickness = thickness
+        };
+
         return this;
     }
 

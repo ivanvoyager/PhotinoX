@@ -1,4 +1,4 @@
-﻿namespace Photino.NET.Utils;
+﻿namespace Photino.NET;
 
 /// <summary>
 /// Provides modern cross‑platform OS detection helpers.
