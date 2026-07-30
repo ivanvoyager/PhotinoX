@@ -1,0 +1,87 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chromeless Demo</title>
+    <style>
+        html, body { margin: 0; height: 100%; overflow: hidden; font-family: system-ui, sans-serif; }
+        body { display: flex; flex-direction: column; background: #1e1e2e; color: #cdd6f4; }
+
+        #titlebar {
+            height: 36px; flex: 0 0 auto; display: flex; align-items: center; padding: 0 4px 0 12px;
+            background: #313244; user-select: none;
+        }
+        #titlebar .title { flex: 1; font-size: 13px; }
+        #titlebar button {
+            width: 34px; height: 26px; border: none; background: transparent; color: inherit;
+            font-size: 14px; line-height: 1; cursor: pointer; border-radius: 4px;
+        }
+        #titlebar button:hover { background: #45475a; }
+        #titlebar button.close:hover { background: #f38ba8; color: #11111b; }
+
+        #content { flex: 1; padding: 16px 20px; overflow: auto; }
+        #content h3 { margin: 0 0 8px; }
+        #content p { margin: 4px 0; color: #a6adc8; font-size: 13px; }
+
+        /* Resize grips pinned to each edge and corner. */
+        .grip { position: fixed; z-index: 10; }
+        .grip.Top { top: 0; left: 14px; right: 14px; height: 8px; cursor: ns-resize; }
+        .grip.Bottom { bottom: 0; left: 14px; right: 14px; height: 8px; cursor: ns-resize; }
+        .grip.Left { left: 0; top: 14px; bottom: 14px; width: 8px; cursor: ew-resize; }
+        .grip.Right { right: 0; top: 14px; bottom: 14px; width: 8px; cursor: ew-resize; }
+        .grip.TopLeft { top: 0; left: 0; width: 14px; height: 14px; cursor: nwse-resize; }
+        .grip.TopRight { top: 0; right: 0; width: 14px; height: 14px; cursor: nesw-resize; }
+        .grip.BottomLeft { bottom: 0; left: 0; width: 14px; height: 14px; cursor: nesw-resize; }
+        .grip.BottomRight { bottom: 0; right: 0; width: 14px; height: 14px; cursor: nwse-resize; }
+        /* Faint tint so the corner grips are easy to see and grab in the demo. */
+        .grip.BottomRight, .grip.BottomLeft, .grip.TopRight, .grip.TopLeft { background: rgba(137, 180, 250, 0.25); }
+    </style>
+</head>
+<body>
+    <div class="grip Top" data-edge="Top"></div>
+    <div class="grip Bottom" data-edge="Bottom"></div>
+    <div class="grip Left" data-edge="Left"></div>
+    <div class="grip Right" data-edge="Right"></div>
+    <div class="grip TopLeft" data-edge="TopLeft"></div>
+    <div class="grip TopRight" data-edge="TopRight"></div>
+    <div class="grip BottomLeft" data-edge="BottomLeft"></div>
+    <div class="grip BottomRight" data-edge="BottomRight"></div>
+
+    <div id="titlebar">
+        <span class="title">Chromeless &mdash; drag me, resize the edges</span>
+        <button id="min" title="Minimize">&#8211;</button>
+        <button id="max" title="Maximize">&#9744;</button>
+        <button class="close" id="close" title="Close">&#10005;</button>
+    </div>
+
+    <div id="content">
+        <h3>Custom title bar demo</h3>
+        <p>Drag the title bar to move the window.</p>
+        <p>Drag any edge or corner to resize it.</p>
+    </div>
+
+    <script>
+        const send = m => window.external.sendMessage(m);
+
+        // Start a window drag when the title bar is pressed (but not its buttons).
+        document.getElementById('titlebar').addEventListener('pointerdown', e => {
+            if (e.button !== 0 || e.target.closest('button')) return;
+            send('begindrag');
+        });
+
+        // Start a resize when a grip is pressed. The edge name matches PhotinoWindowEdge.
+        document.querySelectorAll('.grip').forEach(grip => {
+            grip.addEventListener('pointerdown', e => {
+                if (e.button !== 0) return;
+                e.preventDefault();
+                send('beginresize-' + grip.dataset.edge);
+            });
+        });
+
+        document.getElementById('min').addEventListener('click', () => send('minimize'));
+        document.getElementById('max').addEventListener('click', () => send('maximize'));
+        document.getElementById('close').addEventListener('click', () => send('close'));
+    </script>
+</body>
+</html>

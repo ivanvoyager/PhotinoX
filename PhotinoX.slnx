@@ -1,5 +1,6 @@
 <Solution>
   <Folder Name="/Samples/">
+    <Project Path="Samples/ChromelessDragResizeDemo/ChromelessDragResizeDemo.csproj" />
     <Project Path="Samples/WindowDiagnostics/WindowDiagnostics.csproj" />
   </Folder>
   <Folder Name="/Solution Items/">

@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "ChromelessDragResizeDemo": {
+      "commandName": "Project",
+      "debugEngines": "managed,native"
+    }
+  }
+}
