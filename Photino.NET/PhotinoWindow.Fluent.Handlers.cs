@@ -1,5 +1,4 @@
 ﻿using System.ComponentModel;
-using System.Drawing;
 
 namespace Photino.NET;
 
@@ -15,8 +14,12 @@ partial class PhotinoWindow
     /// <exception cref="InvalidOperationException">
     /// Thrown when the window has already been closed.
     /// </exception>
-    public PhotinoWindow RegisterCreatingHandler(EventHandler? handler)
+    /// <exception cref="ArgumentNullException">
+    /// Thrown when <paramref name="handler"/> is <see langword="null"/>.
+    /// </exception>
+    public PhotinoWindow RegisterCreatingHandler(EventHandler handler)
     {
+        ArgumentNullException.ThrowIfNull(handler);
         ThrowIfClosed();
         Creating += handler;
         return this;
@@ -32,8 +35,12 @@ partial class PhotinoWindow
     /// <exception cref="InvalidOperationException">
     /// Thrown when the window has already been closed.
     /// </exception>
-    public PhotinoWindow RegisterCreatedHandler(EventHandler? handler)
+    /// <exception cref="ArgumentNullException">
+    /// Thrown when <paramref name="handler"/> is <see langword="null"/>.
+    /// </exception>
+    public PhotinoWindow RegisterCreatedHandler(EventHandler handler)
     {
+        ArgumentNullException.ThrowIfNull(handler);
         ThrowIfClosed();
         Created += handler;
         return this;
@@ -52,8 +59,12 @@ partial class PhotinoWindow
     /// <exception cref="InvalidOperationException">
     /// Thrown when the window has already been closed.
     /// </exception>
-    public PhotinoWindow RegisterClosingHandler(EventHandler<CancelEventArgs>? handler)
+    /// <exception cref="ArgumentNullException">
+    /// Thrown when <paramref name="handler"/> is <see langword="null"/>.
+    /// </exception>
+    public PhotinoWindow RegisterClosingHandler(EventHandler<CancelEventArgs> handler)
     {
+        ArgumentNullException.ThrowIfNull(handler);
         ThrowIfClosed();
         Closing += handler;
         return this;
@@ -69,8 +80,12 @@ partial class PhotinoWindow
     /// <exception cref="InvalidOperationException">
     /// Thrown when the window has already been closed.
     /// </exception>
-    public PhotinoWindow RegisterClosedHandler(EventHandler? handler)
+    /// <exception cref="ArgumentNullException">
+    /// Thrown when <paramref name="handler"/> is <see langword="null"/>.
+    /// </exception>
+    public PhotinoWindow RegisterClosedHandler(EventHandler handler)
     {
+        ArgumentNullException.ThrowIfNull(handler);
         ThrowIfClosed();
         Closed += handler;
         return this;
@@ -86,8 +101,12 @@ partial class PhotinoWindow
     /// <exception cref="InvalidOperationException">
     /// Thrown when the window has already been closed.
     /// </exception>
-    public PhotinoWindow RegisterLocationChangedHandler(EventHandler<Point>? handler)
+    /// <exception cref="ArgumentNullException">
+    /// Thrown when <paramref name="handler"/> is <see langword="null"/>.
+    /// </exception>
+    public PhotinoWindow RegisterLocationChangedHandler(EventHandler<LocationChangedEventArgs> handler)
     {
+        ArgumentNullException.ThrowIfNull(handler);
         ThrowIfClosed();
         LocationChanged += handler;
         return this;
@@ -103,8 +122,12 @@ partial class PhotinoWindow
     /// <exception cref="InvalidOperationException">
     /// Thrown when the window has already been closed.
     /// </exception>
-    public PhotinoWindow RegisterSizeChangedHandler(EventHandler<Size>? handler)
+    /// <exception cref="ArgumentNullException">
+    /// Thrown when <paramref name="handler"/> is <see langword="null"/>.
+    /// </exception>
+    public PhotinoWindow RegisterSizeChangedHandler(EventHandler<SizeChangedEventArgs> handler)
     {
+        ArgumentNullException.ThrowIfNull(handler);
         ThrowIfClosed();
         SizeChanged += handler;
         return this;
@@ -120,8 +143,12 @@ partial class PhotinoWindow
     /// <exception cref="InvalidOperationException">
     /// Thrown when the window has already been closed.
     /// </exception>
-    public PhotinoWindow RegisterActivatedHandler(EventHandler? handler)
+    /// <exception cref="ArgumentNullException">
+    /// Thrown when <paramref name="handler"/> is <see langword="null"/>.
+    /// </exception>
+    public PhotinoWindow RegisterActivatedHandler(EventHandler handler)
     {
+        ArgumentNullException.ThrowIfNull(handler);
         ThrowIfClosed();
         Activated += handler;
         return this;
@@ -137,8 +164,12 @@ partial class PhotinoWindow
     /// <exception cref="InvalidOperationException">
     /// Thrown when the window has already been closed.
     /// </exception>
-    public PhotinoWindow RegisterDeactivatedHandler(EventHandler? handler)
+    /// <exception cref="ArgumentNullException">
+    /// Thrown when <paramref name="handler"/> is <see langword="null"/>.
+    /// </exception>
+    public PhotinoWindow RegisterDeactivatedHandler(EventHandler handler)
     {
+        ArgumentNullException.ThrowIfNull(handler);
         ThrowIfClosed();
         Deactivated += handler;
         return this;
@@ -154,8 +185,12 @@ partial class PhotinoWindow
     /// <exception cref="InvalidOperationException">
     /// Thrown when the window has already been closed.
     /// </exception>
-    public PhotinoWindow RegisterMaximizedHandler(EventHandler? handler)
+    /// <exception cref="ArgumentNullException">
+    /// Thrown when <paramref name="handler"/> is <see langword="null"/>.
+    /// </exception>
+    public PhotinoWindow RegisterMaximizedHandler(EventHandler handler)
     {
+        ArgumentNullException.ThrowIfNull(handler);
         ThrowIfClosed();
         Maximized += handler;
         return this;
@@ -171,8 +206,12 @@ partial class PhotinoWindow
     /// <exception cref="InvalidOperationException">
     /// Thrown when the window has already been closed.
     /// </exception>
-    public PhotinoWindow RegisterRestoredHandler(EventHandler? handler)
+    /// <exception cref="ArgumentNullException">
+    /// Thrown when <paramref name="handler"/> is <see langword="null"/>.
+    /// </exception>
+    public PhotinoWindow RegisterRestoredHandler(EventHandler handler)
     {
+        ArgumentNullException.ThrowIfNull(handler);
         ThrowIfClosed();
         Restored += handler;
         return this;
@@ -188,8 +227,12 @@ partial class PhotinoWindow
     /// <exception cref="InvalidOperationException">
     /// Thrown when the window has already been closed.
     /// </exception>
-    public PhotinoWindow RegisterMinimizedHandler(EventHandler? handler)
+    /// <exception cref="ArgumentNullException">
+    /// Thrown when <paramref name="handler"/> is <see langword="null"/>.
+    /// </exception>
+    public PhotinoWindow RegisterMinimizedHandler(EventHandler handler)
     {
+        ArgumentNullException.ThrowIfNull(handler);
         ThrowIfClosed();
         Minimized += handler;
         return this;
@@ -205,8 +248,12 @@ partial class PhotinoWindow
     /// <exception cref="InvalidOperationException">
     /// Thrown when the window has already been closed.
     /// </exception>
-    public PhotinoWindow RegisterFullScreenEnteredHandler(EventHandler? handler)
+    /// <exception cref="ArgumentNullException">
+    /// Thrown when <paramref name="handler"/> is <see langword="null"/>.
+    /// </exception>
+    public PhotinoWindow RegisterFullScreenEnteredHandler(EventHandler handler)
     {
+        ArgumentNullException.ThrowIfNull(handler);
         ThrowIfClosed();
         FullScreenEntered += handler;
         return this;
@@ -222,8 +269,12 @@ partial class PhotinoWindow
     /// <exception cref="InvalidOperationException">
     /// Thrown when the window has already been closed.
     /// </exception>
-    public PhotinoWindow RegisterFullScreenExitedHandler(EventHandler? handler)
+    /// <exception cref="ArgumentNullException">
+    /// Thrown when <paramref name="handler"/> is <see langword="null"/>.
+    /// </exception>
+    public PhotinoWindow RegisterFullScreenExitedHandler(EventHandler handler)
     {
+        ArgumentNullException.ThrowIfNull(handler);
         ThrowIfClosed();
         FullScreenExited += handler;
         return this;
@@ -239,8 +290,12 @@ partial class PhotinoWindow
     /// <exception cref="InvalidOperationException">
     /// Thrown when the window has already been closed.
     /// </exception>
-    public PhotinoWindow RegisterStateChangedHandler(EventHandler<PhotinoWindowStateChangedEventArgs>? handler)
+    /// <exception cref="ArgumentNullException">
+    /// Thrown when <paramref name="handler"/> is <see langword="null"/>.
+    /// </exception>
+    public PhotinoWindow RegisterStateChangedHandler(EventHandler<StateChangedEventArgs> handler)
     {
+        ArgumentNullException.ThrowIfNull(handler);
         ThrowIfClosed();
         StateChanged += handler;
         return this;
@@ -253,14 +308,18 @@ partial class PhotinoWindow
     /// Returns the current <see cref="PhotinoWindow"/> instance.
     /// </returns>
     /// <remarks>
-    /// Messages can be sent from JavaScript via <code>window.external.sendMessage(message)</code>
+    /// Messages can be sent from JavaScript via <code>window.external.sendMessage(message)</code>.
     /// </remarks>
     /// <param name="handler">The handler to register.</param>
     /// <exception cref="InvalidOperationException">
     /// Thrown when the window has already been closed.
     /// </exception>
-    public PhotinoWindow RegisterWebMessageReceivedHandler(EventHandler<string>? handler)
+    /// <exception cref="ArgumentNullException">
+    /// Thrown when <paramref name="handler"/> is <see langword="null"/>.
+    /// </exception>
+    public PhotinoWindow RegisterWebMessageReceivedHandler(EventHandler<WebMessageReceivedEventArgs> handler)
     {
+        ArgumentNullException.ThrowIfNull(handler);
         ThrowIfClosed();
         WebMessageReceived += handler;
         return this;

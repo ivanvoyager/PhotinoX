@@ -107,21 +107,21 @@ internal static class Program
                         LogToConsole($"Window '{Id}' closed.");
                     }
                 })
-                .RegisterLocationChangedHandler((_, location) =>
+                .RegisterLocationChangedHandler((_, e) =>
                 {
                     Log("LocationChanged", new
                     {
-                        location.X,
-                        location.Y
+                        e.Left,
+                        e.Top
                     });
                     SendState();
                 })
-                .RegisterSizeChangedHandler((_, size) =>
+                .RegisterSizeChangedHandler((_, e) =>
                 {
                     Log("SizeChanged", new
                     {
-                        size.Width,
-                        size.Height
+                        e.Width,
+                        e.Height
                     });
                     SendState();
                 })
@@ -161,9 +161,9 @@ internal static class Program
 
                     SendState();
                 })
-                .RegisterWebMessageReceivedHandler((_, message) =>
+                .RegisterWebMessageReceivedHandler((_, e) =>
                 {
-                    HandleClientMessage(message);
+                    HandleClientMessage(e.Message);
                 });
 
         }

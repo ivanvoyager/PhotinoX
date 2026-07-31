@@ -63,7 +63,7 @@ var window = new PhotinoWindow()
 return app.Run(window);
 ```
 
-`PhotinoDispatcher` provides application-level UI-thread dispatching. `Invoke(...)` executes work on the dispatcher thread and throws when scheduling fails, while `TryInvoke(...)` returns `false` for scheduling failures. `BeginInvoke(...)` reports scheduling success as `bool`, and `InvokeAsync(...)` returns a task that faults if scheduling fails. State-based overloads are available for callbacks that need to pass explicit state without capturing closures. The dispatcher also exposes `CheckAccess()` / `VerifyAccess()` and `UnhandledException` notifications for exceptions raised by asynchronous dispatcher callbacks.
+`PhotinoDispatcher` provides application-level UI-thread dispatching. `Invoke(...)` executes work on the dispatcher thread and throws when scheduling fails, while `TryInvoke(...)` returns `false` for scheduling failures. `BeginInvoke(...)` reports scheduling success as `bool`, and `InvokeAsync(...)` returns a task that completes when the dispatched callback completes, is canceled, or faults if scheduling fails. Cancellation-aware overloads accept `CancellationToken`, and async callback overloads use `ValueTask` / `ValueTask<TResult>` for allocation-friendly completion paths. State-based overloads are available for callbacks that need to pass explicit state without capturing closures.
 
 ### Window events
 
@@ -87,6 +87,8 @@ Window event names are simplified to remove redundant `Window` prefixes and alig
 | - | `StateChanged` |
 
 `Closing` now uses `EventHandler<CancelEventArgs>`; set `CancelEventArgs.Cancel` to cancel the close operation.
+
+`LocationChanged`, `SizeChanged`, and `WebMessageReceived` now use strongly typed event payload records instead of raw `Point`, `Size`, and `string` values. `StateChanged` uses the `StateChangedEventArgs` record. This makes event payloads more explicit and easier to compare while keeping event handlers consistent with the rest of the managed API.
 
 | Previous registration helper | New registration helper |
 |---|---|
@@ -152,7 +154,7 @@ Startup content selection is explicit: `Load(...)` sets URL content and clears r
 
 ### Compatibility
 
-These changes may require source-level updates for applications that use older Photino.NET event names, `WaitForClose()`-based startup, focus-in/focus-out event handlers, old bool-returning close handlers, the previous separate fullscreen/maximized/minimized state model now replaced by `WindowState`.
+These changes may require source-level updates for applications that use older Photino.NET event names, `WaitForClose()`-based startup, focus-in/focus-out event handlers, old bool-returning close handlers, direct `Point` / `Size` / `string` event payloads, or the previous separate fullscreen/maximized/minimized state model now replaced by `WindowState`.
 
 ### Native runtime foundation
 

@@ -32,11 +32,13 @@ internal class Program
         app.Run(mainWindow);
     }
 
-    private static void WindowWebMessageReceived(object? sender, string message)
+    private static void WindowWebMessageReceived(object? sender, WebMessageReceivedEventArgs e)
     {
         Log(sender, $"WindowWebMessageReceived Callback Fired.");
 
         if (sender is not PhotinoWindow currentWindow) return;
+
+        var message = e.Message;
 
         if (string.Equals(message, "begindrag", StringComparison.OrdinalIgnoreCase))
         {
@@ -68,16 +70,16 @@ internal class Program
         }
     }
 
-    private static void WindowLocationChanged(object? sender, Point location)
+    private static void WindowLocationChanged(object? sender, LocationChangedEventArgs e)
     {
-        Log(sender, $"WindowLocationChanged Callback Fired.  Left: {location.X}  Top: {location.Y}");
+        Log(sender, $"WindowLocationChanged Callback Fired.  Left: {e.Left}  Top: {e.Top}");
     }
-    private static void WindowSizeChanged(object? sender, Size size)
+    private static void WindowSizeChanged(object? sender, SizeChangedEventArgs e)
     {
-        Log(sender, $"WindowSizeChanged Callback Fired.  Height: {size.Height}  Width: {size.Width}");
+        Log(sender, $"WindowSizeChanged Callback Fired.  Height: {e.Height}  Width: {e.Width}");
     }
 
-    private static void WindowStateChanged(object? sender, PhotinoWindowStateChangedEventArgs e)
+    private static void WindowStateChanged(object? sender, StateChangedEventArgs e)
     {
         Log(sender, $"WindowStateChanged Callback Fired.  Old: {e.OldState}  New: {e.NewState}");
     }
