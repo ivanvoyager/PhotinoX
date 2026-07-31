@@ -191,11 +191,7 @@ public sealed partial class PhotinoDispatcher
             return;
         }
 
-        var invokeState = new InvokeActionState<TState>
-        {
-            Callback = callback,
-            State = state
-        };
+        var invokeState = new InvokeActionState<TState>(callback, state);
 
         bool success = InvokeNative(static value =>
         {
@@ -234,11 +230,7 @@ public sealed partial class PhotinoDispatcher
             return true;
         }
 
-        var invokeState = new InvokeActionState<TState>
-        {
-            Callback = callback,
-            State = state
-        };
+        var invokeState = new InvokeActionState<TState>(callback, state);
 
         bool success = InvokeNative(static value =>
         {
@@ -271,7 +263,7 @@ public sealed partial class PhotinoDispatcher
         if (CheckAccess())
             return callback();
 
-        var state = new InvokeFuncState<TResult> { Callback = callback };
+        var state = new InvokeFuncState<TResult>(callback: callback);
 
         bool success = InvokeNative(static value =>
         {
@@ -314,7 +306,7 @@ public sealed partial class PhotinoDispatcher
             return true;
         }
 
-        var state = new InvokeFuncState<TResult> { Callback = callback };
+        var state = new InvokeFuncState<TResult>(callback);
 
         bool success = InvokeNative(static value =>
         {
@@ -351,11 +343,7 @@ public sealed partial class PhotinoDispatcher
         if (CheckAccess())
             return callback(state);
 
-        var invokeState = new InvokeFuncState<TState, TResult>
-        {
-            Callback = callback,
-            State = state
-        };
+        var invokeState = new InvokeFuncState<TState, TResult>(callback, state);
 
         bool success = InvokeNative(static value =>
         {
@@ -401,11 +389,7 @@ public sealed partial class PhotinoDispatcher
             return true;
         }
 
-        var invokeState = new InvokeFuncState<TState, TResult>
-        {
-            Callback = callback,
-            State = state
-        };
+        var invokeState = new InvokeFuncState<TState, TResult>(callback, state);
 
         bool success = InvokeNative(static value =>
         {
@@ -478,41 +462,39 @@ public sealed partial class PhotinoDispatcher
     /// Asynchronously executes the specified <see cref="Action"/> on the dispatcher thread.
     /// </summary>
     /// <param name="callback">The action to execute.</param>
+    /// <param name="cancellationToken">
+    /// A cancellation token to observe while waiting for the operation to complete.
+    /// </param>
     /// <returns>
-    /// A <see cref="Task"/> that completes when the action has finished executing, or faults if the action cannot be scheduled.
+    /// A <see cref="Task"/> that completes when the action has finished executing, is canceled, or faults if the action cannot be scheduled.
     /// </returns>
     /// <exception cref="ArgumentNullException">
     /// Thrown when <paramref name="callback"/> is <c>null</c>.
     /// </exception>
+    /// <exception cref="OperationCanceledException">
+    /// Thrown when <paramref name="cancellationToken"/> is canceled.
+    /// </exception>
     /// <remarks>
     /// Exceptions thrown by the callback are captured by the returned task.
     /// </remarks>
-    public Task InvokeAsync(Action callback)
+    public Task InvokeAsync(Action callback, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(callback);
 
-        var invokeState = new InvokeAsyncActionState
-        {
-            Completion = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously),
-            Callback = callback
-        };
+        if (cancellationToken.IsCancellationRequested)
+            return Task.FromCanceled(cancellationToken);
+
+        var invokeState = new InvokeAsyncActionState(callback, cancellationToken);
+        invokeState.RegisterCancellation();
 
         bool success = BeginInvokeNative(static value =>
         {
             var state = (InvokeAsyncActionState)value!;
-            try
-            {
-                state.Callback();
-                state.Completion.SetResult();
-            }
-            catch (Exception ex)
-            {
-                state.Completion.SetException(ex);
-            }
+            state.Execute();
         }, invokeState);
 
         if (!success)
-            invokeState.Completion.SetException(CreateFailedException());
+            invokeState.Fail(CreateFailedException());
 
         return invokeState.Completion.Task;
     }
@@ -522,42 +504,39 @@ public sealed partial class PhotinoDispatcher
     /// </summary>
     /// <param name="callback">The callback to execute.</param>
     /// <param name="state">The object passed to the callback.</param>
+    /// <param name="cancellationToken">
+    /// A cancellation token to observe while waiting for the operation to complete.
+    /// </param>
     /// <returns>
-    /// A <see cref="Task"/> that completes when the callback has finished executing, or faults if the callback cannot be scheduled.
+    /// A <see cref="Task"/> that completes when the callback has finished executing, is canceled, or faults if the callback cannot be scheduled.
     /// </returns>
     /// <exception cref="ArgumentNullException">
     /// Thrown when <paramref name="callback"/> is <c>null</c>.
     /// </exception>
+    /// <exception cref="OperationCanceledException">
+    /// Thrown when <paramref name="cancellationToken"/> is canceled.
+    /// </exception>
     /// <remarks>
     /// Exceptions thrown by the callback are captured by the returned task.
     /// </remarks>
-    public Task InvokeAsync(SendOrPostCallback callback, object? state)
+    public Task InvokeAsync(SendOrPostCallback callback, object? state, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(callback);
 
-        var invokeState = new InvokeAsyncState
-        {
-            Completion = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously),
-            Callback = callback,
-            State = state
-        };
+        if (cancellationToken.IsCancellationRequested)
+            return Task.FromCanceled(cancellationToken);
+
+        var invokeState = new InvokeAsyncState(callback, state, cancellationToken);
+        invokeState.RegisterCancellation();
 
         bool success = BeginInvokeNative(static value =>
         {
             var state = (InvokeAsyncState)value!;
-            try
-            {
-                state.Callback(state.State);
-                state.Completion.SetResult();
-            }
-            catch (Exception ex)
-            {
-                state.Completion.SetException(ex);
-            }
+            state.Execute();
         }, invokeState);
 
         if (!success)
-            invokeState.Completion.SetException(CreateFailedException());
+            invokeState.Fail(CreateFailedException());
 
         return invokeState.Completion.Task;
     }
@@ -568,43 +547,40 @@ public sealed partial class PhotinoDispatcher
     /// <typeparam name="TState">The callback state type.</typeparam>
     /// <param name="callback">The action to execute.</param>
     /// <param name="state">The state passed to <paramref name="callback"/>.</param>
+    /// <param name="cancellationToken">
+    /// A cancellation token to observe while waiting for the operation to complete.
+    /// </param>
     /// <returns>
-    /// A <see cref="Task"/> that completes when the action has finished executing, or faults if the callback cannot be scheduled.
+    /// A <see cref="Task"/> that completes when the action has finished executing, is canceled, or faults if the callback cannot be scheduled.
     /// </returns>
     /// <exception cref="ArgumentNullException">
     /// Thrown when <paramref name="callback"/> is <c>null</c>.
+    /// </exception>
+    /// <exception cref="OperationCanceledException">
+    /// Thrown when <paramref name="cancellationToken"/> is canceled.
     /// </exception>
     /// <remarks>
     /// This overload allows callers to pass state explicitly and avoid closure allocations.
     /// Exceptions thrown by the callback are captured by the returned task.
     /// </remarks>
-    public Task InvokeAsync<TState>(Action<TState> callback, TState state)
+    public Task InvokeAsync<TState>(Action<TState> callback, TState state, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(callback);
 
-        var invokeState = new InvokeAsyncActionState<TState>
-        {
-            Completion = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously),
-            Callback = callback,
-            State = state
-        };
+        if (cancellationToken.IsCancellationRequested)
+            return Task.FromCanceled(cancellationToken);
+
+        var invokeState = new InvokeAsyncActionState<TState>(callback, state, cancellationToken);
+        invokeState.RegisterCancellation();
 
         bool success = BeginInvokeNative(static value =>
         {
             var state = (InvokeAsyncActionState<TState>)value!;
-            try
-            {
-                state.Callback(state.State);
-                state.Completion.SetResult();
-            }
-            catch (Exception ex)
-            {
-                state.Completion.SetException(ex);
-            }
+            state.Execute();
         }, invokeState);
 
         if (!success)
-            invokeState.Completion.SetException(CreateFailedException());
+            invokeState.Fail(CreateFailedException());
 
         return invokeState.Completion.Task;
     }
@@ -614,41 +590,39 @@ public sealed partial class PhotinoDispatcher
     /// </summary>
     /// <typeparam name="TResult">The result type.</typeparam>
     /// <param name="callback">The function to execute.</param>
+    /// <param name="cancellationToken">
+    /// A cancellation token to observe while waiting for the operation to complete.
+    /// </param>
     /// <returns>
-    /// A <see cref="Task{TResult}"/> that completes when the function has finished executing, or faults if the function cannot be scheduled.
+    /// A <see cref="Task{TResult}"/> that completes when the function has finished executing, is canceled, or faults if the function cannot be scheduled.
     /// </returns>
     /// <exception cref="ArgumentNullException">
     /// Thrown when <paramref name="callback"/> is <c>null</c>.
     /// </exception>
+    /// <exception cref="OperationCanceledException">
+    /// Thrown when <paramref name="cancellationToken"/> is canceled.
+    /// </exception>
     /// <remarks>
     /// Exceptions thrown by the callback are captured by the returned task.
     /// </remarks>
-    public Task<TResult> InvokeAsync<TResult>(Func<TResult> callback)
+    public Task<TResult> InvokeAsync<TResult>(Func<TResult> callback, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(callback);
 
-        var invokeState = new InvokeAsyncFuncState<TResult>
-        {
-            Completion = new TaskCompletionSource<TResult>(TaskCreationOptions.RunContinuationsAsynchronously),
-            Callback = callback
-        };
+        if (cancellationToken.IsCancellationRequested)
+            return Task.FromCanceled<TResult>(cancellationToken);
+
+        var invokeState = new InvokeAsyncFuncState<TResult>(callback, cancellationToken);
+        invokeState.RegisterCancellation();
 
         bool success = BeginInvokeNative(static value =>
         {
             var state = (InvokeAsyncFuncState<TResult>)value!;
-            try
-            {
-                TResult result = state.Callback();
-                state.Completion.SetResult(result);
-            }
-            catch (Exception ex)
-            {
-                state.Completion.SetException(ex);
-            }
+            state.Execute();
         }, invokeState);
 
         if (!success)
-            invokeState.Completion.SetException(CreateFailedException());
+            invokeState.Fail(CreateFailedException());
 
         return invokeState.Completion.Task;
     }
@@ -660,130 +634,212 @@ public sealed partial class PhotinoDispatcher
     /// <typeparam name="TResult">The result type.</typeparam>
     /// <param name="callback">The function to execute.</param>
     /// <param name="state">The state passed to <paramref name="callback"/>.</param>
+    /// <param name="cancellationToken">
+    /// A cancellation token to observe while waiting for the operation to complete.
+    /// </param>
     /// <returns>
-    /// A <see cref="Task{TResult}"/> that completes when the function has finished executing, or faults if the callback cannot be scheduled.
+    /// A <see cref="Task{TResult}"/> that completes when the function has finished executing, is canceled, or faults if the callback cannot be scheduled.
     /// </returns>
     /// <exception cref="ArgumentNullException">
     /// Thrown when <paramref name="callback"/> is <c>null</c>.
+    /// </exception>
+    /// <exception cref="OperationCanceledException">
+    /// Thrown when <paramref name="cancellationToken"/> is canceled.
     /// </exception>
     /// <remarks>
     /// This overload allows callers to pass state explicitly and avoid closure allocations.
     /// Exceptions thrown by the callback are captured by the returned task.
     /// </remarks>
-    public Task<TResult> InvokeAsync<TState, TResult>(Func<TState, TResult> callback, TState state)
+    public Task<TResult> InvokeAsync<TState, TResult>(Func<TState, TResult> callback, TState state, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(callback);
 
-        var invokeState = new InvokeAsyncFuncState<TState, TResult>
-        {
-            Completion = new TaskCompletionSource<TResult>(TaskCreationOptions.RunContinuationsAsynchronously),
-            Callback = callback,
-            State = state
-        };
+        if (cancellationToken.IsCancellationRequested)
+            return Task.FromCanceled<TResult>(cancellationToken);
+
+        var invokeState = new InvokeAsyncFuncState<TState, TResult>(callback, state, cancellationToken);
+        invokeState.RegisterCancellation();
 
         bool success = BeginInvokeNative(static value =>
         {
             var state = (InvokeAsyncFuncState<TState, TResult>)value!;
-            try
-            {
-                TResult result = state.Callback(state.State);
-                state.Completion.SetResult(result);
-            }
-            catch (Exception ex)
-            {
-                state.Completion.SetException(ex);
-            }
+            state.Execute();
         }, invokeState);
 
         if (!success)
-            invokeState.Completion.SetException(CreateFailedException());
+            invokeState.Fail(CreateFailedException());
 
         return invokeState.Completion.Task;
     }
 
     /// <summary>
-    /// Asynchronously executes the specified task-returning callback through the dispatcher.
+    /// Asynchronously executes the specified asynchronous callback through the dispatcher.
     /// </summary>
     /// <param name="callback">The callback to execute.</param>
+    /// <param name="cancellationToken">
+    /// A cancellation token to observe while waiting for the operation to complete.
+    /// </param>
     /// <returns>
-    /// A <see cref="Task"/> that completes when the task returned by <paramref name="callback"/> completes, or faults if the callback cannot be scheduled.
+    /// A <see cref="Task"/> that completes when the operation returned by <paramref name="callback"/> completes, is canceled, or faults if the callback cannot be scheduled.
     /// </returns>
     /// <exception cref="ArgumentNullException">
     /// Thrown when <paramref name="callback"/> is <c>null</c>.
     /// </exception>
+    /// <exception cref="OperationCanceledException">
+    /// Thrown when <paramref name="cancellationToken"/> is canceled.
+    /// </exception>
     /// <remarks>
-    /// Exceptions thrown by the callback or by the task it returns are captured by the returned task.
+    /// Exceptions thrown by the callback or by the operation it returns are captured by the returned task.
     /// </remarks>
-    public Task InvokeAsync(Func<Task> callback)
+    public Task InvokeAsync(Func<CancellationToken, ValueTask> callback, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(callback);
 
-        var invokeState = new InvokeAsyncTaskState
-        {
-            Completion = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously),
-            Callback = callback
-        };
+        if (cancellationToken.IsCancellationRequested)
+            return Task.FromCanceled(cancellationToken);
 
-        bool success = BeginInvokeNative(async static value =>
+        var invokeState = new InvokeAsyncValueTaskState(callback, cancellationToken);
+        invokeState.RegisterCancellation();
+
+        bool success = BeginInvokeNative(static value =>
         {
-            var state = (InvokeAsyncTaskState)value!;
-            try
-            {
-                await state.Callback().ConfigureAwait(false);
-                state.Completion.SetResult();
-            }
-            catch (Exception ex)
-            {
-                state.Completion.SetException(ex);
-            }
+            var state = (InvokeAsyncValueTaskState)value!;
+            state.Execute();
         }, invokeState);
 
         if (!success)
-            invokeState.Completion.SetException(CreateFailedException());
+            invokeState.Fail(CreateFailedException());
 
         return invokeState.Completion.Task;
     }
 
     /// <summary>
-    /// Asynchronously executes the specified task-returning callback through the dispatcher and returns its result.
+    /// Asynchronously executes the specified state-based asynchronous callback through the dispatcher.
+    /// </summary>
+    /// <typeparam name="TState">The callback state type.</typeparam>
+    /// <param name="callback">The callback to execute.</param>
+    /// <param name="state">The state passed to <paramref name="callback"/>.</param>
+    /// <param name="cancellationToken">
+    /// A cancellation token to observe while waiting for the operation to complete.
+    /// </param>
+    /// <returns>
+    /// A <see cref="Task"/> that completes when the operation returned by <paramref name="callback"/> completes, is canceled, or faults if the callback cannot be scheduled.
+    /// </returns>
+    /// <exception cref="ArgumentNullException">
+    /// Thrown when <paramref name="callback"/> is <c>null</c>.
+    /// </exception>
+    /// <exception cref="OperationCanceledException">
+    /// Thrown when <paramref name="cancellationToken"/> is canceled.
+    /// </exception>
+    /// <remarks>
+    /// This overload allows callers to pass state explicitly and avoid closure allocations.
+    /// Exceptions thrown by the callback or by the operation it returns are captured by the returned task.
+    /// </remarks>
+    public Task InvokeAsync<TState>(Func<TState, CancellationToken, ValueTask> callback, TState state, CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(callback);
+
+        if (cancellationToken.IsCancellationRequested)
+            return Task.FromCanceled(cancellationToken);
+
+        var invokeState = new InvokeAsyncValueTaskState<TState>(callback, state, cancellationToken);
+        invokeState.RegisterCancellation();
+
+        bool success = BeginInvokeNative(static value =>
+        {
+            var state = (InvokeAsyncValueTaskState<TState>)value!;
+            state.Execute();
+        }, invokeState);
+
+        if (!success)
+            invokeState.Fail(CreateFailedException());
+
+        return invokeState.Completion.Task;
+    }
+
+    /// <summary>
+    /// Asynchronously executes the specified asynchronous callback through the dispatcher and returns its result.
     /// </summary>
     /// <typeparam name="TResult">The result type.</typeparam>
     /// <param name="callback">The callback to execute.</param>
+    /// <param name="cancellationToken">
+    /// A cancellation token to observe while waiting for the operation to complete.
+    /// </param>
     /// <returns>
-    /// A <see cref="Task{TResult}"/> that completes when the task returned by <paramref name="callback"/> completes, or faults if the callback cannot be scheduled.
+    /// A <see cref="Task{TResult}"/> that completes when the operation returned by <paramref name="callback"/> completes, is canceled, or faults if the callback cannot be scheduled.
     /// </returns>
     /// <exception cref="ArgumentNullException">
     /// Thrown when <paramref name="callback"/> is <c>null</c>.
     /// </exception>
+    /// <exception cref="OperationCanceledException">
+    /// Thrown when <paramref name="cancellationToken"/> is canceled.
+    /// </exception>
     /// <remarks>
-    /// Exceptions thrown by the callback or by the task it returns are captured by the returned task.
+    /// Exceptions thrown by the callback or by the operation it returns are captured by the returned task.
     /// </remarks>
-    public Task<TResult> InvokeAsync<TResult>(Func<Task<TResult>> callback)
+    public Task<TResult> InvokeAsync<TResult>(Func<CancellationToken, ValueTask<TResult>> callback, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(callback);
 
-        var invokeState = new InvokeAsyncTaskState<TResult>
-        {
-            Completion = new TaskCompletionSource<TResult>(TaskCreationOptions.RunContinuationsAsynchronously),
-            Callback = callback
-        };
+        if (cancellationToken.IsCancellationRequested)
+            return Task.FromCanceled<TResult>(cancellationToken);
 
-        bool success = BeginInvokeNative(async static value =>
+        var invokeState = new InvokeAsyncValueTaskResultState<TResult>(callback, cancellationToken);
+        invokeState.RegisterCancellation();
+
+        bool success = BeginInvokeNative(static value =>
         {
-            var state = (InvokeAsyncTaskState<TResult>)value!;
-            try
-            {
-                TResult result = await state.Callback().ConfigureAwait(false);
-                state.Completion.SetResult(result);
-            }
-            catch (Exception ex)
-            {
-                state.Completion.SetException(ex);
-            }
+            var state = (InvokeAsyncValueTaskResultState<TResult>)value!;
+            state.Execute();
         }, invokeState);
 
         if (!success)
-            invokeState.Completion.SetException(CreateFailedException());
+            invokeState.Fail(CreateFailedException());
+
+        return invokeState.Completion.Task;
+    }
+
+    /// <summary>
+    /// Asynchronously executes the specified state-based asynchronous callback through the dispatcher and returns its result.
+    /// </summary>
+    /// <typeparam name="TState">The callback state type.</typeparam>
+    /// <typeparam name="TResult">The result type.</typeparam>
+    /// <param name="callback">The callback to execute.</param>
+    /// <param name="state">The state passed to <paramref name="callback"/>.</param>
+    /// <param name="cancellationToken">
+    /// A cancellation token to observe while waiting for the operation to complete.
+    /// </param>
+    /// <returns>
+    /// A <see cref="Task{TResult}"/> that completes when the operation returned by <paramref name="callback"/> completes, is canceled, or faults if the callback cannot be scheduled.
+    /// </returns>
+    /// <exception cref="ArgumentNullException">
+    /// Thrown when <paramref name="callback"/> is <c>null</c>.
+    /// </exception>
+    /// <exception cref="OperationCanceledException">
+    /// Thrown when <paramref name="cancellationToken"/> is canceled.
+    /// </exception>
+    /// <remarks>
+    /// This overload allows callers to pass state explicitly and avoid closure allocations.
+    /// Exceptions thrown by the callback or by the operation it returns are captured by the returned task.
+    /// </remarks>
+    public Task<TResult> InvokeAsync<TState, TResult>(Func<TState, CancellationToken, ValueTask<TResult>> callback, TState state, CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(callback);
+
+        if (cancellationToken.IsCancellationRequested)
+            return Task.FromCanceled<TResult>(cancellationToken);
+
+        var invokeState = new InvokeAsyncValueTaskResultState<TState, TResult>(callback, state, cancellationToken);
+        invokeState.RegisterCancellation();
+
+        bool success = BeginInvokeNative(static value =>
+        {
+            var state = (InvokeAsyncValueTaskResultState<TState, TResult>)value!;
+            state.Execute();
+        }, invokeState);
+
+        if (!success)
+            invokeState.Fail(CreateFailedException());
 
         return invokeState.Completion.Task;
     }

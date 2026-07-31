@@ -1611,13 +1611,19 @@ public partial class PhotinoWindow
     /// <param name="message">
     /// The message to send.
     /// </param>
+    /// <param name="cancellationToken">
+    /// A cancellation token to observe while waiting for the operation to complete.
+    /// </param>
     /// <returns>
     /// A task that represents the asynchronous send operation.
     /// </returns>
     /// <exception cref="InvalidOperationException">
     /// Thrown when the window is not initialized or has already been closed.
     /// </exception>
-    public Task SendWebMessageAsync(string message)
+    /// <exception cref="OperationCanceledException">
+    /// Thrown when <paramref name="cancellationToken"/> is canceled.
+    /// </exception>
+    public Task SendWebMessageAsync(string message, CancellationToken cancellationToken = default)
     {
         Log($".{nameof(SendWebMessageAsync)}({message})");
         ThrowIfClosedOrNotInitialized();
@@ -1625,7 +1631,7 @@ public partial class PhotinoWindow
         return Dispatcher.InvokeAsync(static state =>
         {
             Photino_SendWebMessage(state.NativeInstance, state.Message);
-        }, (NativeInstance: _nativeInstance, Message: message));
+        }, (NativeInstance: _nativeInstance, Message: message), cancellationToken);
     }
 
     /// <summary>
