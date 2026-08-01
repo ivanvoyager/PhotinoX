@@ -10,9 +10,9 @@
 
         #titlebar {
             height: 36px; flex: 0 0 auto; display: flex; align-items: center; padding: 0 4px 0 12px;
-            background: #313244; user-select: none;
+            background: #313244; user-select: none; -webkit-user-select: none;
         }
-        #titlebar .title { flex: 1; font-size: 13px; }
+        #titlebar .title { flex: 1; font-size: 13px; user-select: none; -webkit-user-select: none; }
         #titlebar button {
             width: 34px; height: 26px; border: none; background: transparent; color: inherit;
             font-size: 14px; line-height: 1; cursor: pointer; border-radius: 4px;
@@ -64,13 +64,59 @@
     <script>
         const send = m => window.external.sendMessage(m);
 
-        // Start a window drag when the title bar is pressed (but not its buttons).
-        document.getElementById('titlebar').addEventListener('pointerdown', e => {
+        const titlebar = document.getElementById('titlebar');
+
+        let dragStartX = 0;
+        let dragStartY = 0;
+        let dragPending = false;
+
+        titlebar.addEventListener('pointerdown', e => {
             if (e.button !== 0 || e.target.closest('button')) return;
+
+            dragStartX = e.clientX;
+            dragStartY = e.clientY;
+            dragPending = true;
+
+            titlebar.setPointerCapture(e.pointerId);
+        });
+
+        titlebar.addEventListener('pointermove', e => {
+            if (!dragPending) return;
+
+            const dx = Math.abs(e.clientX - dragStartX);
+            const dy = Math.abs(e.clientY - dragStartY);
+
+            if (dx < 4 && dy < 4) return;
+
+            dragPending = false;
             send('begindrag');
         });
 
-        // Start a resize when a grip is pressed. The edge name matches PhotinoWindowEdge.
+        titlebar.addEventListener('pointerup', e => {
+            dragPending = false;
+
+            if (titlebar.hasPointerCapture(e.pointerId)) {
+                titlebar.releasePointerCapture(e.pointerId);
+            }
+        });
+
+        titlebar.addEventListener('pointercancel', e => {
+            dragPending = false;
+
+            if (titlebar.hasPointerCapture(e.pointerId)) {
+                titlebar.releasePointerCapture(e.pointerId);
+            }
+        });
+
+        titlebar.addEventListener('dblclick', e => {
+            if (e.button !== 0 || e.target.closest('button')) return;
+
+            dragPending = false;
+            e.preventDefault();
+
+            send('maximize');
+        });
+
         document.querySelectorAll('.grip').forEach(grip => {
             grip.addEventListener('pointerdown', e => {
                 if (e.button !== 0) return;

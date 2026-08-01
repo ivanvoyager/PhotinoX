@@ -34,7 +34,7 @@ internal class Program
 
     private static void WindowWebMessageReceived(object? sender, WebMessageReceivedEventArgs e)
     {
-        Log(sender, $"WindowWebMessageReceived Callback Fired.");
+        Log(sender, $"WebMessageReceived Callback Fired.");
 
         if (sender is not PhotinoWindow currentWindow) return;
 
@@ -72,16 +72,16 @@ internal class Program
 
     private static void WindowLocationChanged(object? sender, LocationChangedEventArgs e)
     {
-        Log(sender, $"WindowLocationChanged Callback Fired.  Left: {e.Left}  Top: {e.Top}");
+        Log(sender, $"LocationChanged Callback Fired.  Left: {e.Left}  Top: {e.Top}");
     }
     private static void WindowSizeChanged(object? sender, SizeChangedEventArgs e)
     {
-        Log(sender, $"WindowSizeChanged Callback Fired.  Height: {e.Height}  Width: {e.Width}");
+        Log(sender, $"SizeChanged Callback Fired.  Height: {e.Height}  Width: {e.Width}");
     }
 
     private static void WindowStateChanged(object? sender, StateChangedEventArgs e)
     {
-        Log(sender, $"WindowStateChanged Callback Fired.  Old: {e.OldState}  New: {e.NewState}");
+        Log(sender, $"StateChanged Callback Fired.  Old: {e.OldState}  New: {e.NewState}");
     }
     
     private static void Log(object? sender, string message)

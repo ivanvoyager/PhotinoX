@@ -7,13 +7,13 @@ namespace Photino.NET;
 /// </summary>
 /// <param name="OldState">The previous native window state.</param>
 /// <param name="NewState">The new native window state.</param>
-public sealed record StateChangedEventArgs(PhotinoWindowState OldState, PhotinoWindowState NewState);
+public readonly record struct StateChangedEventArgs(PhotinoWindowState OldState, PhotinoWindowState NewState);
 
 /// <summary>
 /// Provides data for the <see cref="PhotinoWindow.LocationChanged"/> event.
 /// </summary>
 /// <param name="Location">The new native window location in pixels.</param>
-public sealed record LocationChangedEventArgs(Point Location)
+public readonly record struct LocationChangedEventArgs(Point Location)
 {
     /// <summary>
     /// Gets the new native window position from the left in pixels.
@@ -30,7 +30,7 @@ public sealed record LocationChangedEventArgs(Point Location)
 /// Provides data for the <see cref="PhotinoWindow.SizeChanged"/> event.
 /// </summary>
 /// <param name="Size">The new native window size in pixels.</param>
-public sealed record SizeChangedEventArgs(Size Size)
+public readonly record struct SizeChangedEventArgs(Size Size)
 {
     /// <summary>
     /// Gets the new native window width in pixels.
@@ -47,4 +47,4 @@ public sealed record SizeChangedEventArgs(Size Size)
 /// Provides data for the <see cref="PhotinoWindow.WebMessageReceived"/> event.
 /// </summary>
 /// <param name="Message">The message sent by the WebView content.</param>
-public sealed record WebMessageReceivedEventArgs(string Message);
+public readonly record struct WebMessageReceivedEventArgs(string Message);
