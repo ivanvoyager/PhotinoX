@@ -27,7 +27,8 @@ internal class Program
             .RegisterWebMessageReceivedHandler(WindowWebMessageReceived)
             .RegisterLocationChangedHandler(WindowLocationChanged)
             .RegisterSizeChangedHandler(WindowSizeChanged)
-            .RegisterStateChangedHandler(WindowStateChanged);
+            .RegisterStateChangedHandler(WindowStateChanged)
+            .RegisterContentLoadedHandler(WindowContentLoaded);
 
         app.Run(mainWindow);
     }
@@ -83,7 +84,12 @@ internal class Program
     {
         Log(sender, $"StateChanged Callback Fired.  Old: {e.OldState}  New: {e.NewState}");
     }
-    
+
+    private static void WindowContentLoaded(object? sender, ContentLoadedEventArgs e)
+    {
+        Log(sender, $"ContentLoaded Callback Fired.  URI: {e.Uri}");
+    }
+
     private static void Log(object? sender, string message)
     {
         var windowTitle = sender is PhotinoWindow currentWindow ? currentWindow.Title : string.Empty;

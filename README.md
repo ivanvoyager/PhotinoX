@@ -85,10 +85,14 @@ Window event names are simplified to remove redundant `Window` prefixes and alig
 | - | `FullScreenEntered` |
 | - | `FullScreenExited` |
 | - | `StateChanged` |
+| - | `ContentLoaded` |
+| - | `InitialContentLoaded` |
 
 `Closing` now uses `EventHandler<CancelEventArgs>`; set `CancelEventArgs.Cancel` to cancel the close operation.
 
-`LocationChanged`, `SizeChanged`, and `WebMessageReceived` now use strongly typed event payload records instead of raw `Point`, `Size`, and `string` values. `StateChanged` uses the `StateChangedEventArgs` record. This makes event payloads more explicit and easier to compare while keeping event handlers consistent with the rest of the managed API.
+`LocationChanged`, `SizeChanged`, and `WebMessageReceived` now use strongly typed event payload records instead of raw `Point`, `Size`, and `string` values. `StateChanged` uses the `StateChangedEventArgs` record. `WebMessageReceivedEventArgs` includes both the message and the top-level WebView URI at the time the message was received.
+
+New `ContentLoaded` and `InitialContentLoaded` events are available for observing completed top-level WebView content loads. `ContentLoaded` is raised after each completed top-level content load, while `InitialContentLoaded` is raised once after the initial top-level content load completes. These events do not indicate that a JavaScript framework, SPA route, Blazor component tree, or all asynchronous page work has finished rendering.
 
 | Previous registration helper | New registration helper |
 |---|---|
@@ -101,6 +105,8 @@ Window event names are simplified to remove redundant `Window` prefixes and alig
 | - | `RegisterFullScreenEnteredHandler(...)` |
 | - | `RegisterFullScreenExitedHandler(...)` |
 | - | `RegisterStateChangedHandler(...)` |
+| - | `RegisterContentLoadedHandler(...)` |
+| - | `RegisterInitialContentLoadedHandler(...)` |
 
 ### Window API
 
@@ -154,7 +160,7 @@ Startup content selection is explicit: `Load(...)` sets URL content and clears r
 
 ### Compatibility
 
-These changes may require source-level updates for applications that use older Photino.NET event names, `WaitForClose()`-based startup, focus-in/focus-out event handlers, old bool-returning close handlers, direct `Point` / `Size` / `string` event payloads, or the previous separate fullscreen/maximized/minimized state model now replaced by `WindowState`.
+These changes may require source-level updates for applications that use older Photino.NET event names, `WaitForClose()`-based startup, focus-in/focus-out event handlers, old bool-returning close handlers, direct `Point` / `Size` / `string` event payloads, older `WebMessageReceived` handlers that only expected a message string, or the previous separate fullscreen/maximized/minimized state model now replaced by `WindowState`.
 
 ### Native runtime foundation
 
