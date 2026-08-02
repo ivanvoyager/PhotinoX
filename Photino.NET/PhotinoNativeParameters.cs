@@ -9,10 +9,11 @@ using MovedCallback = Photino.NET.NativeDelegates.IntIntCallback;   //(int x, in
 using MaximizedCallback = Photino.NET.NativeDelegates.VoidCallback;
 using RestoredCallback = Photino.NET.NativeDelegates.VoidCallback;
 using MinimizedCallback = Photino.NET.NativeDelegates.VoidCallback;
-using WebMessageReceivedCallback = Photino.NET.NativeDelegates.StringCallback;
+using WebMessageReceivedCallback = Photino.NET.NativeDelegates.StringStringCallback;
 using WebResourceRequestedCallback = Photino.NET.NativeDelegates.ResourceCallback;
 using FullScreenChangedCallback = Photino.NET.NativeDelegates.VoidBoolCallback;
 using StateChangedCallback = Photino.NET.NativeDelegates.StateChangedCallback;
+using ContentLoadedCallback = Photino.NET.NativeDelegates.StringCallback;
 
 namespace Photino.NET;
 
@@ -78,130 +79,131 @@ internal struct PhotinoNativeParameters
     [MarshalAs(UnmanagedType.FunctionPtr)] internal MinimizedCallback MinimizedHandler;                     //#17
     [MarshalAs(UnmanagedType.FunctionPtr)] internal MovedCallback MovedHandler;                             //#18
     [MarshalAs(UnmanagedType.FunctionPtr)] internal WebMessageReceivedCallback WebMessageReceivedHandler;   //#19
-    [MarshalAs(UnmanagedType.FunctionPtr)] internal WebResourceRequestedCallback CustomSchemeHandler;       //#20
-    [MarshalAs(UnmanagedType.FunctionPtr)] internal ClosedCallback ClosedHandler;                           //#21
-    [MarshalAs(UnmanagedType.FunctionPtr)] internal FullScreenChangedCallback FullScreenChangedHandler;     //#22
-    [MarshalAs(UnmanagedType.FunctionPtr)] internal StateChangedCallback StateChangedHandler;               //#23
+    [MarshalAs(UnmanagedType.FunctionPtr)] internal ContentLoadedCallback ContentLoadedHandler;             //#20
+    [MarshalAs(UnmanagedType.FunctionPtr)] internal WebResourceRequestedCallback CustomSchemeHandler;       //#21
+    [MarshalAs(UnmanagedType.FunctionPtr)] internal ClosedCallback ClosedHandler;                           //#22
+    [MarshalAs(UnmanagedType.FunctionPtr)] internal FullScreenChangedCallback FullScreenChangedHandler;     //#23
+    [MarshalAs(UnmanagedType.FunctionPtr)] internal StateChangedCallback StateChangedHandler;               //#24
 
 
     /// <summary>OPTIONAL: Initial window position in pixels. Default is 0. Can be overridden with UseOsDefaultLocation.</summary>
-    [MarshalAs(UnmanagedType.I4)] internal int Left;       //#24
+    [MarshalAs(UnmanagedType.I4)] internal int Left;       //#25
 
     /// <summary>OPTIONAL: Initial window position in pixels. Default is 0. Can be overridden with UseOsDefaultLocation.</summary>
-    [MarshalAs(UnmanagedType.I4)] internal int Top;        //#25
+    [MarshalAs(UnmanagedType.I4)] internal int Top;        //#26
 
     /// <summary>OPTIONAL: Initial window size in pixels. Default is 0. Can be overridden with UseOsDefaultSize.</summary>
-    [MarshalAs(UnmanagedType.I4)] internal int Width;      //#26
+    [MarshalAs(UnmanagedType.I4)] internal int Width;      //#27
 
     /// <summary>OPTIONAL: Initial window size in pixels. Default is 0. Can be overridden with UseOsDefaultSize.</summary>
-    [MarshalAs(UnmanagedType.I4)] internal int Height;     //#27
+    [MarshalAs(UnmanagedType.I4)] internal int Height;     //#28
 
     /// <summary>OPTIONAL: Initial zoom level of the native browser control. e.g. 100 = 100%. Default is 100.</summary>
-    [MarshalAs(UnmanagedType.I4)] internal int Zoom;       //#28
+    [MarshalAs(UnmanagedType.I4)] internal int Zoom;       //#29
 
     /// <summary>OPTIONAL: Initial minimum window width in pixels.</summary>
-    [MarshalAs(UnmanagedType.I4)] internal int MinWidth;   //#29
+    [MarshalAs(UnmanagedType.I4)] internal int MinWidth;   //#30
 
     /// <summary>OPTIONAL: Initial minimum window height in pixels.</summary>
-    [MarshalAs(UnmanagedType.I4)] internal int MinHeight;  //#30
+    [MarshalAs(UnmanagedType.I4)] internal int MinHeight;  //#31
 
     /// <summary>OPTIONAL: Initial maximum window width in pixels.</summary>
-    [MarshalAs(UnmanagedType.I4)] internal int MaxWidth;   //#31
+    [MarshalAs(UnmanagedType.I4)] internal int MaxWidth;   //#32
 
     /// <summary>OPTIONAL: Initial maximum window height in pixels.</summary>
-    [MarshalAs(UnmanagedType.I4)] internal int MaxHeight;  //#32
+    [MarshalAs(UnmanagedType.I4)] internal int MaxHeight;  //#33
 
     /// <summary>OPTIONAL: Initial native window state. Default is Normal.</summary>
-    [MarshalAs(UnmanagedType.I4)] internal PhotinoWindowState WindowState; //#33
+    [MarshalAs(UnmanagedType.I4)] internal PhotinoWindowState WindowState; //#34
 
     /// <summary>OPTIONAL: If true, native window appears centered on screen. Left and Top properties are ignored. Default is false.</summary>
-    [MarshalAs(UnmanagedType.I1)] internal bool CenterOnInitialize; //#34
+    [MarshalAs(UnmanagedType.I1)] internal bool CenterOnInitialize; //#35
 
     /// <summary>OPTIONAL: If true, window is created without a title bar or borders. This allows owner-drawn title bars and borders. Default is false.</summary>
-    [MarshalAs(UnmanagedType.I1)] internal bool Chromeless; //#35
+    [MarshalAs(UnmanagedType.I1)] internal bool Chromeless; //#36
 
     /// <summary>OPTIONAL: If true, window can be displayed with transparent background where supported. Chromeless windows and alpha-based page backgrounds are typically required for full-window transparency. Default is false.</summary>
-    [MarshalAs(UnmanagedType.I1)] internal bool Transparent; //#36
+    [MarshalAs(UnmanagedType.I1)] internal bool Transparent; //#37
 
     /// <summary>OPTIONAL: If true, user can access the browser control's context menu. Default is true.</summary>
-    [MarshalAs(UnmanagedType.I1)] internal bool ContextMenuEnabled; //#37
+    [MarshalAs(UnmanagedType.I1)] internal bool ContextMenuEnabled; //#38
 
     /// <summary>OPTIONAL: If true, user can zoom the browser control. Default is true.</summary>
-    [MarshalAs(UnmanagedType.I1)] internal bool ZoomEnabled; //#38
+    [MarshalAs(UnmanagedType.I1)] internal bool ZoomEnabled; //#39
 
     /// <summary>OPTIONAL: If true, user can access the browser control's dev tools. Default is true.</summary>
-    [MarshalAs(UnmanagedType.I1)] internal bool DevToolsEnabled; //#39
+    [MarshalAs(UnmanagedType.I1)] internal bool DevToolsEnabled; //#40
 
     /// <summary>OPTIONAL: If true, native window can be resized by the user. Default is true.</summary>
-    [MarshalAs(UnmanagedType.I1)] internal bool Resizable; //#40
+    [MarshalAs(UnmanagedType.I1)] internal bool Resizable; //#41
 
     /// <summary>OPTIONAL: If true, native window appears in front of other windows and cannot be hidden behind them. Default is false.</summary>
-    [MarshalAs(UnmanagedType.I1)] internal bool Topmost; //#41
+    [MarshalAs(UnmanagedType.I1)] internal bool Topmost; //#42
 
     /// <summary>OPTIONAL: If true, overrides Top and Left parameters and lets the OS position the newly created window. Default is true.</summary>
-    [MarshalAs(UnmanagedType.I1)] internal bool UseOsDefaultLocation; //#42
+    [MarshalAs(UnmanagedType.I1)] internal bool UseOsDefaultLocation; //#43
 
     /// <summary>OPTIONAL: If true, overrides Height and Width parameters and lets the OS size the newly created window. Default is true.</summary>
-    [MarshalAs(UnmanagedType.I1)] internal bool UseOsDefaultSize; //#43
+    [MarshalAs(UnmanagedType.I1)] internal bool UseOsDefaultSize; //#44
 
     /// <summary>OPTIONAL: If true, requests for access to local resources (camera, microphone, etc.) will automatically be granted. Default is true.</summary>
-    [MarshalAs(UnmanagedType.I1)] internal bool GrantBrowserPermissions; //#44
+    [MarshalAs(UnmanagedType.I1)] internal bool GrantBrowserPermissions; //#45
 
     /// <summary>OPTIONAL: If true, browser control allows autoplaying media when page is loaded. Default is true.</summary>
-    [MarshalAs(UnmanagedType.I1)] internal bool MediaAutoplayEnabled; //#45
+    [MarshalAs(UnmanagedType.I1)] internal bool MediaAutoplayEnabled; //#46
 
     /// <summary>OPTIONAL: If true, browser allows access to the local file system. Default is true.</summary>
-    [MarshalAs(UnmanagedType.I1)] internal bool FileSystemAccessEnabled; //#46
+    [MarshalAs(UnmanagedType.I1)] internal bool FileSystemAccessEnabled; //#47
 
     /// <summary>OPTIONAL: If true, web security is enabled where supported. Default is true.</summary>
-    [MarshalAs(UnmanagedType.I1)] internal bool WebSecurityEnabled; //#47
+    [MarshalAs(UnmanagedType.I1)] internal bool WebSecurityEnabled; //#48
 
     /// <summary>OPTIONAL: If true, JavaScript clipboard access is enabled where supported. Default is true.</summary>
-    [MarshalAs(UnmanagedType.I1)] internal bool JavascriptClipboardAccessEnabled; //#48
+    [MarshalAs(UnmanagedType.I1)] internal bool JavascriptClipboardAccessEnabled; //#49
 
     /// <summary>OPTIONAL: If true, media stream access is enabled where supported. Default is true.</summary>
-    [MarshalAs(UnmanagedType.I1)] internal bool MediaStreamEnabled; //#49
+    [MarshalAs(UnmanagedType.I1)] internal bool MediaStreamEnabled; //#50
 
     /// <summary>OPTIONAL: If true, smooth scrolling is enabled where supported. Default is true.</summary>
-    [MarshalAs(UnmanagedType.I1)] internal bool SmoothScrollingEnabled; //#50
+    [MarshalAs(UnmanagedType.I1)] internal bool SmoothScrollingEnabled; //#51
 
     /// <summary>OPTIONAL: If true, certificate errors are ignored where supported. Default is false.</summary>
-    [MarshalAs(UnmanagedType.I1)] internal bool IgnoreCertificateErrorsEnabled; //#51
+    [MarshalAs(UnmanagedType.I1)] internal bool IgnoreCertificateErrorsEnabled; //#52
 
     /// <summary>WINDOWS: OPTIONAL: If true, toast notifications are allowed on Windows by calling ShowNotification. Requires registering the app with Windows which is not always desirable as it creates shortcuts, etc. Default is true.</summary>
-    [MarshalAs(UnmanagedType.I1)] internal bool NotificationsEnabled; //#52
+    [MarshalAs(UnmanagedType.I1)] internal bool NotificationsEnabled; //#53
 
     /// <summary>
     /// WINDOWS: OPTIONAL: If true and ParentInstance is set, creates a native owner relationship
     /// between this window and its logical parent. Default is false.
     /// </summary>
-    [MarshalAs(UnmanagedType.I1)] internal bool UseNativeWindowOwner; //#53
+    [MarshalAs(UnmanagedType.I1)] internal bool UseNativeWindowOwner; //#54
 
     /// <summary>
     /// LINUX: OPTIONAL: Height, in logical pixels, of the native chromeless drag region measured from the WebView top edge.
     /// Set to 0 to disable native Linux chromeless drag. Default is 0.
     /// </summary>
-    [MarshalAs(UnmanagedType.I4)] internal int ChromelessDragRegionHeight; //#54
+    [MarshalAs(UnmanagedType.I4)] internal int ChromelessDragRegionHeight; //#55
 
     /// <summary>
     /// LINUX: OPTIONAL: Left inset, in logical pixels, excluded from the native chromeless drag region. Default is 0.
     /// </summary>
-    [MarshalAs(UnmanagedType.I4)] internal int ChromelessDragRegionLeftInset; //#55
+    [MarshalAs(UnmanagedType.I4)] internal int ChromelessDragRegionLeftInset; //#56
 
     /// <summary>
     /// LINUX: OPTIONAL: Right inset, in logical pixels, excluded from the native chromeless drag region.
     /// Use this to exclude custom title bar buttons from native drag. Default is 0.
     /// </summary>
-    [MarshalAs(UnmanagedType.I4)] internal int ChromelessDragRegionRightInset; //#56
+    [MarshalAs(UnmanagedType.I4)] internal int ChromelessDragRegionRightInset; //#57
 
     /// <summary>
     /// LINUX: OPTIONAL: Thickness, in logical pixels, of the native chromeless resize border measured from the WebView edges.
     /// Set to 0 to disable native Linux chromeless resize borders. Default is 8.
     /// </summary>
-    [MarshalAs(UnmanagedType.I4)] internal int ChromelessResizeBorderThickness; //#57
+    [MarshalAs(UnmanagedType.I4)] internal int ChromelessResizeBorderThickness; //#58
 
     /// <summary>Set when GetParamErrors() is called, prior to initializing the native window. It is a check to make sure the struct matches what C++ is expecting.</summary>
-    [MarshalAs(UnmanagedType.I4)] internal int Size; //#58
+    [MarshalAs(UnmanagedType.I4)] internal int Size; //#59
 
 
     ///<summary>Checks the parameters to ensure they are valid before window creation. Called by PhotinoWindow prior to initializing native window.</summary>
@@ -266,7 +268,7 @@ internal struct PhotinoNativeParameters
         try
         {
             Size = Marshal.SizeOf<PhotinoNativeParameters>();
-            Debug.Assert(Size == 384);
+            Debug.Assert(Size == 392);
         }
         catch (Exception ex)
         {

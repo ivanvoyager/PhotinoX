@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel;
+using System.Diagnostics;
 using System.Drawing;
 
 namespace Photino.NET;
@@ -225,13 +226,88 @@ public partial class PhotinoWindow
     public event EventHandler<WebMessageReceivedEventArgs>? WebMessageReceived;
 
     /// <summary>
-    /// Invokes registered handlers when the native window sends a message.
+    /// Invokes registered handlers when the WebView content sends a message to the host application.
     /// </summary>
-    /// <param name="message">The message sent by the native window.</param>
-    internal void OnWebMessageReceived(string message)
+    /// <param name="message">The message sent by the WebView content.</param>
+    /// <param name="uri">The URI of the top-level WebView content at the time the message was received.</param>
+    /// <exception cref="ArgumentNullException">
+    /// Thrown when <paramref name="message"/> or <paramref name="uri"/> is <see langword="null"/>.
+    /// </exception>
+    internal void OnWebMessageReceived(string message, string uri)
     {
-        WebMessageReceived?.Invoke(this, new WebMessageReceivedEventArgs(message));
+        if (message is null)
+        {
+            Debug.Fail("Failed to receive message from WebView content: message is null");
+            return;
+        }
+
+        if (!Uri.TryCreate(uri, UriKind.Absolute, out var sourceUri))
+        {
+            Debug.Fail($"Failed to create URI from message source: {uri}");
+            return;
+        }
+
+        WebMessageReceived?.Invoke(this, new WebMessageReceivedEventArgs(message, sourceUri));
     }
 
-    // TODO public event EventHandler? ContentRendered;
+    /// <summary>
+    /// Occurs when the WebView finishes loading top-level content.
+    /// </summary>
+    /// <remarks>
+    /// This event is raised for completed top-level content loads. It does not indicate
+    /// that a JavaScript framework, SPA route, Blazor component tree, or all asynchronous
+    /// page work has finished rendering.
+    /// </remarks>
+    public event EventHandler<ContentLoadedEventArgs>? ContentLoaded;
+
+    /// <summary>
+    /// Occurs once when the initial top-level WebView content load completes.
+    /// </summary>
+    /// <remarks>
+    /// This event does not indicate that a JavaScript framework, SPA route,
+    /// Blazor component tree, or all asynchronous page work has finished rendering.
+    /// </remarks>
+    public event EventHandler<ContentLoadedEventArgs>? InitialContentLoaded;
+
+    /// <summary>
+    /// Invokes registered handlers when the WebView finishes loading top-level window content.
+    /// </summary>
+    /// <param name="uri">The URI of the top-level WebView content that finished loading.</param>
+    /// <exception cref="ArgumentNullException">
+    /// Thrown when <paramref name="uri"/> is <see langword="null"/>.
+    /// </exception>
+    internal void OnContentLoaded(string uri)
+    {
+        if (!Uri.TryCreate(uri, UriKind.Absolute, out var contentUri))
+        {
+            Debug.Fail($"Failed to create URI from content load: {uri}");
+            return;
+        }
+
+        OnContentLoaded(contentUri);
+    }
+
+    private bool _firstContentLoadedRaised;
+
+    /// <summary>
+    /// Invokes registered handlers when the WebView finishes loading top-level window content.
+    /// </summary>
+    /// <param name="uri">The URI of the top-level WebView content that finished loading.</param>
+    /// <exception cref="ArgumentNullException">
+    /// Thrown when <paramref name="uri"/> is <see langword="null"/>.
+    /// </exception>
+    internal void OnContentLoaded(Uri uri)
+    {
+        var args = new ContentLoadedEventArgs(uri);
+
+        if (!_firstContentLoadedRaised)
+        {
+            _firstContentLoadedRaised = true;
+            InitialContentLoaded?.Invoke(this, args);
+        }
+
+        ContentLoaded?.Invoke(this, args);
+    }
+
+    // TODO: Handle exceptions thrown by event handlers and log them to the console or a logger.
 }

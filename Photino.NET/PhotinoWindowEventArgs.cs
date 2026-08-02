@@ -47,4 +47,19 @@ public readonly record struct SizeChangedEventArgs(Size Size)
 /// Provides data for the <see cref="PhotinoWindow.WebMessageReceived"/> event.
 /// </summary>
 /// <param name="Message">The message sent by the WebView content.</param>
-public readonly record struct WebMessageReceivedEventArgs(string Message);
+/// <param name="Uri">The URI of the top-level WebView content that sent the message.</param>
+public readonly record struct WebMessageReceivedEventArgs(string Message, Uri Uri);
+
+/// <summary>
+/// Provides data for the <see cref="PhotinoWindow.ContentLoaded"/> and
+/// <see cref="PhotinoWindow.InitialContentLoaded"/> events.
+/// </summary>
+/// <remarks>
+/// This event data describes a completed top-level WebView content load.
+/// It does not indicate that a JavaScript framework, SPA route, Blazor component tree,
+/// or all asynchronous page work has finished rendering.
+/// </remarks>
+/// <param name="Uri">
+/// The URI of the top-level WebView content that finished loading.
+/// </param>
+public readonly record struct ContentLoadedEventArgs(Uri Uri);

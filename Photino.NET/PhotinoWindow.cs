@@ -1427,6 +1427,7 @@ public partial class PhotinoWindow
         _startupParameters.FocusInHandler = OnActivated;
         _startupParameters.FocusOutHandler = OnDeactivated;
         _startupParameters.WebMessageReceivedHandler = OnWebMessageReceived;
+        _startupParameters.ContentLoadedHandler = OnContentLoaded;
         _startupParameters.CustomSchemeHandler = OnCustomScheme;
         _startupParameters.ClosedHandler = OnClosed;
         _startupParameters.FullScreenChangedHandler = OnFullScreenChanged;
