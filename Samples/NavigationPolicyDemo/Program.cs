@@ -15,7 +15,7 @@ internal static class Program
             .SetTitle("Navigation Policy Demo")
             .SetUseOsDefaultSize(false)
             .SetUseOsDefaultLocation(false)
-            .SetSize(new Size(960, 680))
+            .SetSize(new Size(960, 700))
             .Center()
             .Load("wwwroot/navigation-policy.html")
             .RegisterContentLoadedHandler(WindowContentLoaded)
