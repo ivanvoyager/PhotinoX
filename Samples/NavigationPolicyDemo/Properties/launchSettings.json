@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "NavigationPolicyDemo": {
+      "commandName": "Project",
+      "debugEngines": "managed,native"
+    }
+  }
+}

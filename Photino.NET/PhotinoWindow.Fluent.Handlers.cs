@@ -302,7 +302,7 @@ partial class PhotinoWindow
     }
 
     /// <summary>
-    /// Registers user-defined handler methods to receive callbacks from the native window when it sends a message.
+    /// Registers user-defined handler methods to receive callbacks when the WebView content sends a message to the host application.
     /// </summary>
     /// <returns>
     /// Returns the current <see cref="PhotinoWindow"/> instance.
@@ -322,6 +322,55 @@ partial class PhotinoWindow
         ArgumentNullException.ThrowIfNull(handler);
         ThrowIfClosed();
         WebMessageReceived += handler;
+        return this;
+    }
+
+    /// <summary>
+    /// Registers user-defined handler methods to receive callbacks before the WebView starts navigating to top-level content.
+    /// </summary>
+    /// <returns>
+    /// Returns the current <see cref="PhotinoWindow"/> instance.
+    /// </returns>
+    /// <remarks>
+    /// Set <see cref="CancelEventArgs.Cancel"/> to <see langword="true"/> to cancel the navigation.
+    /// </remarks>
+    /// <param name="handler">The handler to register.</param>
+    /// <exception cref="InvalidOperationException">
+    /// Thrown when the window has already been closed.
+    /// </exception>
+    /// <exception cref="ArgumentNullException">
+    /// Thrown when <paramref name="handler"/> is <see langword="null"/>.
+    /// </exception>
+    public PhotinoWindow RegisterNavigationStartingHandler(EventHandler<NavigationStartingEventArgs> handler)
+    {
+        ArgumentNullException.ThrowIfNull(handler);
+        ThrowIfClosed();
+        NavigationStarting += handler;
+        return this;
+    }
+
+    /// <summary>
+    /// Registers user-defined handler methods to receive callbacks when the WebView requests opening content in a new window.
+    /// </summary>
+    /// <returns>
+    /// Returns the current <see cref="PhotinoWindow"/> instance.
+    /// </returns>
+    /// <remarks>
+    /// PhotinoX does not create browser-controlled popup windows. Applications can handle this event
+    /// and open the requested URI externally if needed.
+    /// </remarks>
+    /// <param name="handler">The handler to register.</param>
+    /// <exception cref="InvalidOperationException">
+    /// Thrown when the window has already been closed.
+    /// </exception>
+    /// <exception cref="ArgumentNullException">
+    /// Thrown when <paramref name="handler"/> is <see langword="null"/>.
+    /// </exception>
+    public PhotinoWindow RegisterNewWindowRequestedHandler(EventHandler<NewWindowRequestedEventArgs> handler)
+    {
+        ArgumentNullException.ThrowIfNull(handler);
+        ThrowIfClosed();
+        NewWindowRequested += handler;
         return this;
     }
 

@@ -63,7 +63,7 @@ var window = new PhotinoWindow()
 return app.Run(window);
 ```
 
-`PhotinoDispatcher` provides application-level UI-thread dispatching. `Invoke(...)` executes work on the dispatcher thread and throws when scheduling fails, while `TryInvoke(...)` returns `false` for scheduling failures. `BeginInvoke(...)` reports scheduling success as `bool`, and `InvokeAsync(...)` returns a task that completes when the dispatched callback completes, is canceled, or faults if scheduling fails. Cancellation-aware overloads accept `CancellationToken`, and async callback overloads use `ValueTask` / `ValueTask<TResult>` for allocation-friendly completion paths. State-based overloads are available for callbacks that need to pass explicit state without capturing closures.
+`PhotinoDispatcher` provides application-level UI-thread dispatching. `Invoke(...)` executes work on the dispatcher thread and throws when scheduling fails, while `TryInvoke(...)` returns `false` for scheduling failures. `BeginInvoke(...)` reports scheduling success as `bool`, and `InvokeAsync(...)` returns a task that completes when the dispatched callback completes, is canceled, or faults if scheduling fails. Cancellation-aware overloads accept `CancellationToken`, and async callback overloads use `ValueTask` / `ValueTask<TResult>` for allocation-friendly completion paths. State-based overloads are available to avoid closure captures.
 
 ### Window events
 
@@ -85,12 +85,18 @@ Window event names are simplified to remove redundant `Window` prefixes and alig
 | - | `FullScreenEntered` |
 | - | `FullScreenExited` |
 | - | `StateChanged` |
+| - | `NavigationStarting` |
+| - | `NewWindowRequested` |
 | - | `ContentLoaded` |
 | - | `InitialContentLoaded` |
 
 `Closing` now uses `EventHandler<CancelEventArgs>`; set `CancelEventArgs.Cancel` to cancel the close operation.
 
-`LocationChanged`, `SizeChanged`, and `WebMessageReceived` now use strongly typed event payload records instead of raw `Point`, `Size`, and `string` values. `StateChanged` uses the `StateChangedEventArgs` record. `WebMessageReceivedEventArgs` includes both the message and the top-level WebView URI at the time the message was received.
+`LocationChanged`, `SizeChanged`, and `WebMessageReceived` now use strongly typed event payload records instead of raw `Point`, `Size`, and `string` values. `WebMessageReceivedEventArgs` includes both the message and the top-level WebView URI at the time the message was received.
+
+`NavigationStarting` is raised before the WebView starts navigating to top-level content. Set `NavigationStartingEventArgs.Cancel` to cancel the current-window navigation.
+
+`NewWindowRequested` is raised when WebView content requests opening content in a new window, such as through `target="_blank"` links or `window.open(...)`. PhotinoX does not create browser-controlled popup windows. Applications can handle this event and open the requested URI externally if needed.
 
 New `ContentLoaded` and `InitialContentLoaded` events are available for observing completed top-level WebView content loads. `ContentLoaded` is raised after each completed top-level content load, while `InitialContentLoaded` is raised once after the initial top-level content load completes. These events do not indicate that a JavaScript framework, SPA route, Blazor component tree, or all asynchronous page work has finished rendering.
 
@@ -105,6 +111,8 @@ New `ContentLoaded` and `InitialContentLoaded` events are available for observin
 | - | `RegisterFullScreenEnteredHandler(...)` |
 | - | `RegisterFullScreenExitedHandler(...)` |
 | - | `RegisterStateChangedHandler(...)` |
+| - | `RegisterNavigationStartingHandler(...)` |
+| - | `RegisterNewWindowRequestedHandler(...)` |
 | - | `RegisterContentLoadedHandler(...)` |
 | - | `RegisterInitialContentLoadedHandler(...)` |
 
@@ -133,7 +141,7 @@ Notable lifecycle and API changes in PhotinoX:
 | Linux chromeless native hit-test settings | `SetLinuxChromelessDragRegion`, `SetLinuxChromelessResizeBorderThickness`, `LinuxChromelessSettings` |
 | Window/platform state | `IsInitialized`, `IsClosed`, cross-platform `WindowHandle` |
 
-`WindowState` replaces the previous `FullScreen`, `Maximized`, and `Minimized` properties with a single cross-platform state model. It supports `Normal`, `Minimized`, `Maximized`, and `FullScreen`, and is also used for startup state configuration.
+`WindowState` replaces the previous `FullScreen`, `Maximized`, and `Minimized` properties with a single state model. It supports `Normal`, `Minimized`, `Maximized`, and `FullScreen`, and is also used for startup state configuration.
 
 `MainMonitor` represents the monitor that currently contains the native window. `Monitors` enumerates all available monitors and does not define which monitor is considered current.
 

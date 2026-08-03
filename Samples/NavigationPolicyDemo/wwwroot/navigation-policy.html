@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Navigation Policy Demo</title>
+    <style>
+        html, body {
+            margin: 0;
+            min-height: 100%;
+            font-family: system-ui, sans-serif;
+            background: #1e1e2e;
+            color: #cdd6f4;
+        }
+
+        body {
+            padding: 24px;
+            box-sizing: border-box;
+        }
+
+        h1 {
+            margin: 0 0 12px;
+            font-size: 24px;
+        }
+
+        h2 {
+            margin: 24px 0 8px;
+            font-size: 16px;
+            color: #f5c2e7;
+        }
+
+        p {
+            color: #a6adc8;
+            line-height: 1.45;
+        }
+
+        a, button {
+            font: inherit;
+        }
+
+        a {
+            color: #89b4fa;
+        }
+
+        button {
+            padding: 8px 12px;
+            border: 0;
+            border-radius: 6px;
+            background: #89b4fa;
+            color: #11111b;
+            cursor: pointer;
+        }
+
+            button:hover {
+                background: #b4befe;
+            }
+
+        .card {
+            margin-top: 16px;
+            padding: 16px;
+            border-radius: 10px;
+            background: #313244;
+        }
+
+        code {
+            color: #fab387;
+        }
+    </style>
+</head>
+<body>
+    <h1>Navigation Policy Demo</h1>
+
+    <p>
+        This sample is prepared for the upcoming <code>NavigationStarting</code> and
+        <code>NewWindowRequested</code> events.
+    </p>
+
+    <div class="card">
+        <h2>Same-window navigation</h2>
+        <p>
+            This link should raise <code>NavigationStarting</code>. The app can allow it,
+            cancel it, or open it externally.
+        </p>
+        <p>
+            <a href="https://example.com/">Open https://example.com in the same WebView</a>
+        </p>
+    </div>
+
+    <div class="card">
+        <h2>New-window navigation</h2>
+        <p>
+            This link should raise <code>NewWindowRequested</code>. The app can handle it
+            without allowing the WebView to create a new native window.
+        </p>
+        <p>
+            <a href="https://example.com/" target="_blank" rel="noopener noreferrer">Open https://example.com in a new window</a>
+        </p>
+    </div>
+
+    <div class="card">
+        <h2>JavaScript window.open</h2>
+        <p>
+            This button should also raise <code>NewWindowRequested</code>.
+        </p>
+        <button id="open-window">window.open(...)</button>
+    </div>
+
+    <div class="card">
+        <h2>Host message</h2>
+        <p>
+            This verifies that <code>WebMessageReceivedEventArgs.Uri</code> reports the current WebView URI.
+        </p>
+        <button id="send-message">Send message to host</button>
+    </div>
+
+    <script>
+        document.getElementById('open-window').addEventListener('click', () => {
+            window.open('https://example.com/', '_blank', 'noopener,noreferrer');
+        });
+
+        document.getElementById('send-message').addEventListener('click', () => {
+            window.external.sendMessage('message-from-navigation-policy-demo');
+        });
+    </script>
+</body>
+</html>

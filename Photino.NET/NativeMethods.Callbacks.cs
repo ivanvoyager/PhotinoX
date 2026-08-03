@@ -12,6 +12,9 @@ using RestoredCallback = Photino.NET.NativeDelegates.VoidCallback;
 using MinimizedCallback = Photino.NET.NativeDelegates.VoidCallback;
 using FullScreenChangedCallback = Photino.NET.NativeDelegates.VoidBoolCallback;
 using StateChangedCallback = Photino.NET.NativeDelegates.StateChangedCallback;
+using NavigationStartingCallback = Photino.NET.NativeDelegates.StringBoolCallback;
+using NewWindowRequestedCallback = Photino.NET.NativeDelegates.StringBoolCallback;
+using ContentLoadedCallback = Photino.NET.NativeDelegates.StringCallback;
 
 namespace Photino.NET;
 
@@ -61,4 +64,15 @@ internal static partial class NativeMethods
     [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
     private static partial void Photino_SetStateChangedCallback(IntPtr instance, StateChangedCallback callback);
 
+    [LibraryImport(DLL_NAME)]
+    [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
+    private static partial void Photino_SetNavigationStartingCallback(IntPtr instance, NavigationStartingCallback callback);
+
+    [LibraryImport(DLL_NAME)]
+    [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
+    private static partial void Photino_SetNewWindowRequestedCallback(IntPtr instance, NewWindowRequestedCallback callback);
+
+    [LibraryImport(DLL_NAME)]
+    [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
+    private static partial void Photino_SetContentLoadedCallback(IntPtr instance, ContentLoadedCallback callback);
 }

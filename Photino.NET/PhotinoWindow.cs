@@ -1428,6 +1428,8 @@ public partial class PhotinoWindow
         _startupParameters.FocusOutHandler = OnDeactivated;
         _startupParameters.WebMessageReceivedHandler = OnWebMessageReceived;
         _startupParameters.ContentLoadedHandler = OnContentLoaded;
+        _startupParameters.NavigationStartingHandler = OnNavigationStarting;
+        _startupParameters.NewWindowRequestedHandler = OnNewWindowRequested;
         _startupParameters.CustomSchemeHandler = OnCustomScheme;
         _startupParameters.ClosedHandler = OnClosed;
         _startupParameters.FullScreenChangedHandler = OnFullScreenChanged;
@@ -1571,6 +1573,10 @@ public partial class PhotinoWindow
 
         _startupParameters.Title = _title ?? DefaultTitle;
         _startupParameters.NativeParent = Parent?._nativeInstance ?? IntPtr.Zero;
+
+        _startupParameters.Size = Marshal.SizeOf<PhotinoNativeParameters>();
+        Debug.Assert(_startupParameters.Size == 416);
+        _startupParameters.AbiVersion = PhotinoNativeParameters.NativeAbiVersion;
 
         // Validate startup parameters
         List<string>? errors = null;
