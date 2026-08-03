@@ -1,4 +1,5 @@
-﻿using System.Drawing;
+﻿using System.ComponentModel;
+using System.Drawing;
 
 namespace Photino.NET;
 
@@ -49,6 +50,38 @@ public readonly record struct SizeChangedEventArgs(Size Size)
 /// <param name="Message">The message sent by the WebView content.</param>
 /// <param name="Uri">The URI of the top-level WebView content that sent the message.</param>
 public readonly record struct WebMessageReceivedEventArgs(string Message, Uri Uri);
+
+/// <summary>
+/// Provides data for the <see cref="PhotinoWindow.NavigationStarting"/> event.
+/// </summary>
+/// <remarks>
+/// Set <see cref="CancelEventArgs.Cancel"/> to <see langword="true"/> to cancel the navigation.
+/// </remarks>
+public sealed class NavigationStartingEventArgs : CancelEventArgs
+{
+    /// <summary>
+    /// Initializes a new instance of the <see cref="NavigationStartingEventArgs"/> class.
+    /// </summary>
+    /// <param name="uri">The URI that the WebView is about to navigate to.</param>
+    /// <exception cref="ArgumentNullException">
+    /// Thrown when <paramref name="uri"/> is <see langword="null"/>.
+    /// </exception>
+    public NavigationStartingEventArgs(Uri uri)
+    {
+        Uri = uri ?? throw new ArgumentNullException(nameof(uri));
+    }
+
+    /// <summary>
+    /// Gets the URI that the WebView is about to navigate to.
+    /// </summary>
+    public Uri Uri { get; }
+}
+
+/// <summary>
+/// Provides data for the <see cref="PhotinoWindow.NewWindowRequested"/> event.
+/// </summary>
+/// <param name="Uri">The URI requested for the new window.</param>
+public readonly record struct NewWindowRequestedEventArgs(Uri Uri);
 
 /// <summary>
 /// Provides data for the <see cref="PhotinoWindow.ContentLoaded"/> and

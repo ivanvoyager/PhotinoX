@@ -1,6 +1,7 @@
 ﻿using System.ComponentModel;
 using System.Diagnostics;
 using System.Drawing;
+using System.Runtime.CompilerServices;
 
 namespace Photino.NET;
 
@@ -56,11 +57,19 @@ public partial class PhotinoWindow
         if (handler == null)
             return 0;
 
-        var args = new CancelEventArgs();
-        handler(this, args);
+        try
+        {
+            var args = new CancelEventArgs();
+            handler(this, args);
 
-        // C++ expects a single byte (0 = allow close, 1 = cancel close)
-        return args.Cancel ? (byte)1 : (byte)0;
+            // C++ expects a single byte (0 = allow close, 1 = cancel close)
+            return args.Cancel ? (byte)1 : (byte)0;
+        }
+        catch (Exception ex)
+        {
+            HandleNativeCallbackException(ex);
+            return 0;
+        }
     }
 
     /// <summary>
@@ -78,7 +87,7 @@ public partial class PhotinoWindow
 
         try
         {
-            Closed?.Invoke(this, EventArgs.Empty);
+            InvokeNativeEvent(Closed);
         }
         finally
         {
@@ -98,7 +107,7 @@ public partial class PhotinoWindow
     /// <param name="top">The window position from the top in pixels.</param>
     internal void OnLocationChanged(int left, int top)
     {
-        LocationChanged?.Invoke(this, new LocationChangedEventArgs(new Point(left, top)));
+        InvokeNativeEvent(LocationChanged, new LocationChangedEventArgs(new Point(left, top)));
     }
 
     /// <summary>
@@ -113,7 +122,7 @@ public partial class PhotinoWindow
     /// <param name="height">The window height in pixels.</param>
     internal void OnSizeChanged(int width, int height)
     {
-        SizeChanged?.Invoke(this, new SizeChangedEventArgs(new Size(width, height)));
+        InvokeNativeEvent(SizeChanged, new SizeChangedEventArgs(new Size(width, height)));
     }
 
     /// <summary>
@@ -126,7 +135,7 @@ public partial class PhotinoWindow
     /// </summary>
     internal void OnActivated()
     {
-        Activated?.Invoke(this, EventArgs.Empty);
+        InvokeNativeEvent(Activated);
     }
 
     /// <summary>
@@ -139,7 +148,7 @@ public partial class PhotinoWindow
     /// </summary>
     internal void OnDeactivated()
     {
-        Deactivated?.Invoke(this, EventArgs.Empty);
+        InvokeNativeEvent(Deactivated);
     }
 
     /// <summary>
@@ -152,7 +161,7 @@ public partial class PhotinoWindow
     /// </summary>
     internal void OnMaximized()
     {
-        Maximized?.Invoke(this, EventArgs.Empty);
+        InvokeNativeEvent(Maximized);
     }
 
     /// <summary>
@@ -165,7 +174,7 @@ public partial class PhotinoWindow
     /// </summary>
     internal void OnRestored()
     {
-        Restored?.Invoke(this, EventArgs.Empty);
+        InvokeNativeEvent(Restored);
     }
 
     /// <summary>
@@ -178,7 +187,7 @@ public partial class PhotinoWindow
     /// </summary>
     internal void OnMinimized()
     {
-        Minimized?.Invoke(this, EventArgs.Empty);
+        InvokeNativeEvent(Minimized);
     }
 
     /// <summary>
@@ -200,9 +209,9 @@ public partial class PhotinoWindow
     internal void OnFullScreenChanged(bool fullScreen)
     {
         if (fullScreen)
-            FullScreenEntered?.Invoke(this, EventArgs.Empty);
+            InvokeNativeEvent(FullScreenEntered);
         else
-            FullScreenExited?.Invoke(this, EventArgs.Empty);
+            InvokeNativeEvent(FullScreenExited);
     }
 
     /// <summary>
@@ -217,11 +226,11 @@ public partial class PhotinoWindow
     /// <param name="newState">The new native window state.</param>
     internal void OnStateChanged(PhotinoWindowState oldState, PhotinoWindowState newState)
     {
-        StateChanged?.Invoke(this, new StateChangedEventArgs(oldState, newState));
+        InvokeNativeEvent(StateChanged, new StateChangedEventArgs(oldState, newState));
     }
 
     /// <summary>
-    /// Occurs when the native window sends a message to the host application.
+    /// Occurs when the WebView content sends a message to the host application.
     /// </summary>
     public event EventHandler<WebMessageReceivedEventArgs>? WebMessageReceived;
 
@@ -230,9 +239,6 @@ public partial class PhotinoWindow
     /// </summary>
     /// <param name="message">The message sent by the WebView content.</param>
     /// <param name="uri">The URI of the top-level WebView content at the time the message was received.</param>
-    /// <exception cref="ArgumentNullException">
-    /// Thrown when <paramref name="message"/> or <paramref name="uri"/> is <see langword="null"/>.
-    /// </exception>
     internal void OnWebMessageReceived(string message, string uri)
     {
         if (message is null)
@@ -247,7 +253,91 @@ public partial class PhotinoWindow
             return;
         }
 
-        WebMessageReceived?.Invoke(this, new WebMessageReceivedEventArgs(message, sourceUri));
+        InvokeNativeEvent(WebMessageReceived, new WebMessageReceivedEventArgs(message, sourceUri));
+    }
+
+    /// <summary>
+    /// Occurs before the WebView starts navigating to top-level content.
+    /// </summary>
+    /// <remarks>
+    /// Set <see cref="CancelEventArgs.Cancel"/> to <see langword="true"/> to cancel the navigation.
+    /// </remarks>
+    public event EventHandler<NavigationStartingEventArgs>? NavigationStarting;
+
+    /// <summary>
+    /// Invokes registered handlers before the WebView starts navigating to top-level content.
+    /// </summary>
+    /// <param name="uri">The URI that the WebView is about to navigate to.</param>
+    /// <returns>
+    /// <c>1</c> to cancel navigation; otherwise, <c>0</c>.
+    /// </returns>
+    internal byte OnNavigationStarting(string uri)
+    {
+        if (!Uri.TryCreate(uri, UriKind.Absolute, out var navigationUri))
+        {
+            Debug.Fail($"Failed to create URI from navigation target: {uri}");
+            return 0;
+        }
+
+        var handler = NavigationStarting;
+        if (handler is null)
+            return 0;
+
+        try
+        {
+            var args = new NavigationStartingEventArgs(navigationUri);
+            handler(this, args);
+            // C++ expects a single byte (0 = allow navigation, 1 = cancel navigation)
+            return args.Cancel ? (byte)1 : (byte)0;
+        }
+        catch (Exception ex)
+        {
+            HandleNativeCallbackException(ex);
+            return 0;
+        }
+    }
+
+    /// <summary>
+    /// Occurs when the WebView requests opening content in a new window.
+    /// </summary>
+    /// <remarks>
+    /// PhotinoX does not create browser-controlled popup windows. Applications can handle this event
+    /// and open the requested URI externally if needed.
+    /// </remarks>
+    public event EventHandler<NewWindowRequestedEventArgs>? NewWindowRequested;
+
+    /// <summary>
+    /// Invokes registered handlers when the WebView requests opening content in a new window.
+    /// </summary>
+    /// <param name="uri">The URI requested for the new window.</param>
+    /// <returns>
+    /// <c>1</c> to indicate that browser-controlled popup window creation must be suppressed.
+    /// </returns>
+    internal byte OnNewWindowRequested(string uri)
+    {
+        if (!Uri.TryCreate(uri, UriKind.Absolute, out var requestedUri))
+        {
+            Debug.Fail($"Failed to create URI from new-window request: {uri}");
+            return 1;
+        }
+
+        var handler = NewWindowRequested;
+        if (handler is null)
+            return 1;
+
+        try
+        {
+            handler(this, new NewWindowRequestedEventArgs(requestedUri));
+
+            // C++ expects a single byte (1 = request handled).
+            // PhotinoX suppresses browser-controlled popup windows by default.
+            return 1;
+        }
+        catch (Exception ex)
+        {
+            HandleNativeCallbackException(ex);
+            return 1;
+        }
     }
 
     /// <summary>
@@ -270,12 +360,9 @@ public partial class PhotinoWindow
     public event EventHandler<ContentLoadedEventArgs>? InitialContentLoaded;
 
     /// <summary>
-    /// Invokes registered handlers when the WebView finishes loading top-level window content.
+    /// Invokes registered handlers when the WebView finishes loading top-level content.
     /// </summary>
     /// <param name="uri">The URI of the top-level WebView content that finished loading.</param>
-    /// <exception cref="ArgumentNullException">
-    /// Thrown when <paramref name="uri"/> is <see langword="null"/>.
-    /// </exception>
     internal void OnContentLoaded(string uri)
     {
         if (!Uri.TryCreate(uri, UriKind.Absolute, out var contentUri))
@@ -290,24 +377,72 @@ public partial class PhotinoWindow
     private bool _firstContentLoadedRaised;
 
     /// <summary>
-    /// Invokes registered handlers when the WebView finishes loading top-level window content.
+    /// Invokes registered handlers when the WebView finishes loading top-level content.
     /// </summary>
     /// <param name="uri">The URI of the top-level WebView content that finished loading.</param>
-    /// <exception cref="ArgumentNullException">
-    /// Thrown when <paramref name="uri"/> is <see langword="null"/>.
-    /// </exception>
     internal void OnContentLoaded(Uri uri)
     {
+        if (uri is null)
+        {
+            Debug.Fail("Failed to raise content load event: URI is null");
+            return;
+        }
+
         var args = new ContentLoadedEventArgs(uri);
 
         if (!_firstContentLoadedRaised)
         {
             _firstContentLoadedRaised = true;
-            InitialContentLoaded?.Invoke(this, args);
+            InvokeNativeEvent(InitialContentLoaded, args);
         }
 
-        ContentLoaded?.Invoke(this, args);
+        InvokeNativeEvent(ContentLoaded, args);
     }
 
-    // TODO: Handle exceptions thrown by event handlers and log them to the console or a logger.
+    private void InvokeNativeEvent<TEventArgs>(EventHandler<TEventArgs>? handler, TEventArgs args, [CallerMemberName] string? caller = null)
+    {
+        if (handler is null)
+            return;
+
+        try
+        {
+            handler(this, args);
+        }
+        catch (Exception ex)
+        {
+            HandleNativeCallbackException(ex, caller);
+        }
+    }
+
+    private void InvokeNativeEvent(EventHandler? handler, [CallerMemberName] string? caller = null)
+    {
+        if (handler is null)
+            return;
+
+        try
+        {
+            handler(this, EventArgs.Empty);
+        }
+        catch (Exception ex)
+        {
+            HandleNativeCallbackException(ex, caller);
+        }
+    }
+
+    private void HandleNativeCallbackException(Exception exception, [CallerMemberName] string? caller = null)
+    {
+        try
+        {
+            Debug.Fail($"Unhandled exception in native callback '{caller}': {exception}");
+            Log($"Unhandled exception in native callback '{caller}': {exception}");
+            Dispatcher.OnUnhandledException(exception);
+        }
+        catch (Exception ex)
+        {
+            // Never throw from native callback exception handling.
+            var message = $"Exception during dispatcher exception handling: {ex}";
+            Trace.WriteLine(message);
+            Debug.Fail(message);
+        }
+    }
 }
