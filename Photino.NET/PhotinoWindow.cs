@@ -235,6 +235,7 @@ public partial class PhotinoWindow
         set
         {
             ThrowIfClosedOrInitialized();
+
             _startupParameters.Chromeless = value;
         }
     }
@@ -718,7 +719,10 @@ public partial class PhotinoWindow
     /// The file path to the icon.
     /// </value>
     /// <exception cref="ArgumentException">
-    /// Thrown when the icon file path is null, empty, whitespace, or does not reference an existing file.
+    /// Thrown when the icon file path does not reference an existing file.
+    /// </exception>
+    /// <exception cref="InvalidOperationException">
+    /// Thrown when trying to clear the icon after the native window is initialized.
     /// </exception>
     public string? IconFile
     {
@@ -747,7 +751,16 @@ public partial class PhotinoWindow
         {
             ThrowIfClosed();
 
-            ArgumentException.ThrowIfNullOrWhiteSpace(value);
+            if (string.IsNullOrWhiteSpace(value))
+            {
+                if (_nativeInstance == IntPtr.Zero)
+                {
+                    _startupParameters.WindowIconFile = null;
+                    return;
+                }
+
+                throw new InvalidOperationException("IconFile can only be cleared before the native window is initialized.");
+            }
 
             var iconFile = value;
 
@@ -756,7 +769,7 @@ public partial class PhotinoWindow
                 iconFile = Path.Combine(AppContext.BaseDirectory, value);
 
                 if (!File.Exists(iconFile))
-                    throw new ArgumentException($"Icon file: {value} does not exist.");
+                    throw new ArgumentException($"Icon file: {value} does not exist.", nameof(value));
             }
 
             if (_nativeInstance == IntPtr.Zero)
@@ -1079,11 +1092,8 @@ public partial class PhotinoWindow
         set
         {
             ThrowIfClosedOrInitialized();
-            var ss = _startupParameters.BrowserControlInitParameters;
-            if (!string.Equals(ss, value, StringComparison.Ordinal))
-            {
-                _startupParameters.BrowserControlInitParameters = value;
-            }
+
+            _startupParameters.BrowserControlInitParameters = value;
         }
     }
 
@@ -1107,14 +1117,8 @@ public partial class PhotinoWindow
         set
         {
             ThrowIfClosedOrInitialized();
-            var ss = _startupParameters.StartString;
-            if (!string.Equals(ss, value, StringComparison.Ordinal))
-            {
-                if (value != null)
-                    LoadString(value);
-                else
-                    _startupParameters.StartString = value;
-            }
+
+            _startupParameters.StartString = value;
         }
     }
 
@@ -1138,14 +1142,8 @@ public partial class PhotinoWindow
         set
         {
             ThrowIfClosedOrInitialized();
-            var su = _startupParameters.StartUrl;
-            if (!string.Equals(su, value, StringComparison.Ordinal))
-            {
-                if (value != null)
-                    Load(value);
-                else
-                    _startupParameters.StartUrl = value;
-            }
+
+            _startupParameters.StartUrl = value;
         }
     }
 
@@ -1165,11 +1163,8 @@ public partial class PhotinoWindow
         set
         {
             ThrowIfClosedOrInitialized();
-            var tfp = _startupParameters.TemporaryFilesPath;
-            if (tfp != value)
-            {
-                _startupParameters.TemporaryFilesPath = value;
-            }
+
+            _startupParameters.TemporaryFilesPath = value;
         }
     }
 
@@ -1189,11 +1184,8 @@ public partial class PhotinoWindow
         set
         {
             ThrowIfClosedOrInitialized();
-            var nri = _startupParameters.NotificationRegistrationId;
-            if (nri != value)
-            {
-                _startupParameters.NotificationRegistrationId = value;
-            }
+
+            _startupParameters.NotificationRegistrationId = value;
         }
     }
 
@@ -1335,6 +1327,7 @@ public partial class PhotinoWindow
         set
         {
             ThrowIfClosedOrInitialized();
+
             _startupParameters.UseOsDefaultSize = value;
         }
     }
