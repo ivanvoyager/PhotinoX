@@ -170,7 +170,7 @@ Startup content selection is explicit: `Load(...)` sets URL content and clears r
 
 ### WebView2 user data folder
 
-On Windows, `UserDataFolder` specifies the WebView2 user data folder used by the native WebView2 runtime. It is used for browser profile data such as cookies, permissions, cache, local storage, IndexedDB, and related WebView2 state.
+On Windows, `UserDataFolder` specifies the WebView2 user data folder used by the WebView2 runtime. It is used for browser profile data such as cookies, permissions, cache, local storage, IndexedDB, and related WebView2 state.
 
 `TemporaryFilesPath` and `SetTemporaryFilesPath(...)` were renamed to `UserDataFolder` and `SetUserDataFolder(...)` to match the actual WebView2 behavior.
 
@@ -208,6 +208,7 @@ dotnet add package PhotinoX
 ## Samples
 
 See real, working examples here:
+- [Samples](https://github.com/ivanvoyager/PhotinoX/tree/master/Samples)
 - [PhotinoX.Samples](https://github.com/ivanvoyager/PhotinoX.Samples)
 - [PhotinoX.Blazor](https://github.com/ivanvoyager/PhotinoX.Blazor) (with Blazor support, samples inside `Samples/`)
 
