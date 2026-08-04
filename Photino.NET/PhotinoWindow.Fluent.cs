@@ -1,9 +1,8 @@
 ﻿using System.Drawing;
 
+using static Photino.NET.NativeMethods;
+
 namespace Photino.NET;
-
-using static NativeMethods;
-
 partial class PhotinoWindow
 {
     #region Lifecycle / window actions
@@ -1315,7 +1314,7 @@ partial class PhotinoWindow
     }
 
     /// <summary>
-    /// Sets the local path to store temp files for browser control.
+    /// Sets the local path to store user data for browser control.
     /// Default is the user's AppDataLocal folder.
     /// </summary>
     /// <remarks>
@@ -1325,10 +1324,10 @@ partial class PhotinoWindow
     /// Returns the current <see cref="PhotinoWindow"/> instance.
     /// </returns>
     /// <param name="tempFilesPath">Path to temp file's directory.</param>
-    public PhotinoWindow SetTemporaryFilesPath(string? tempFilesPath)
+    public PhotinoWindow SetUserDataFolder(string? tempFilesPath)
     {
-        Log($".{nameof(SetTemporaryFilesPath)}({tempFilesPath})");
-        TemporaryFilesPath = tempFilesPath;
+        Log($".{nameof(SetUserDataFolder)}({tempFilesPath})");
+        UserDataFolder = tempFilesPath;
         return this;
     }
 

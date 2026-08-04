@@ -46,9 +46,9 @@ internal struct PhotinoNativeParameters
     [MarshalAs(UnmanagedType.LPUTF8Str)]
     internal string? WindowIconFile;//#6
 
-    ///<summary>WINDOWS: OPTIONAL: Path to store temp files for browser control. Defaults is user's AppDataLocal folder.</summary>
+    ///<summary>WINDOWS: OPTIONAL: Path to store user data for browser control. Defaults is user's AppDataLocal folder.</summary>
     [MarshalAs(UnmanagedType.LPUTF8Str)]
-    internal string? TemporaryFilesPath;//#7
+    internal string? UserDataFolder;//#7
 
     ///<summary>OPTIONAL: Changes the user agent on the browser control at initialization.</summary>
     [MarshalAs(UnmanagedType.LPUTF8Str)]
@@ -217,7 +217,7 @@ internal struct PhotinoNativeParameters
 
     ///<summary>Checks the parameters to ensure they are valid before window creation. Called by PhotinoWindow prior to initializing native window.</summary>
     ///<returns>List of error strings</returns>
-    internal void GetParamErrors(ref List<string>? errors)
+    internal readonly void GetParamErrors(ref List<string>? errors)
     {
         var startUrl = StartUrl;
         var startString = StartString;
@@ -226,7 +226,7 @@ internal struct PhotinoNativeParameters
         if (string.IsNullOrWhiteSpace(startUrl) && string.IsNullOrWhiteSpace(startString))
             (errors ??= []).Add("An initial URL or HTML string must be supplied in StartUrl or StartString for the browser control to navigate to.");
 
-        if (!Enum.IsDefined(typeof(PhotinoWindowState), WindowState))
+        if (!Enum.IsDefined(WindowState))
             (errors ??= []).Add($"Invalid WindowState value: {(int)WindowState}.");
 
         if (!string.IsNullOrWhiteSpace(windowIconFile) && !File.Exists(windowIconFile))

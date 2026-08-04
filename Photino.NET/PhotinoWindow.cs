@@ -2,10 +2,9 @@ using System.Diagnostics;
 using System.Drawing;
 using System.Runtime.InteropServices;
 
+using static Photino.NET.NativeMethods;
+
 namespace Photino.NET;
-
-using static NativeMethods;
-
 /// <summary>
 /// The PhotinoWindow class represents a window in a Photino-based desktop application.
 /// </summary>
@@ -32,7 +31,7 @@ public partial class PhotinoWindow
         SmoothScrollingEnabled = true,
         IgnoreCertificateErrorsEnabled = false,
         NotificationsEnabled = true,
-        TemporaryFilesPath = Platform.IsWindows
+        UserDataFolder = Platform.IsWindows
             ? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Photino")
             : null,
         Title = DefaultTitle,
@@ -819,7 +818,7 @@ public partial class PhotinoWindow
             Dispatcher.Invoke(static state =>
             {
                 Photino_SetPosition(state.NativeInstance, state.X, state.Y);
-            }, (NativeInstance: _nativeInstance, X: value.X, Y: value.Y));
+            }, (NativeInstance: _nativeInstance, value.X, value.Y));
         }
     }
 
@@ -1057,7 +1056,7 @@ public partial class PhotinoWindow
             Dispatcher.Invoke(static state =>
             {
                 Photino_SetSize(state.NativeInstance, state.Width, state.Height);
-            }, (NativeInstance: _nativeInstance, Width: value.Width, Height: value.Height));
+            }, (NativeInstance: _nativeInstance, value.Width, value.Height));
         }
     }
 
@@ -1148,23 +1147,23 @@ public partial class PhotinoWindow
     }
 
     /// <summary>
-    /// Gets or sets the local path to store temp files for browser control.
+    /// Gets or sets the local path to store user data for browser control.
     /// Default is the user's AppDataLocal folder.
     /// </summary>
     /// <remarks>
     /// Only available on Windows.
     /// </remarks>
-    public string? TemporaryFilesPath
+    public string? UserDataFolder
     {
         get
         {
-            return _startupParameters.TemporaryFilesPath;
+            return _startupParameters.UserDataFolder;
         }
         set
         {
             ThrowIfClosedOrInitialized();
 
-            _startupParameters.TemporaryFilesPath = value;
+            _startupParameters.UserDataFolder = value;
         }
     }
 
