@@ -128,6 +128,8 @@ New `ContentLoaded` and `InitialContentLoaded` events are available for observin
 | No explicit closed state | `IsClosed` |
 | No explicit initialization state | `IsInitialized` |
 | `FullScreen`, `Maximized`, and `Minimized` properties | Unified native-driven `WindowState` with `Normal`, `Minimized`, `Maximized`, and `FullScreen` |
+| `TemporaryFilesPath` | `UserDataFolder` |
+| `SetTemporaryFilesPath(...)` | `SetUserDataFolder(...)` |
 
 Notable lifecycle and API changes in PhotinoX:
 
@@ -165,6 +167,14 @@ Startup content selection is explicit: `Load(...)` sets URL content and clears r
 | Managed custom scheme responses | Response data is backed by native-owned memory for safer managed/native interop. |
 | `Load(...)` | Sets startup URL content and clears raw string content. |
 | `LoadString(...)` | Sets raw string content and clears startup URL content. |
+
+### WebView2 user data folder
+
+On Windows, `UserDataFolder` specifies the WebView2 user data folder used by the native WebView2 runtime. It is used for browser profile data such as cookies, permissions, cache, local storage, IndexedDB, and related WebView2 state.
+
+`TemporaryFilesPath` and `SetTemporaryFilesPath(...)` were renamed to `UserDataFolder` and `SetUserDataFolder(...)` to match the actual WebView2 behavior.
+
+PhotinoX reuses an existing WebView2 environment when the requested configuration is compatible with an environment that has already been created.
 
 ### Compatibility
 
