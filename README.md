@@ -87,6 +87,7 @@ Window event names are simplified to remove redundant `Window` prefixes and alig
 | - | `StateChanged` |
 | - | `NavigationStarting` |
 | - | `NewWindowRequested` |
+| - | `ContentLoading` |
 | - | `ContentLoaded` |
 | - | `InitialContentLoaded` |
 
@@ -98,7 +99,7 @@ Window event names are simplified to remove redundant `Window` prefixes and alig
 
 `NewWindowRequested` is raised when WebView content requests opening content in a new window, such as through `target="_blank"` links or `window.open(...)`. PhotinoX does not create browser-controlled popup windows. Applications can handle this event and open the requested URI externally if needed.
 
-New `ContentLoaded` and `InitialContentLoaded` events are available for observing completed top-level WebView content loads. `ContentLoaded` is raised after each completed top-level content load, while `InitialContentLoaded` is raised once after the initial top-level content load completes. These events do not indicate that a JavaScript framework, SPA route, Blazor component tree, or all asynchronous page work has finished rendering.
+`ContentLoading`, `ContentLoaded`, and `InitialContentLoaded` are available for observing top-level WebView content loading. `ContentLoading` is raised when top-level content starts loading after navigation has committed. `ContentLoaded` is raised after each completed top-level content load, while `InitialContentLoaded` is raised once after the initial top-level content load completes. These events do not indicate that a JavaScript framework, SPA route, Blazor component tree, or all asynchronous page work has finished rendering.
 
 | Previous registration helper | New registration helper |
 |---|---|
@@ -113,6 +114,7 @@ New `ContentLoaded` and `InitialContentLoaded` events are available for observin
 | - | `RegisterStateChangedHandler(...)` |
 | - | `RegisterNavigationStartingHandler(...)` |
 | - | `RegisterNewWindowRequestedHandler(...)` |
+| - | `RegisterContentLoadingHandler(...)` |
 | - | `RegisterContentLoadedHandler(...)` |
 | - | `RegisterInitialContentLoadedHandler(...)` |
 
@@ -174,7 +176,7 @@ On Windows, `UserDataFolder` specifies the WebView2 user data folder used by the
 
 `TemporaryFilesPath` and `SetTemporaryFilesPath(...)` were renamed to `UserDataFolder` and `SetUserDataFolder(...)` to match the actual WebView2 behavior.
 
-PhotinoX reuses an existing WebView2 environment when the requested configuration is compatible with an environment that has already been created.
+PhotinoX reuses an existing WebView2 environment when the requested Windows WebView2 configuration is compatible with an environment that has already been created.
 
 ### Compatibility
 

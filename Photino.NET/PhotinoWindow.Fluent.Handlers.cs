@@ -375,6 +375,32 @@ partial class PhotinoWindow
     }
 
     /// <summary>
+    /// Registers user-defined handler methods to receive callbacks when top-level WebView content starts loading.
+    /// </summary>
+    /// <returns>
+    /// Returns the current <see cref="PhotinoWindow"/> instance.
+    /// </returns>
+    /// <remarks>
+    /// This event is raised after navigation has committed. It does not indicate
+    /// that a JavaScript framework, SPA route, Blazor component tree, or all asynchronous
+    /// page work has finished loading or rendering.
+    /// </remarks>
+    /// <param name="handler">The handler to register.</param>
+    /// <exception cref="InvalidOperationException">
+    /// Thrown when the window has already been closed.
+    /// </exception>
+    /// <exception cref="ArgumentNullException">
+    /// Thrown when <paramref name="handler"/> is <see langword="null"/>.
+    /// </exception>
+    public PhotinoWindow RegisterContentLoadingHandler(EventHandler<ContentLoadingEventArgs> handler)
+    {
+        ArgumentNullException.ThrowIfNull(handler);
+        ThrowIfClosed();
+        ContentLoading += handler;
+        return this;
+    }
+
+    /// <summary>
     /// Registers user-defined handler methods to receive callbacks when the WebView finishes loading top-level content.
     /// </summary>
     /// <returns>

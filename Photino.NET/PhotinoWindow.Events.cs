@@ -341,6 +341,45 @@ public partial class PhotinoWindow
     }
 
     /// <summary>
+    /// Occurs when top-level WebView content starts loading after navigation has committed.
+    /// </summary>
+    /// <remarks>
+    /// This event does not indicate that the document, JavaScript framework, SPA route,
+    /// Blazor component tree, or asynchronous page work has finished loading or rendering.
+    /// </remarks>
+    public event EventHandler<ContentLoadingEventArgs>? ContentLoading;
+
+    /// <summary>
+    /// Invokes registered handlers when top-level WebView content starts loading.
+    /// </summary>
+    /// <param name="uri">The URI of the top-level WebView content that started loading.</param>
+    internal void OnContentLoading(string uri)
+    {
+        if (!Uri.TryCreate(uri, UriKind.Absolute, out var contentUri))
+        {
+            Debug.Fail($"Failed to create URI from content loading: {uri}");
+            return;
+        }
+
+        OnContentLoading(contentUri);
+    }
+
+    /// <summary>
+    /// Invokes registered handlers when top-level WebView content starts loading.
+    /// </summary>
+    /// <param name="uri">The URI of the top-level WebView content that started loading.</param>
+    internal void OnContentLoading(Uri uri)
+    {
+        if (uri is null)
+        {
+            Debug.Fail("Failed to raise content loading event: URI is null");
+            return;
+        }
+
+        InvokeNativeEvent(ContentLoading, new ContentLoadingEventArgs(uri));
+    }
+
+    /// <summary>
     /// Occurs when the WebView finishes loading top-level content.
     /// </summary>
     /// <remarks>
