@@ -3,6 +3,7 @@
 using static Photino.NET.NativeMethods;
 
 namespace Photino.NET;
+
 partial class PhotinoWindow
 {
     #region Lifecycle / window actions
@@ -1327,29 +1328,6 @@ partial class PhotinoWindow
     {
         Log($".{nameof(SetUserDataFolder)}({userDataFolder})");
         UserDataFolder = userDataFolder;
-        return this;
-    }
-
-    /// <summary>
-    /// Set runtime path for WebView2 so that developers can use Photino on Windows using the "Fixed Version" deployment module of the WebView2 runtime.
-    /// </summary>
-    /// <remarks>
-    /// This only works on Windows.
-    /// </remarks>
-    /// <returns>
-    /// Returns the current <see cref="PhotinoWindow"/> instance.
-    /// </returns>
-    /// <seealso href="https://docs.microsoft.com/en-us/microsoft-edge/webview2/concepts/distribution" />
-    /// <param name="data">Runtime path for WebView2, or <see langword="null"/> to clear it.</param>
-    public PhotinoWindow Win32SetWebView2Path(string? data)
-    {
-        Log($".{nameof(Win32SetWebView2Path)}({data})");
-
-        if (Platform.IsWindows)
-            Photino_setWebView2RuntimePath_win32(data);
-        else
-            Log($"{nameof(Win32SetWebView2Path)} is only supported on the Windows platform");
-
         return this;
     }
 
