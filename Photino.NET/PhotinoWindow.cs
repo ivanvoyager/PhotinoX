@@ -32,7 +32,7 @@ public partial class PhotinoWindow
         IgnoreCertificateErrorsEnabled = false,
         NotificationsEnabled = true,
         UserDataFolder = Platform.IsWindows
-            ? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Photino")
+            ? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "PhotinoX")
             : null,
         Title = DefaultTitle,
         UseOsDefaultLocation = true,
@@ -1147,11 +1147,10 @@ public partial class PhotinoWindow
     }
 
     /// <summary>
-    /// Gets or sets the local path to store user data for browser control.
-    /// Default is the user's AppDataLocal folder.
+    /// Gets or sets the WebView user data folder used by the native browser control.
     /// </summary>
     /// <remarks>
-    /// Only available on Windows.
+    /// Windows only. When set to <see langword="null"/>, the platform default WebView2 behavior is used.
     /// </remarks>
     public string? UserDataFolder
     {
@@ -1419,6 +1418,7 @@ public partial class PhotinoWindow
         _startupParameters.FocusInHandler = OnActivated;
         _startupParameters.FocusOutHandler = OnDeactivated;
         _startupParameters.WebMessageReceivedHandler = OnWebMessageReceived;
+        _startupParameters.ContentLoadingHandler = OnContentLoading;
         _startupParameters.ContentLoadedHandler = OnContentLoaded;
         _startupParameters.NavigationStartingHandler = OnNavigationStarting;
         _startupParameters.NewWindowRequestedHandler = OnNewWindowRequested;
@@ -1567,7 +1567,7 @@ public partial class PhotinoWindow
         _startupParameters.NativeParent = Parent?._nativeInstance ?? IntPtr.Zero;
 
         _startupParameters.Size = Marshal.SizeOf<PhotinoNativeParameters>();
-        Debug.Assert(_startupParameters.Size == 416);
+        Debug.Assert(_startupParameters.Size == 424);
         _startupParameters.AbiVersion = PhotinoNativeParameters.NativeAbiVersion;
 
         // Validate startup parameters

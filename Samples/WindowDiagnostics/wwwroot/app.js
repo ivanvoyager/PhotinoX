@@ -13,7 +13,10 @@ const eventNames = [
     "FullScreenEntered",
     "FullScreenExited",
     "StateChanged",
-    "WebMessageReceived"
+    "WebMessageReceived",
+    "NavigationStarting",
+    "ContentLoading",
+    "ContentLoaded"
 ];
 
 const defaultEnabledEvents = new Set([
@@ -28,7 +31,10 @@ const defaultEnabledEvents = new Set([
     "Restored",
     "FullScreenEntered",
     "FullScreenExited",
-    "StateChanged"
+    "StateChanged",
+    "NavigationStarting",
+    "ContentLoading",
+    "ContentLoaded"
 ]);
 
 const enabledEvents = new Set(defaultEnabledEvents);

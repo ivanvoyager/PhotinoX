@@ -158,8 +158,19 @@ internal static class Program
                 .RegisterWebMessageReceivedHandler((_, e) =>
                 {
                     HandleClientMessage(e.Message);
+                })
+                .RegisterNavigationStartingHandler((_, e) =>
+                {
+                    Log("NavigationStarting", e);
+                })
+                .RegisterContentLoadingHandler((_, e) =>
+                {
+                    Log("ContentLoading", e);
+                })
+                .RegisterContentLoadedHandler((_, e) =>
+                {
+                    Log("ContentLoaded", e);
                 });
-
         }
 
         private void HandleClientMessage(string message)

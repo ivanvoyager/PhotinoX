@@ -84,6 +84,19 @@ public sealed class NavigationStartingEventArgs : CancelEventArgs
 public readonly record struct NewWindowRequestedEventArgs(Uri Uri);
 
 /// <summary>
+/// Provides data for the <see cref="PhotinoWindow.ContentLoading"/> event.
+/// </summary>
+/// <remarks>
+/// This event data describes a top-level WebView content load that has started after navigation has committed.
+/// It does not indicate that the document, JavaScript framework, SPA route, Blazor component tree,
+/// or asynchronous page work has finished loading or rendering.
+/// </remarks>
+/// <param name="Uri">
+/// The URI of the top-level WebView content that started loading.
+/// </param>
+public readonly record struct ContentLoadingEventArgs(Uri Uri);
+
+/// <summary>
 /// Provides data for the <see cref="PhotinoWindow.ContentLoaded"/> and
 /// <see cref="PhotinoWindow.InitialContentLoaded"/> events.
 /// </summary>

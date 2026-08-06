@@ -1314,20 +1314,19 @@ partial class PhotinoWindow
     }
 
     /// <summary>
-    /// Sets the local path to store user data for browser control.
-    /// Default is the user's AppDataLocal folder.
+    /// Sets the WebView user data folder used by the native browser control.
     /// </summary>
     /// <remarks>
-    /// Only available on Windows.
+    /// Windows only. When set to <see langword="null"/>, the platform default WebView2 behavior is used.
     /// </remarks>
     /// <returns>
     /// Returns the current <see cref="PhotinoWindow"/> instance.
     /// </returns>
-    /// <param name="tempFilesPath">Path to temp file's directory.</param>
-    public PhotinoWindow SetUserDataFolder(string? tempFilesPath)
+    /// <param name="userDataFolder">Path to the WebView user data folder, or <see langword="null"/>.</param>
+    public PhotinoWindow SetUserDataFolder(string? userDataFolder)
     {
-        Log($".{nameof(SetUserDataFolder)}({tempFilesPath})");
-        UserDataFolder = tempFilesPath;
+        Log($".{nameof(SetUserDataFolder)}({userDataFolder})");
+        UserDataFolder = userDataFolder;
         return this;
     }
 
