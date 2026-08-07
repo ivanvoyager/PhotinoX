@@ -192,6 +192,7 @@ On Linux Wayland, top-level window position is compositor-controlled. Move notif
 
 ## Core (ecosystem)
 
+- [**PhotinoX.App**](https://github.com/ivanvoyager/PhotinoX.App) - Application composition layer for PhotinoX desktop applications.
 - [**PhotinoX.Native**](https://github.com/ivanvoyager/PhotinoX.Native) - native binaries for Windows/macOS/Linux.
 - [**PhotinoX.Blazor**](https://github.com/ivanvoyager/PhotinoX.Blazor) - Blazor integration for native desktop apps.
 - [**PhotinoX.Server**](https://github.com/ivanvoyager/PhotinoX.Server) - optional local static-file server for SPA/static assets.
