@@ -3,6 +3,9 @@
     <CsFiles Include="**\*.*.cs" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Update="**\*Extensions.cs">
+      <DependentUpon>$([System.String]::Copy('%(Filename)').Replace('Extensions', '.cs'))</DependentUpon>
+    </Compile>
     <Compile Update="@(CsFiles)">
       <DependentUpon>$([System.Text.RegularExpressions.Regex]::Replace('%(Filename)', '\..*$', '.cs'))</DependentUpon>
     </Compile>

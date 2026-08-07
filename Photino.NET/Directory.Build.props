@@ -1,4 +1,7 @@
 <Project>
+  <!-- Imports -->
+  <Import Project="$(MSBuildThisFileDirectory)..\Directory.Build.props" />
+
   <!-- Package metadata -->
   <PropertyGroup>
     <Authors>ivanvoyager, TryPhotino</Authors>
@@ -32,10 +35,8 @@
   </ItemGroup>
 
   <ItemGroup>
+    <InternalsVisibleTo Include="PhotinoX.App" />
     <InternalsVisibleTo Include="PhotinoX.Blazor" />
   </ItemGroup>
-
-  <!-- Imports -->
-  <Import Project="$(MSBuildThisFileDirectory)..\Directory.Build.props" />
 
 </Project>

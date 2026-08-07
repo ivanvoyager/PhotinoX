@@ -1,9 +1,8 @@
 ﻿using System.Runtime.ExceptionServices;
 
+using static Photino.NET.NativeMethods;
+
 namespace Photino.NET;
-
-using static NativeMethods;
-
 /// <summary>
 /// Represents a Photino application lifetime object.
 /// </summary>

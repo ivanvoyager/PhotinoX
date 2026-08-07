@@ -35,6 +35,7 @@ public partial class PhotinoWindow
             ? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "PhotinoX")
             : null,
         Title = DefaultTitle,
+        CenterOnInitialize = false,
         UseOsDefaultLocation = true,
         UseOsDefaultSize = true,
         Zoom = 100,

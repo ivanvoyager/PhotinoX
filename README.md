@@ -192,6 +192,7 @@ On Linux Wayland, top-level window position is compositor-controlled. Move notif
 
 ## Core (ecosystem)
 
+- [**PhotinoX.App**](https://github.com/ivanvoyager/PhotinoX.App) - Application composition layer for PhotinoX desktop applications.
 - [**PhotinoX.Native**](https://github.com/ivanvoyager/PhotinoX.Native) - native binaries for Windows/macOS/Linux.
 - [**PhotinoX.Blazor**](https://github.com/ivanvoyager/PhotinoX.Blazor) - Blazor integration for native desktop apps.
 - [**PhotinoX.Server**](https://github.com/ivanvoyager/PhotinoX.Server) - optional local static-file server for SPA/static assets.
@@ -204,8 +205,9 @@ On Linux Wayland, top-level window position is compositor-controlled. Move notif
 ```bash
 dotnet add package PhotinoX
 ```
+
 `PhotinoX.Native` provides the native WebView host binaries and must be available for the target runtime identifier.
-> Package targets **net8.0; net9.0; net10.0**. CI builds use the latest **.NET 10 SDK**.
+> Package targets **net8.0; net9.0; net10.0**.
 
 ## Samples
 
@@ -221,10 +223,9 @@ Original Photino concept docs: https://docs.tryphotino.io/
 - **.NET 10 SDK** (build)
 - **Target frameworks:** `net8.0; net9.0; net10.0` (package supports all three)
 - Runtime deps: see [**PhotinoX.Native**](https://www.nuget.org/packages/PhotinoX.Native) (`runtimes/<rid>/native/`)
-- **Windows:** WebView2 Runtime  
-  Required component: **Microsoft.Web.WebView2** (Edge WebView2)  
+- **Windows:** Microsoft Edge WebView2 Runtime  
   https://learn.microsoft.com/microsoft-edge/webview2/
-- **macOS**: WKWebView (system WebKit)  
+- **macOS:** WKWebView (system WebKit)  
   https://developer.apple.com/documentation/webkit/wkwebview/
 - **Linux:** WebKitGTK 4.1 runtime packages  
   https://webkitgtk.org/
