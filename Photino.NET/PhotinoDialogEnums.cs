@@ -42,23 +42,23 @@ public enum PhotinoDialogButtons
 public enum PhotinoDialogIcon
 {
     /// <summary> 
-    /// An information icon. 
+    /// An information icon.
     /// </summary> 
     Info,
 
-    /// <summary> 
-    /// A warning icon. 
+    /// <summary>
+    /// A warning icon.
     /// </summary>
     Warning,
 
-    /// <summary> 
-    /// An error icon. 
-    /// </summary> 
+    /// <summary>
+    /// An error icon.
+    /// </summary>
     Error,
 
-    /// <summary> 
-    /// A question icon. 
-    /// </summary> 
+    /// <summary>
+    /// A question icon.
+    /// </summary>
     Question
 }
 

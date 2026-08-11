@@ -38,7 +38,7 @@ OS-native WebView:
 
 ## How PhotinoX differs from Photino.NET
 
-Compared with the original Photino.NET managed API, PhotinoX introduces an explicit `PhotinoApplication` model, centralized UI-thread dispatching through `PhotinoDispatcher`, simplified window event names, native-driven window state tracking, and explicit window lifecycle APIs.
+Compared with the original Photino.NET managed API, PhotinoX introduces an explicit `PhotinoApplication` model, centralized UI-thread dispatching through `PhotinoDispatcher`, application-owned notifications, simplified window event names, native-driven window state tracking, and explicit window lifecycle APIs.
 
 ### Application model
 
@@ -50,6 +50,7 @@ Compared with the original Photino.NET managed API, PhotinoX introduces an expli
 | Window creation and message-loop state are controlled from `PhotinoWindow`. | `PhotinoApplication.Run(window)` shows the main window; explicit window creation/showing is available through `PhotinoWindow.Show()`. |
 | Window lifetime is centered around individual `PhotinoWindow` instances. | `PhotinoApplication` tracks open windows through `MainWindow` and `Windows`. |
 | `PhotinoWindow.Invoke(...)` dispatches through native window-level invoke helpers. | UI-thread dispatching is centralized through `PhotinoApplication.Current.Dispatcher`, including `CheckAccess`, `Invoke`, `TryInvoke`, `BeginInvoke`, and `InvokeAsync`. |
+| Notification display is tied to window-level APIs. | Notifications are exposed through `PhotinoApplication`, with application-level enabled state and notification events. |
 | Shutdown behavior is implicit around the native message loop. | Shutdown behavior is controlled by `PhotinoShutdownMode` and `PhotinoApplication.Shutdown(...)`. |
 
 ```csharp
@@ -64,6 +65,8 @@ return app.Run(window);
 ```
 
 `PhotinoDispatcher` provides application-level UI-thread dispatching. `Invoke(...)` executes work on the dispatcher thread and throws when scheduling fails, while `TryInvoke(...)` returns `false` for scheduling failures. `BeginInvoke(...)` reports scheduling success as `bool`, and `InvokeAsync(...)` returns a task that completes when the dispatched callback completes, is canceled, or faults if scheduling fails. Cancellation-aware overloads accept `CancellationToken`, and async callback overloads use `ValueTask` / `ValueTask<TResult>` for allocation-friendly completion paths. State-based overloads are available to avoid closure captures.
+
+`PhotinoApplication` also owns native notification integration. Notifications are shown through the application surface instead of individual windows, and notification events are exposed for activation, action activation, input activation, dismissal, and failure.
 
 ### Window events
 

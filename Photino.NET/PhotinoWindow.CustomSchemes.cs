@@ -1,14 +1,12 @@
 ﻿using System.Diagnostics;
 using System.Runtime.InteropServices;
 
+using static Photino.NET.NativeMethods;
+
 namespace Photino.NET;
 
-using static NativeMethods;
-
-public partial class PhotinoWindow
+partial class PhotinoWindow
 {
-    internal const int MaxCustomSchemeNames = 16;
-
     /// <summary>
     /// Provides a response stream for a user-defined custom URI scheme.
     /// </summary>
@@ -91,8 +89,8 @@ public partial class PhotinoWindow
         {
             if (!CustomSchemes.ContainsKey(scheme))
             {
-                if (CustomSchemes.Count >= MaxCustomSchemeNames)
-                    throw new InvalidOperationException($"No more than {MaxCustomSchemeNames} custom schemes can be set prior to initialization. Additional handlers can be added after initialization.");
+                if (CustomSchemes.Count >= PhotinoWindowNativeParameters.MaxCustomSchemeNames)
+                    throw new InvalidOperationException($"No more than {PhotinoWindowNativeParameters.MaxCustomSchemeNames} custom schemes can be set prior to initialization. Additional handlers can be added after initialization.");
             }
         }
         else

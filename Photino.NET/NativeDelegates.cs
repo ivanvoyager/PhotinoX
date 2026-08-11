@@ -21,4 +21,12 @@ internal static class NativeDelegates
 
     //These are sent in during the request
     [UnmanagedFunctionPointer(CC)] internal delegate int MonitorCallback(in NativeMonitor monitor, IntPtr state);
+
+    //Application callbacks
+    [UnmanagedFunctionPointer(CC)] internal delegate int ExitCallback(int exitCode);
+    [UnmanagedFunctionPointer(CC)] internal delegate void NotificationActivatedCallback(int notificationId, IntPtr state);
+    [UnmanagedFunctionPointer(CC)] internal delegate void NotificationActionActivatedCallback(int notificationId, int actionIndex, IntPtr state);
+    [UnmanagedFunctionPointer(CC)] internal delegate void NotificationInputActivatedCallback(int notificationId, [MarshalAs(UnmanagedType.LPUTF8Str)] string response, IntPtr state);
+    [UnmanagedFunctionPointer(CC)] internal delegate void NotificationDismissedCallback(int notificationId, [MarshalAs(UnmanagedType.I4)] PhotinoNotificationDismissalReason reason, IntPtr state);
+    [UnmanagedFunctionPointer(CC)] internal delegate void NotificationFailedCallback(int notificationId, IntPtr state);
 }

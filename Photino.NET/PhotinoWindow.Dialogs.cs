@@ -1,10 +1,10 @@
 ﻿using System.Runtime.InteropServices;
 
+using static Photino.NET.NativeMethods;
+
 namespace Photino.NET;
 
-using static NativeMethods;
-
-public partial class PhotinoWindow
+partial class PhotinoWindow
 {
     /// <summary>
     /// Show an open file dialog native to the OS.

@@ -1,0 +1,149 @@
+:root {
+    color-scheme: light dark;
+    font-family: Segoe UI, system-ui, sans-serif;
+}
+
+html,
+body {
+    height: 100%;
+    overflow: hidden;
+}
+
+body {
+    margin: 0;
+    background: #111827;
+    color: #e5e7eb;
+}
+
+main {
+    display: grid;
+    grid-template-columns: 380px 1fr;
+    gap: 16px;
+    padding: 16px;
+    box-sizing: border-box;
+    height: 100vh;
+    min-height: 0;
+}
+
+section {
+    background: #1f2937;
+    border: 1px solid #374151;
+    border-radius: 10px;
+    padding: 16px;
+    min-height: 0;
+    box-sizing: border-box;
+}
+
+section:nth-child(2) {
+    display: flex;
+    flex-direction: column;
+}
+
+h1,
+h2 {
+    margin: 0 0 12px 0;
+}
+
+h1 {
+    font-size: 22px;
+}
+
+h2 {
+    font-size: 16px;
+    color: #bfdbfe;
+}
+
+.form-title {
+    margin-top: 18px;
+}
+
+label {
+    display: block;
+    margin-top: 12px;
+    margin-bottom: 4px;
+    color: #cbd5e1;
+    font-size: 13px;
+}
+
+input,
+textarea {
+    width: 100%;
+    box-sizing: border-box;
+    border: 1px solid #4b5563;
+    border-radius: 6px;
+    background: #111827;
+    color: #f9fafb;
+    padding: 8px;
+    font: inherit;
+}
+
+textarea {
+    resize: vertical;
+    min-height: 72px;
+}
+
+button {
+    border: 0;
+    border-radius: 6px;
+    background: #2563eb;
+    color: white;
+    padding: 9px 12px;
+    font: inherit;
+    cursor: pointer;
+}
+
+button.secondary {
+    background: #4b5563;
+}
+
+button.danger {
+    background: #dc2626;
+}
+
+.row {
+    display: flex;
+    gap: 8px;
+    margin-top: 14px;
+    align-items: center;
+}
+
+.row button {
+    flex: 1;
+}
+
+.state {
+    display: grid;
+    grid-template-columns: 170px 1fr;
+    gap: 6px 10px;
+    margin-bottom: 14px;
+    font-size: 13px;
+}
+
+.state dt {
+    color: #9ca3af;
+}
+
+.state dd {
+    margin: 0;
+    color: #f9fafb;
+    word-break: break-all;
+}
+
+#log {
+    flex: 1;
+    min-height: 0;
+    overflow: auto;
+    background: #020617;
+    border: 1px solid #334155;
+    border-radius: 8px;
+    padding: 10px;
+    font-family: Consolas, Menlo, monospace;
+    font-size: 13px;
+    white-space: pre-wrap;
+}
+
+.muted {
+    color: #9ca3af;
+    font-size: 12px;
+    line-height: 1.45;
+}

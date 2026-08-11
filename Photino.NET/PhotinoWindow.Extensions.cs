@@ -2,7 +2,7 @@
 
 namespace Photino.NET;
 
-public static partial class PhotinoWindowExtensions
+public static class PhotinoWindowExtensions
 {
     extension(PhotinoWindow window)
     {

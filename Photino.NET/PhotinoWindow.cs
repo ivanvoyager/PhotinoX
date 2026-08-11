@@ -14,12 +14,14 @@ public partial class PhotinoWindow
     /// Parameters sent to Photino.Native to start a new instance of a Photino.Native window.
     /// </summary>
 
-    private PhotinoNativeParameters _startupParameters = new()
+    private PhotinoWindowNativeParameters _startupParameters = new()
     {
+        Size = Marshal.SizeOf<PhotinoWindowNativeParameters>(),
+        AbiVersion = PhotinoWindowNativeParameters.NativeAbiVersion,
         Resizable = true,   //These values can't be initialized within the struct itself. Set required defaults.
         ContextMenuEnabled = true,
         ZoomEnabled = true,
-        CustomSchemeNames = new string[MaxCustomSchemeNames],
+        CustomSchemeNames = new string[PhotinoWindowNativeParameters.MaxCustomSchemeNames],
         DevToolsEnabled = true,
         GrantBrowserPermissions = true,
         UserAgent = "PhotinoX WebView",
@@ -30,7 +32,6 @@ public partial class PhotinoWindow
         MediaStreamEnabled = true,
         SmoothScrollingEnabled = true,
         IgnoreCertificateErrorsEnabled = false,
-        NotificationsEnabled = true,
         UserDataFolder = Platform.IsWindows
             ? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "PhotinoX")
             : null,
@@ -52,6 +53,41 @@ public partial class PhotinoWindow
     private bool _suppressClosing;
 
     private string? _title = DefaultTitle;
+
+    /// <summary>
+    /// Initializes a new instance of the PhotinoWindow class.
+    /// </summary>
+    /// <remarks>
+    /// This class represents a native window with a native browser control taking up the entire client area.
+    /// If a parent window is specified, it is used as a logical parent.
+    /// Native owner behavior is controlled separately by <see cref="UseNativeWindowOwner"/>.
+    /// </remarks>
+    /// <param name="parent">The parent PhotinoWindow. This is optional and defaults to null.</param>
+    public PhotinoWindow(PhotinoWindow? parent = null)
+    {
+        Parent = parent;
+
+        PhotinoBootstrap.Initialize();
+
+        //Wire up handlers from C++ to C#
+        _startupParameters.ClosingHandler = OnClosing;
+        _startupParameters.ResizedHandler = OnSizeChanged;
+        _startupParameters.MaximizedHandler = OnMaximized;
+        _startupParameters.RestoredHandler = OnRestored;
+        _startupParameters.MinimizedHandler = OnMinimized;
+        _startupParameters.MovedHandler = OnLocationChanged;
+        _startupParameters.FocusInHandler = OnActivated;
+        _startupParameters.FocusOutHandler = OnDeactivated;
+        _startupParameters.WebMessageReceivedHandler = OnWebMessageReceived;
+        _startupParameters.ContentLoadingHandler = OnContentLoading;
+        _startupParameters.ContentLoadedHandler = OnContentLoaded;
+        _startupParameters.NavigationStartingHandler = OnNavigationStarting;
+        _startupParameters.NewWindowRequestedHandler = OnNewWindowRequested;
+        _startupParameters.CustomSchemeHandler = OnCustomScheme;
+        _startupParameters.ClosedHandler = OnClosed;
+        _startupParameters.FullScreenChangedHandler = OnFullScreenChanged;
+        _startupParameters.StateChangedHandler = OnStateChanged;
+    }
 
     /// <summary>
     /// Gets a value indicating whether the native window has been initialized and has not been closed.
@@ -588,27 +624,6 @@ public partial class PhotinoWindow
             ThrowIfClosedOrInitialized();
 
             _startupParameters.IgnoreCertificateErrorsEnabled = value;
-        }
-    }
-
-    public bool NotificationsEnabled
-    {
-        get
-        {
-            if (_nativeInstance == IntPtr.Zero)
-                return _startupParameters.NotificationsEnabled;
-
-            return Dispatcher.Invoke(static nativeInstance =>
-            {
-                Photino_GetNotificationsEnabled(nativeInstance, out byte enabled);
-                return enabled != 0;
-            }, _nativeInstance);
-        }
-        set
-        {
-            ThrowIfClosedOrInitialized();
-
-            _startupParameters.NotificationsEnabled = value;
         }
     }
 
@@ -1168,27 +1183,6 @@ public partial class PhotinoWindow
     }
 
     /// <summary>
-    /// Gets or sets the registration Id for doing toast notifications.
-    /// Default is to use the window title.
-    /// </summary>
-    /// <remarks>
-    /// Only available on Windows.
-    /// </remarks>
-    public string? NotificationRegistrationId
-    {
-        get
-        {
-            return _startupParameters.NotificationRegistrationId;
-        }
-        set
-        {
-            ThrowIfClosedOrInitialized();
-
-            _startupParameters.NotificationRegistrationId = value;
-        }
-    }
-
-    /// <summary>
     /// Gets or sets the native window title.
     /// Default is <c>PhotinoX</c>.
     /// </summary>
@@ -1395,41 +1389,6 @@ public partial class PhotinoWindow
     public int LogVerbosity { get; set; } = 2;
 
     /// <summary>
-    /// Initializes a new instance of the PhotinoWindow class.
-    /// </summary>
-    /// <remarks>
-    /// This class represents a native window with a native browser control taking up the entire client area.
-    /// If a parent window is specified, it is used as a logical parent.
-    /// Native owner behavior is controlled separately by <see cref="UseNativeWindowOwner"/>.
-    /// </remarks>
-    /// <param name="parent">The parent PhotinoWindow. This is optional and defaults to null.</param>
-    public PhotinoWindow(PhotinoWindow? parent = null)
-    {
-        Parent = parent;
-
-        PhotinoBootstrap.Initialize();
-
-        //Wire up handlers from C++ to C#
-        _startupParameters.ClosingHandler = OnClosing;
-        _startupParameters.ResizedHandler = OnSizeChanged;
-        _startupParameters.MaximizedHandler = OnMaximized;
-        _startupParameters.RestoredHandler = OnRestored;
-        _startupParameters.MinimizedHandler = OnMinimized;
-        _startupParameters.MovedHandler = OnLocationChanged;
-        _startupParameters.FocusInHandler = OnActivated;
-        _startupParameters.FocusOutHandler = OnDeactivated;
-        _startupParameters.WebMessageReceivedHandler = OnWebMessageReceived;
-        _startupParameters.ContentLoadingHandler = OnContentLoading;
-        _startupParameters.ContentLoadedHandler = OnContentLoaded;
-        _startupParameters.NavigationStartingHandler = OnNavigationStarting;
-        _startupParameters.NewWindowRequestedHandler = OnNewWindowRequested;
-        _startupParameters.CustomSchemeHandler = OnCustomScheme;
-        _startupParameters.ClosedHandler = OnClosed;
-        _startupParameters.FullScreenChangedHandler = OnFullScreenChanged;
-        _startupParameters.StateChangedHandler = OnStateChanged;
-    }
-
-    /// <summary>
     /// Gets the dispatcher associated with the current Photino application.
     /// </summary>
     /// <remarks>
@@ -1567,9 +1526,7 @@ public partial class PhotinoWindow
         _startupParameters.Title = _title ?? DefaultTitle;
         _startupParameters.NativeParent = Parent?._nativeInstance ?? IntPtr.Zero;
 
-        _startupParameters.Size = Marshal.SizeOf<PhotinoNativeParameters>();
         Debug.Assert(_startupParameters.Size == 424);
-        _startupParameters.AbiVersion = PhotinoNativeParameters.NativeAbiVersion;
 
         // Validate startup parameters
         List<string>? errors = null;
@@ -1632,25 +1589,6 @@ public partial class PhotinoWindow
         {
             Photino_SendWebMessage(state.NativeInstance, state.Message);
         }, (NativeInstance: _nativeInstance, Message: message), cancellationToken);
-    }
-
-    /// <summary>
-    /// Sends a native notification through the operating system.
-    /// </summary>
-    /// <exception cref="InvalidOperationException">
-    /// Thrown when the window is not initialized or has already been closed.
-    /// </exception>
-    /// <param name="title">The title of the notification</param>
-    /// <param name="body">The text of the notification</param>
-    public void SendNotification(string title, string body)
-    {
-        Log($".{nameof(SendNotification)}({title}, {body})");
-        ThrowIfClosedOrNotInitialized();
-
-        Dispatcher.Invoke(static state =>
-        {
-            Photino_ShowNotification(state.NativeInstance, state.Title, state.Body);
-        }, (NativeInstance: _nativeInstance, Title: title, Body: body));
     }
 
     /// <summary>

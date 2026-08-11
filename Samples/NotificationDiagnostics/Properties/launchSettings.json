@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "NotificationDiagnostics": {
+      "commandName": "Project",
+      "debugEngines": "managed,native"
+    }
+  }
+}
