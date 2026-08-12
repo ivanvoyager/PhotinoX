@@ -1,29 +1,29 @@
-﻿using System.Diagnostics;
-using System.Runtime.InteropServices;
-using ClosingCallback = Photino.NET.NativeDelegates.BoolCallback;
+﻿using System.Runtime.InteropServices;
 using ClosedCallback = Photino.NET.NativeDelegates.VoidCallback;
+using ClosingCallback = Photino.NET.NativeDelegates.BoolCallback;
+using ContentLoadedCallback = Photino.NET.NativeDelegates.StringCallback;
+using ContentLoadingCallback = Photino.NET.NativeDelegates.StringCallback;
 using FocusInCallback = Photino.NET.NativeDelegates.VoidCallback;
 using FocusOutCallback = Photino.NET.NativeDelegates.VoidCallback;
-using ResizedCallback = Photino.NET.NativeDelegates.IntIntCallback; //(int width, int height)
-using MovedCallback = Photino.NET.NativeDelegates.IntIntCallback;   //(int x, int y)
-using MaximizedCallback = Photino.NET.NativeDelegates.VoidCallback;
-using RestoredCallback = Photino.NET.NativeDelegates.VoidCallback;
-using MinimizedCallback = Photino.NET.NativeDelegates.VoidCallback;
-using WebMessageReceivedCallback = Photino.NET.NativeDelegates.StringStringCallback;
-using WebResourceRequestedCallback = Photino.NET.NativeDelegates.ResourceCallback;
 using FullScreenChangedCallback = Photino.NET.NativeDelegates.VoidBoolCallback;
-using StateChangedCallback = Photino.NET.NativeDelegates.StateChangedCallback;
+using MaximizedCallback = Photino.NET.NativeDelegates.VoidCallback;
+using MinimizedCallback = Photino.NET.NativeDelegates.VoidCallback;
+using MovedCallback = Photino.NET.NativeDelegates.IntIntCallback;   //(int x, int y)
 using NavigationStartingCallback = Photino.NET.NativeDelegates.StringBoolCallback;
 using NewWindowRequestedCallback = Photino.NET.NativeDelegates.StringBoolCallback;
-using ContentLoadingCallback = Photino.NET.NativeDelegates.StringCallback;
-using ContentLoadedCallback = Photino.NET.NativeDelegates.StringCallback;
+using ResizedCallback = Photino.NET.NativeDelegates.IntIntCallback; //(int width, int height)
+using RestoredCallback = Photino.NET.NativeDelegates.VoidCallback;
+using StateChangedCallback = Photino.NET.NativeDelegates.StateChangedCallback;
+using WebMessageReceivedCallback = Photino.NET.NativeDelegates.StringStringCallback;
+using WebResourceRequestedCallback = Photino.NET.NativeDelegates.ResourceCallback;
 
 namespace Photino.NET;
 
 [StructLayout(LayoutKind.Sequential)]
-internal struct PhotinoNativeParameters
+internal struct PhotinoWindowNativeParameters
 {
-    internal const int NativeAbiVersion = 2;
+    internal const int NativeAbiVersion = 3;
+    internal const int MaxCustomSchemeNames = 16;
 
     /// <summary>Set when GetParamErrors() is called, prior to initializing the native window. It is a check to make sure the struct matches what C++ is expecting.</summary>
     [MarshalAs(UnmanagedType.I4)] internal int Size; //#1
@@ -70,9 +70,8 @@ internal struct PhotinoNativeParameters
     [MarshalAs(UnmanagedType.LPUTF8Str)]
     internal string? BrowserControlInitParameters;//#9
 
-    ///<summary>WINDOWS: OPTIONAL: Registers the application for toast notifications. If not provided, uses Window Title.</summary>
     [MarshalAs(UnmanagedType.LPUTF8Str)]
-    internal string? NotificationRegistrationId;//#10
+    internal string? Reserved;//#10
 
     ///<summary>OPTIONAL: Names of custom URL Schemes. e.g. 'app', 'custom'. Array length must be 16. Default is none.</summary>
     [MarshalAs(UnmanagedType.ByValArray, ArraySubType = UnmanagedType.LPStr, SizeConst = 16)]
@@ -184,37 +183,34 @@ internal struct PhotinoNativeParameters
     /// <summary>OPTIONAL: If true, certificate errors are ignored where supported. Default is false.</summary>
     [MarshalAs(UnmanagedType.I1)] internal bool IgnoreCertificateErrorsEnabled; //#57
 
-    /// <summary>WINDOWS: OPTIONAL: If true, toast notifications are allowed on Windows by calling ShowNotification. Requires registering the app with Windows which is not always desirable as it creates shortcuts, etc. Default is true.</summary>
-    [MarshalAs(UnmanagedType.I1)] internal bool NotificationsEnabled; //#58
-
     /// <summary>
     /// WINDOWS: OPTIONAL: If true and ParentInstance is set, creates a native owner relationship
     /// between this window and its logical parent. Default is false.
     /// </summary>
-    [MarshalAs(UnmanagedType.I1)] internal bool UseNativeWindowOwner; //#59
+    [MarshalAs(UnmanagedType.I1)] internal bool UseNativeWindowOwner; //#58
 
     /// <summary>
     /// LINUX: OPTIONAL: Height, in logical pixels, of the native chromeless drag region measured from the WebView top edge.
     /// Set to 0 to disable native Linux chromeless drag. Default is 0.
     /// </summary>
-    [MarshalAs(UnmanagedType.I4)] internal int ChromelessDragRegionHeight; //#60
+    [MarshalAs(UnmanagedType.I4)] internal int ChromelessDragRegionHeight; //#59
 
     /// <summary>
     /// LINUX: OPTIONAL: Left inset, in logical pixels, excluded from the native chromeless drag region. Default is 0.
     /// </summary>
-    [MarshalAs(UnmanagedType.I4)] internal int ChromelessDragRegionLeftInset; //#61
+    [MarshalAs(UnmanagedType.I4)] internal int ChromelessDragRegionLeftInset; //#60
 
     /// <summary>
     /// LINUX: OPTIONAL: Right inset, in logical pixels, excluded from the native chromeless drag region.
     /// Use this to exclude custom title bar buttons from native drag. Default is 0.
     /// </summary>
-    [MarshalAs(UnmanagedType.I4)] internal int ChromelessDragRegionRightInset; //#62
+    [MarshalAs(UnmanagedType.I4)] internal int ChromelessDragRegionRightInset; //#61
 
     /// <summary>
     /// LINUX: OPTIONAL: Thickness, in logical pixels, of the native chromeless resize border measured from the WebView edges.
     /// Set to 0 to disable native Linux chromeless resize borders. Default is 8.
     /// </summary>
-    [MarshalAs(UnmanagedType.I4)] internal int ChromelessResizeBorderThickness; //#63
+    [MarshalAs(UnmanagedType.I4)] internal int ChromelessResizeBorderThickness; //#62
 
 
     ///<summary>Checks the parameters to ensure they are valid before window creation. Called by PhotinoWindow prior to initializing native window.</summary>

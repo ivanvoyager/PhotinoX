@@ -5,7 +5,7 @@ using System.Runtime.CompilerServices;
 
 namespace Photino.NET;
 
-public partial class PhotinoWindow
+partial class PhotinoWindow
 {
     /// <summary>
     /// Occurs before the native window is created.

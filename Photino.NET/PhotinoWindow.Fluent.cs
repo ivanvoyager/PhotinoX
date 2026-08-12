@@ -1359,45 +1359,6 @@ partial class PhotinoWindow
 
     #endregion
 
-    #region Notifications
-
-    /// <summary>
-    /// Enables or disables native notifications.
-    /// </summary>
-    /// <param name="enable">
-    /// <see langword="true"/> to enable notifications; otherwise, <see langword="false"/>.
-    /// </param>
-    /// <returns>
-    /// Returns the current <see cref="PhotinoWindow"/> instance.
-    /// </returns>
-    public PhotinoWindow SetNotificationsEnabled(bool enable)
-    {
-        Log($".{nameof(SetNotificationsEnabled)}({enable})");
-        NotificationsEnabled = enable;
-        return this;
-    }
-
-    /// <summary>
-    /// Sets the registration id for toast notifications.
-    /// </summary>
-    /// <remarks>
-    /// This only works on Windows. If not specified, the window title is used.
-    /// </remarks>
-    /// <param name="notificationRegistrationId">
-    /// The notification registration id.
-    /// </param>
-    /// <returns>
-    /// Returns the current <see cref="PhotinoWindow"/> instance.
-    /// </returns>
-    public PhotinoWindow SetNotificationRegistrationId(string notificationRegistrationId)
-    {
-        Log($".{nameof(SetNotificationRegistrationId)}({notificationRegistrationId})");
-        NotificationRegistrationId = notificationRegistrationId;
-        return this;
-    }
-
-    #endregion
-
     #region Diagnostics
 
     /// <summary>

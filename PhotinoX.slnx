@@ -2,6 +2,7 @@
   <Folder Name="/Samples/">
     <Project Path="Samples/ChromelessDragResizeDemo/ChromelessDragResizeDemo.csproj" />
     <Project Path="Samples/NavigationPolicyDemo/NavigationPolicyDemo.csproj" />
+    <Project Path="Samples/NotificationDiagnostics/NotificationDiagnostics.csproj" />
     <Project Path="Samples/WindowDiagnostics/WindowDiagnostics.csproj" />
   </Folder>
   <Folder Name="/Solution Items/">

@@ -2,9 +2,9 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 
-namespace Photino.NET;
+using static Photino.NET.NativeMethods;
 
-using static NativeMethods;
+namespace Photino.NET;
 
 /// <summary>
 /// Provides access to the Photino application dispatcher.
@@ -103,7 +103,7 @@ public sealed partial class PhotinoDispatcher
     /// This method does not throw for dispatcher scheduling failures. Scheduling failures are reported through diagnostics and dispatcher statistics.
     /// Exceptions thrown by <paramref name="callback"/> are reported through <see cref="UnhandledException"/>.
     /// </remarks>
-    public bool BeginInvoke(SendOrPostCallback callback, object? state)
+    public bool Post(SendOrPostCallback callback, object? state)
     {
         ArgumentNullException.ThrowIfNull(callback);
 
@@ -415,7 +415,7 @@ public sealed partial class PhotinoDispatcher
     /// <remarks>
     /// Exceptions thrown by <paramref name="callback"/> are propagated to the caller.
     /// </remarks>
-    public void Invoke(SendOrPostCallback callback, object? state)
+    public void Send(SendOrPostCallback callback, object? state)
     {
         ArgumentNullException.ThrowIfNull(callback);
 
@@ -445,7 +445,7 @@ public sealed partial class PhotinoDispatcher
     /// Exceptions thrown by <paramref name="callback"/> are propagated to the caller.
     /// Dispatcher scheduling failures are returned as <c>false</c> and reported through diagnostics and dispatcher statistics.
     /// </remarks>
-    public bool TryInvoke(SendOrPostCallback callback, object? state)
+    public bool TrySend(SendOrPostCallback callback, object? state)
     {
         ArgumentNullException.ThrowIfNull(callback);
 
@@ -500,7 +500,7 @@ public sealed partial class PhotinoDispatcher
     }
 
     /// <summary>
-    /// Asynchronously executes the specified <see cref="SendOrPostCallback"/> on the dispatcher thread.
+    /// Posts the specified <see cref="SendOrPostCallback"/> to the dispatcher thread and returns a task for its completion.
     /// </summary>
     /// <param name="callback">The callback to execute.</param>
     /// <param name="state">The object passed to the callback.</param>
@@ -508,7 +508,7 @@ public sealed partial class PhotinoDispatcher
     /// A cancellation token to observe while waiting for the operation to complete.
     /// </param>
     /// <returns>
-    /// A <see cref="Task"/> that completes when the callback has finished executing, is canceled, or faults if the callback cannot be scheduled.
+    /// A <see cref="Task"/> that completes when the posted callback has finished executing, is canceled, or faults if the callback cannot be scheduled.
     /// </returns>
     /// <exception cref="ArgumentNullException">
     /// Thrown when <paramref name="callback"/> is <c>null</c>.
@@ -517,9 +517,9 @@ public sealed partial class PhotinoDispatcher
     /// Thrown when <paramref name="cancellationToken"/> is canceled.
     /// </exception>
     /// <remarks>
-    /// Exceptions thrown by the callback are captured by the returned task.
+    /// Exceptions thrown by the posted callback are captured by the returned task.
     /// </remarks>
-    public Task InvokeAsync(SendOrPostCallback callback, object? state, CancellationToken cancellationToken = default)
+    public Task PostAsync(SendOrPostCallback callback, object? state, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(callback);
 

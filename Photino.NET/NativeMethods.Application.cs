@@ -3,9 +3,9 @@ using System.Runtime.CompilerServices;
 using System.Runtime.ExceptionServices;
 using System.Runtime.InteropServices;
 
-namespace Photino.NET;
+using InvokeStateCallback = Photino.NET.NativeDelegates.VoidStateCallback;
 
-using InvokeStateCallback = NativeDelegates.VoidStateCallback;
+namespace Photino.NET;
 
 internal static partial class NativeMethods
 {
@@ -43,9 +43,10 @@ internal static partial class NativeMethods
     internal static int InvokeFailureCount => Volatile.Read(ref s_invokeFailureCount);
     internal static int BeginInvokeFailureCount => Volatile.Read(ref s_beginInvokeFailureCount);
 
-    [LibraryImport(DLL_NAME)]
-    [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
-    internal static partial int PhotinoApplication_Run();
+#pragma warning disable SYSLIB1054
+    [DllImport(DLL_NAME, CallingConvention = CallingConvention.Cdecl)]
+    internal static extern int PhotinoApplication_Run(ref PhotinoApplicationNativeParameters parameters);
+#pragma warning restore SYSLIB1054
 
     [LibraryImport(DLL_NAME)]
     [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]

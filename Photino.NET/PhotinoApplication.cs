@@ -1,4 +1,7 @@
-﻿using System.Runtime.ExceptionServices;
+﻿using System.Diagnostics;
+using System.Reflection;
+using System.Runtime.ExceptionServices;
+using System.Runtime.InteropServices;
 
 using static Photino.NET.NativeMethods;
 
@@ -12,6 +15,14 @@ namespace Photino.NET;
 /// </remarks>
 public sealed partial class PhotinoApplication
 {
+    private PhotinoApplicationNativeParameters _startupParameters = new()
+    {
+        Size = Marshal.SizeOf<PhotinoApplicationNativeParameters>(),
+        AbiVersion = PhotinoApplicationNativeParameters.NativeAbiVersion,
+
+        NotificationsEnabled = true
+    };
+
     private static PhotinoApplication? s_current;
     private int _isRunning;
 
@@ -35,6 +46,60 @@ public sealed partial class PhotinoApplication
         if (registerCurrent && Interlocked.CompareExchange(ref s_current, this, null) is not null)
         {
             ThrowApplicationAlreadyCreated();
+        }
+
+        _startupParameters.ApplicationName =
+            _startupParameters.NotificationRegistrationId = GetDefaultApplicationName();
+
+        _startupParameters.StartupHandler = OnStartup;
+        _startupParameters.ExitHandler = OnExit;
+
+        _startupParameters.NotificationActivatedHandler = OnNotificationActivated;
+        _startupParameters.NotificationActionActivatedHandler = OnNotificationActionActivated;
+        _startupParameters.NotificationInputActivatedHandler = OnNotificationInputActivated;
+        _startupParameters.NotificationDismissedHandler = OnNotificationDismissed;
+        _startupParameters.NotificationFailedHandler = OnNotificationFailed;
+    }
+
+    /// <summary>
+    /// Gets or sets the application display name used by application-level native services.
+    /// </summary>
+    /// <remarks>
+    /// This value is passed to the native application layer when <see cref="Run(PhotinoWindow?)"/> starts.
+    /// It cannot be changed after the application has started.
+    /// </remarks>
+    /// <exception cref="InvalidOperationException">
+    /// Thrown when setting the value after the application has started.
+    /// </exception>
+    public string? Name
+    {
+        get => _startupParameters.ApplicationName;
+        set
+        {
+            ThrowIfRunning();
+
+            _startupParameters.ApplicationName = value;
+        }
+    }
+
+    /// <summary>
+    /// Gets or sets the application icon path used by application-level native services.
+    /// </summary>
+    /// <remarks>
+    /// This value is passed to the native application layer when <see cref="Run(PhotinoWindow?)"/> starts.
+    /// It cannot be changed after the application has started.
+    /// </remarks>
+    /// <exception cref="InvalidOperationException">
+    /// Thrown when setting the value after the application has started.
+    /// </exception>
+    public string? IconPath
+    {
+        get => _startupParameters.ApplicationIconPath;
+        set
+        {
+            ThrowIfRunning();
+
+            _startupParameters.ApplicationIconPath = value;
         }
     }
 
@@ -190,7 +255,9 @@ public sealed partial class PhotinoApplication
             }
         }
 
-        return PhotinoApplication_Run();
+        Debug.Assert(_startupParameters.Size == 96);
+
+        return PhotinoApplication_Run(ref _startupParameters);
     }
 
     /// <summary>
@@ -201,6 +268,7 @@ public sealed partial class PhotinoApplication
     /// </param>
     public void Shutdown(int exitCode = 0)
     {
+        _ = this;
         PhotinoApplication_Shutdown(exitCode);
     }
 
@@ -240,18 +308,16 @@ public sealed partial class PhotinoApplication
         }
     }
 
-    private static void ThrowApplicationAlreadyCreated()
+    private static string GetDefaultApplicationName()
     {
-        throw new InvalidOperationException($"Cannot create more than one {typeof(PhotinoApplication).FullName} instance.");
-    }
+        var name = Assembly.GetEntryAssembly()?.GetName().Name;
+        if (!string.IsNullOrWhiteSpace(name))
+            return name;
 
-    private static void ThrowApplicationAlreadyRunning()
-    {
-        throw new InvalidOperationException("The application is already running.");
-    }
+        name = Process.GetCurrentProcess().ProcessName;
+        if (!string.IsNullOrWhiteSpace(name))
+            return name;
 
-    private static void ThrowNativeWindowCannotBeMovedToStaThread()
-    {
-        throw new InvalidOperationException("An initialized native window cannot be moved to another application thread.");
+        return "PhotinoX";
     }
 }

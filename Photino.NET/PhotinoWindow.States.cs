@@ -1,11 +1,11 @@
 ﻿using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
+using GetAllMonitorsCallback = Photino.NET.NativeDelegates.MonitorCallback;
+
 namespace Photino.NET;
 
-using GetAllMonitorsCallback = NativeDelegates.MonitorCallback;
-
-public partial class PhotinoWindow
+partial class PhotinoWindow
 {
     private ref struct GCHandleScope
     {

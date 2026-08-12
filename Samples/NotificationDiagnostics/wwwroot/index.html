@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Notification Diagnostics</title>
+    <link rel="stylesheet" href="app.css">
+</head>
+<body>
+    <main>
+        <section>
+            <h1>Notification Diagnostics</h1>
+
+            <h2>Application state</h2>
+            <dl class="state">
+                <dt>ApplicationName</dt>
+                <dd id="applicationName">-</dd>
+
+                <dt>RegistrationId</dt>
+                <dd id="notificationRegistrationId">-</dd>
+
+                <dt>NotificationsEnabled</dt>
+                <dd id="notificationsEnabled">-</dd>
+
+                <dt>IsRunning</dt>
+                <dd id="isRunning">-</dd>
+            </dl>
+
+            <div class="row">
+                <button id="enableNotifications">Enable</button>
+                <button id="disableNotifications" class="secondary">Disable</button>
+            </div>
+
+            <h2 class="form-title">Show notification</h2>
+
+            <label for="title">Title</label>
+            <input id="title" value="PhotinoX notification">
+
+            <label for="body">Body</label>
+            <textarea id="body">Notification diagnostics message.</textarea>
+
+            <label for="iconPath">Icon path</label>
+            <input id="iconPath" placeholder="Optional local icon path">
+
+            <div class="row">
+                <button id="showNotification">Show</button>
+                <button id="shutdown" class="danger">Shutdown</button>
+            </div>
+
+            <p class="muted">
+                The sample logs application events, notification events, runtime enable or disable changes,
+                and native notification show failures.
+            </p>
+        </section>
+
+        <section>
+            <h2>Event log</h2>
+            <div id="log"></div>
+        </section>
+    </main>
+
+    <script src="app.js"></script>
+</body>
+</html>

@@ -22,7 +22,7 @@ public sealed class PhotinoWindowCollection : IReadOnlyList<PhotinoWindow>
         List<PhotinoWindow> copy;
         lock (_windows)
         {
-            copy = new List<PhotinoWindow>(_windows);
+            copy = [.. _windows];
         }
         return copy.GetEnumerator();
     }
