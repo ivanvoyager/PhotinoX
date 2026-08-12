@@ -64,6 +64,7 @@ partial class PhotinoApplication
     /// </summary>
     /// <remarks>
     /// On Windows, this value is used as the application notification registration identifier.
+    /// On Linux, this value is passed as the notification desktop-entry hint.
     /// The value is passed to the native application layer when <see cref="Run(PhotinoWindow?)"/> starts.
     /// It cannot be changed after the application has started.
     /// </remarks>

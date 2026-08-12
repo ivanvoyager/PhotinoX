@@ -35,6 +35,10 @@ partial class PhotinoApplication
     /// </summary>
     /// <param name="registrationId">The native notification registration identifier.</param>
     /// <returns>The current <see cref="PhotinoApplication"/> instance.</returns>
+    /// <remarks>
+    /// On Windows, this value is used as the application notification registration identifier.
+    /// On Linux, this value is passed as the notification desktop-entry hint.
+    /// </remarks>
     /// <exception cref="InvalidOperationException">
     /// Thrown when called after the application has started.
     /// </exception>
