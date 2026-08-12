@@ -5,31 +5,31 @@ using static Photino.NET.NativeMethods;
 
 namespace Photino.NET;
 
+/// <summary>
+/// Provides a response stream for a user-defined custom URI scheme.
+/// </summary>
+/// <param name="window">The <see cref="PhotinoWindow"/> instance.</param>
+/// <param name="scheme">The scheme portion of the requested URL.</param>
+/// <param name="url">The full request URL.</param>
+/// <param name="contentType">
+/// The MIME content type of the response; may be <c>null</c>.
+/// </param>
+/// <returns>
+/// A readable <see cref="Stream"/> containing the response data, or <c>null</c>
+/// to indicate that the request should be handled by the default browser logic.
+/// </returns>
+/// <remarks>
+/// The returned <see cref="Stream"/> is consumed synchronously and will be disposed
+/// by the framework after the response is read.
+/// </remarks>
+public delegate Stream? CustomSchemeHandler(PhotinoWindow window, string scheme, string url, out string? contentType);
+
 partial class PhotinoWindow
 {
     /// <summary>
-    /// Provides a response stream for a user-defined custom URI scheme.
-    /// </summary>
-    /// <param name="sender">The <see cref="PhotinoWindow"/> instance.</param>
-    /// <param name="scheme">The scheme portion of the requested URL.</param>
-    /// <param name="url">The full request URL.</param>
-    /// <param name="contentType">
-    /// The MIME content type of the response; may be <c>null</c>.
-    /// </param>
-    /// <returns>
-    /// A readable <see cref="Stream"/> containing the response data, or <c>null</c>
-    /// to indicate that the request should be handled by the default browser logic.
-    /// </returns>
-    /// <remarks>
-    /// The returned <see cref="Stream"/> is consumed synchronously and will be disposed
-    /// by the framework after the response is read.
-    /// </remarks>
-    public delegate Stream? NetCustomSchemeDelegate(object? sender, string scheme, string url, out string? contentType);
-
-    /// <summary>
     /// Stores registered custom scheme handlers keyed by scheme name.
     /// </summary>
-    internal Dictionary<string, NetCustomSchemeDelegate> CustomSchemes = new(StringComparer.OrdinalIgnoreCase);
+    internal Dictionary<string, CustomSchemeHandler> CustomSchemes = new(StringComparer.OrdinalIgnoreCase);
 
     /// <summary>
     /// Determines whether the specified URI scheme has a registered managed custom scheme handler.
@@ -60,7 +60,7 @@ partial class PhotinoWindow
     /// Returns the current <see cref="PhotinoWindow"/> instance.
     /// </returns>
     /// <param name="scheme">The custom scheme</param>
-    /// <param name="handler"><see cref="NetCustomSchemeDelegate"/></param>
+    /// <param name="handler"><see cref="CustomSchemeHandler"/></param>
     /// <exception cref="ArgumentException">
     /// Thrown when the scheme is missing, reserved, invalid, or when no handler was provided.
     /// </exception>
@@ -68,14 +68,14 @@ partial class PhotinoWindow
     /// Thrown when the window has already been closed, when more than 16 custom schemes were set before initialization,
     /// or when the native platform fails to register the scheme after initialization.
     /// </exception>
-    public PhotinoWindow RegisterCustomSchemeHandler(string scheme, NetCustomSchemeDelegate handler)
+    public PhotinoWindow RegisterCustomSchemeHandler(string scheme, CustomSchemeHandler handler)
     {
         ThrowIfClosed();
 
         if (string.IsNullOrWhiteSpace(scheme))
             throw new ArgumentException("A scheme must be provided (for example 'app' or 'custom').", nameof(scheme));
 
-        _ = handler ?? throw new ArgumentException($"A handler with a signature matching {nameof(NetCustomSchemeDelegate)} must be supplied.", nameof(handler));
+        _ = handler ?? throw new ArgumentException($"A handler with a signature matching {nameof(CustomSchemeHandler)} must be supplied.", nameof(handler));
 
         scheme = scheme.ToLowerInvariant();
 
@@ -146,7 +146,7 @@ partial class PhotinoWindow
 
         Debug.Assert(CustomSchemes.ContainsKey(scheme), $"A handler for the custom scheme '{scheme}' has not been registered.");
 
-        if (!CustomSchemes.TryGetValue(scheme, out NetCustomSchemeDelegate? handler))
+        if (!CustomSchemes.TryGetValue(scheme, out CustomSchemeHandler? handler))
             return IntPtr.Zero;
 
         Stream? responseStream;

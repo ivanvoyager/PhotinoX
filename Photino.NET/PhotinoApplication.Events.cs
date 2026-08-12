@@ -73,7 +73,7 @@ partial class PhotinoApplication
     /// <summary>
     /// Occurs when an application notification is activated.
     /// </summary>
-    public event EventHandler<PhotinoNotificationActivatedEventArgs>? NotificationActivated;
+    public event EventHandler<NotificationActivatedEventArgs>? NotificationActivated;
 
     /// <summary>
     /// Invokes registered handlers when an application notification is activated.
@@ -82,13 +82,13 @@ partial class PhotinoApplication
     /// <param name="state">The notification state.</param>
     internal void OnNotificationActivated(int notificationId, IntPtr state)
     {
-        InvokeNativeEvent(NotificationActivated, new PhotinoNotificationActivatedEventArgs(notificationId, RemoveNotificationState(notificationId, state)));
+        InvokeNativeEvent(NotificationActivated, new NotificationActivatedEventArgs(notificationId, RemoveNotificationState(notificationId, state)));
     }
 
     /// <summary>
     /// Occurs when an application notification action is activated.
     /// </summary>
-    public event EventHandler<PhotinoNotificationActionActivatedEventArgs>? NotificationActionActivated;
+    public event EventHandler<NotificationActionActivatedEventArgs>? NotificationActionActivated;
 
     /// <summary>
     /// Invokes registered handlers when an application notification action is activated.
@@ -98,13 +98,13 @@ partial class PhotinoApplication
     /// <param name="state">The notification state.</param>
     internal void OnNotificationActionActivated(int notificationId, int actionIndex, IntPtr state)
     {
-        InvokeNativeEvent(NotificationActionActivated, new PhotinoNotificationActionActivatedEventArgs(notificationId, actionIndex, RemoveNotificationState(notificationId, state)));
+        InvokeNativeEvent(NotificationActionActivated, new NotificationActionActivatedEventArgs(notificationId, actionIndex, RemoveNotificationState(notificationId, state)));
     }
 
     /// <summary>
     /// Occurs when an application notification input response is activated.
     /// </summary>
-    public event EventHandler<PhotinoNotificationInputActivatedEventArgs>? NotificationInputActivated;
+    public event EventHandler<NotificationInputActivatedEventArgs>? NotificationInputActivated;
 
     /// <summary>
     /// Invokes registered handlers when an application notification input response is activated.
@@ -114,13 +114,13 @@ partial class PhotinoApplication
     /// <param name="state">The notification state.</param>
     internal void OnNotificationInputActivated(int notificationId, string response, IntPtr state)
     {
-        InvokeNativeEvent(NotificationInputActivated, new PhotinoNotificationInputActivatedEventArgs(notificationId, response, RemoveNotificationState(notificationId, state)));
+        InvokeNativeEvent(NotificationInputActivated, new NotificationInputActivatedEventArgs(notificationId, response, RemoveNotificationState(notificationId, state)));
     }
 
     /// <summary>
     /// Occurs when an application notification is dismissed.
     /// </summary>
-    public event EventHandler<PhotinoNotificationDismissedEventArgs>? NotificationDismissed;
+    public event EventHandler<NotificationDismissedEventArgs>? NotificationDismissed;
 
     /// <summary>
     /// Invokes registered handlers when an application notification is dismissed.
@@ -128,15 +128,15 @@ partial class PhotinoApplication
     /// <param name="notificationId">The application notification correlation identifier.</param>
     /// <param name="reason">The notification dismissal reason.</param>
     /// <param name="state">The notification state.</param>
-    internal void OnNotificationDismissed(int notificationId, PhotinoNotificationDismissalReason reason, IntPtr state)
+    internal void OnNotificationDismissed(int notificationId, NotificationDismissalReason reason, IntPtr state)
     {
-        InvokeNativeEvent(NotificationDismissed, new PhotinoNotificationDismissedEventArgs(notificationId, reason, RemoveNotificationState(notificationId, state)));
+        InvokeNativeEvent(NotificationDismissed, new NotificationDismissedEventArgs(notificationId, reason, RemoveNotificationState(notificationId, state)));
     }
 
     /// <summary>
     /// Occurs when an application notification fails.
     /// </summary>
-    public event EventHandler<PhotinoNotificationFailedEventArgs>? NotificationFailed;
+    public event EventHandler<NotificationFailedEventArgs>? NotificationFailed;
 
     /// <summary>
     /// Invokes registered handlers when an application notification fails.
@@ -145,7 +145,7 @@ partial class PhotinoApplication
     /// <param name="state">The notification state.</param>
     internal void OnNotificationFailed(int notificationId, IntPtr state)
     {
-        InvokeNativeEvent(NotificationFailed, new PhotinoNotificationFailedEventArgs(notificationId, RemoveNotificationState(notificationId, state)));
+        InvokeNativeEvent(NotificationFailed, new NotificationFailedEventArgs(notificationId, RemoveNotificationState(notificationId, state)));
     }
 
     private void InvokeNativeEvent<TEventArgs>(EventHandler<TEventArgs>? handler, TEventArgs args, [CallerMemberName] string? caller = null)

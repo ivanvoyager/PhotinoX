@@ -28,6 +28,6 @@ internal static class NativeDelegates
     [UnmanagedFunctionPointer(CC)] internal delegate void NotificationActivatedCallback(int notificationId, IntPtr state);
     [UnmanagedFunctionPointer(CC)] internal delegate void NotificationActionActivatedCallback(int notificationId, int actionIndex, IntPtr state);
     [UnmanagedFunctionPointer(CC)] internal delegate void NotificationInputActivatedCallback(int notificationId, [MarshalAs(UnmanagedType.LPUTF8Str)] string response, IntPtr state);
-    [UnmanagedFunctionPointer(CC)] internal delegate void NotificationDismissedCallback(int notificationId, [MarshalAs(UnmanagedType.I4)] PhotinoNotificationDismissalReason reason, IntPtr state);
+    [UnmanagedFunctionPointer(CC)] internal delegate void NotificationDismissedCallback(int notificationId, [MarshalAs(UnmanagedType.I4)] NotificationDismissalReason reason, IntPtr state);
     [UnmanagedFunctionPointer(CC)] internal delegate void NotificationFailedCallback(int notificationId, IntPtr state);
 }

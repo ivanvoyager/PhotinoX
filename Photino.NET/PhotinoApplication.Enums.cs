@@ -58,7 +58,7 @@ public enum PhotinoShutdownRequestReason
 /// <summary>
 /// Specifies why an application notification was dismissed.
 /// </summary>
-public enum PhotinoNotificationDismissalReason
+public enum NotificationDismissalReason
 {
     /// <summary>
     /// The native platform did not provide a specific dismissal reason.

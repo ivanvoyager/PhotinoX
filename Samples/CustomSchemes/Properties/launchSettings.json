@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "CustomSchemes": {
+      "commandName": "Project",
+      "debugEngines": "managed,native"
+    }
+  }
+}

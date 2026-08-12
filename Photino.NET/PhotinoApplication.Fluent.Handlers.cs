@@ -55,7 +55,7 @@ partial class PhotinoApplication
     /// <exception cref="ArgumentNullException">
     /// Thrown when <paramref name="handler"/> is <see langword="null"/>.
     /// </exception>
-    public PhotinoApplication RegisterNotificationActivatedHandler(EventHandler<PhotinoNotificationActivatedEventArgs> handler)
+    public PhotinoApplication RegisterNotificationActivatedHandler(EventHandler<NotificationActivatedEventArgs> handler)
     {
         ArgumentNullException.ThrowIfNull(handler);
         NotificationActivated += handler;
@@ -70,7 +70,7 @@ partial class PhotinoApplication
     /// <exception cref="ArgumentNullException">
     /// Thrown when <paramref name="handler"/> is <see langword="null"/>.
     /// </exception>
-    public PhotinoApplication RegisterNotificationActionActivatedHandler(EventHandler<PhotinoNotificationActionActivatedEventArgs> handler)
+    public PhotinoApplication RegisterNotificationActionActivatedHandler(EventHandler<NotificationActionActivatedEventArgs> handler)
     {
         ArgumentNullException.ThrowIfNull(handler);
         NotificationActionActivated += handler;
@@ -85,7 +85,7 @@ partial class PhotinoApplication
     /// <exception cref="ArgumentNullException">
     /// Thrown when <paramref name="handler"/> is <see langword="null"/>.
     /// </exception>
-    public PhotinoApplication RegisterNotificationInputActivatedHandler(EventHandler<PhotinoNotificationInputActivatedEventArgs> handler)
+    public PhotinoApplication RegisterNotificationInputActivatedHandler(EventHandler<NotificationInputActivatedEventArgs> handler)
     {
         ArgumentNullException.ThrowIfNull(handler);
         NotificationInputActivated += handler;
@@ -100,7 +100,7 @@ partial class PhotinoApplication
     /// <exception cref="ArgumentNullException">
     /// Thrown when <paramref name="handler"/> is <see langword="null"/>.
     /// </exception>
-    public PhotinoApplication RegisterNotificationDismissedHandler(EventHandler<PhotinoNotificationDismissedEventArgs> handler)
+    public PhotinoApplication RegisterNotificationDismissedHandler(EventHandler<NotificationDismissedEventArgs> handler)
     {
         ArgumentNullException.ThrowIfNull(handler);
         NotificationDismissed += handler;
@@ -115,7 +115,7 @@ partial class PhotinoApplication
     /// <exception cref="ArgumentNullException">
     /// Thrown when <paramref name="handler"/> is <see langword="null"/>.
     /// </exception>
-    public PhotinoApplication RegisterNotificationFailedHandler(EventHandler<PhotinoNotificationFailedEventArgs> handler)
+    public PhotinoApplication RegisterNotificationFailedHandler(EventHandler<NotificationFailedEventArgs> handler)
     {
         ArgumentNullException.ThrowIfNull(handler);
         NotificationFailed += handler;

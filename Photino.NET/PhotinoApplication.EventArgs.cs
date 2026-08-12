@@ -48,7 +48,7 @@ public sealed class ExitEventArgs : EventArgs
 /// </summary>
 /// <param name="NotificationId">The application notification correlation identifier.</param>
 /// <param name="State">An optional user-defined state associated with the notification.</param>
-public readonly record struct PhotinoNotificationActivatedEventArgs(int NotificationId, object? State);
+public readonly record struct NotificationActivatedEventArgs(int NotificationId, object? State);
 
 /// <summary>
 /// Provides data for the <see cref="PhotinoApplication.NotificationActionActivated"/> event.
@@ -56,7 +56,7 @@ public readonly record struct PhotinoNotificationActivatedEventArgs(int Notifica
 /// <param name="NotificationId">The application notification correlation identifier.</param>
 /// <param name="ActionIndex">The activated notification action index.</param>
 /// <param name="State">An optional user-defined state associated with the notification.</param>
-public readonly record struct PhotinoNotificationActionActivatedEventArgs(int NotificationId, int ActionIndex, object? State);
+public readonly record struct NotificationActionActivatedEventArgs(int NotificationId, int ActionIndex, object? State);
 
 /// <summary>
 /// Provides data for the <see cref="PhotinoApplication.NotificationInputActivated"/> event.
@@ -64,7 +64,7 @@ public readonly record struct PhotinoNotificationActionActivatedEventArgs(int No
 /// <param name="NotificationId">The application notification correlation identifier.</param>
 /// <param name="Response">The notification input response.</param>
 /// <param name="State">An optional user-defined state associated with the notification.</param>
-public readonly record struct PhotinoNotificationInputActivatedEventArgs(int NotificationId, string Response, object? State);
+public readonly record struct NotificationInputActivatedEventArgs(int NotificationId, string Response, object? State);
 
 /// <summary>
 /// Provides data for the <see cref="PhotinoApplication.NotificationDismissed"/> event.
@@ -72,11 +72,11 @@ public readonly record struct PhotinoNotificationInputActivatedEventArgs(int Not
 /// <param name="NotificationId">The application notification correlation identifier.</param>
 /// <param name="Reason">The notification dismissal reason.</param>
 /// <param name="State">An optional user-defined state associated with the notification.</param>
-public readonly record struct PhotinoNotificationDismissedEventArgs(int NotificationId, PhotinoNotificationDismissalReason Reason, object? State);
+public readonly record struct NotificationDismissedEventArgs(int NotificationId, NotificationDismissalReason Reason, object? State);
 
 /// <summary>
 /// Provides data for the <see cref="PhotinoApplication.NotificationFailed"/> event.
 /// </summary>
 /// <param name="NotificationId">The application notification correlation identifier.</param>
 /// <param name="State">An optional user-defined state associated with the notification.</param>
-public readonly record struct PhotinoNotificationFailedEventArgs(int NotificationId, object? State);
+public readonly record struct NotificationFailedEventArgs(int NotificationId, object? State);
