@@ -46,12 +46,20 @@ Compared with the original Photino.NET managed API, PhotinoX introduces an expli
 
 | Previous model | New model |
 |---|---|
-| `PhotinoWindow.WaitForClose()` creates the native window and starts the message loop. | `PhotinoApplication.Run(window)` owns application lifetime and message-loop execution. |
+| `PhotinoWindow.WaitForClose()` creates the window and starts the message loop. | `PhotinoApplication.Run(window)` owns application lifetime and message-loop execution. |
 | Window creation and message-loop state are controlled from `PhotinoWindow`. | `PhotinoApplication.Run(window)` shows the main window; explicit window creation/showing is available through `PhotinoWindow.Show()`. |
 | Window lifetime is centered around individual `PhotinoWindow` instances. | `PhotinoApplication` tracks open windows through `MainWindow` and `Windows`. |
-| `PhotinoWindow.Invoke(...)` dispatches through native window-level invoke helpers. | UI-thread dispatching is centralized through `PhotinoApplication.Current.Dispatcher`, including `CheckAccess`, `Invoke`, `TryInvoke`, `BeginInvoke`, and `InvokeAsync`. |
+| `PhotinoWindow.Invoke(...)` dispatches through window-level invoke helpers. | UI-thread dispatching is centralized through `PhotinoApplication.Current.Dispatcher`, including `CheckAccess`, `Invoke`, `TryInvoke`, `BeginInvoke`, and `InvokeAsync`. |
 | Notification display is tied to window-level APIs. | Notifications are exposed through `PhotinoApplication`, with application-level enabled state and notification events. |
 | Shutdown behavior is implicit around the native message loop. | Shutdown behavior is controlled by `PhotinoShutdownMode`, `PhotinoApplication.Shutdown(...)`, and `ShutdownRequested`. |
+
+Notable application lifecycle APIs:
+
+| Area | API |
+|---|---|
+| Lifecycle | `Run`, `Shutdown`, `Startup`, `ShutdownRequested`, `Exit` |
+| Shutdown behavior | `ShutdownMode`, `ShutdownRequestedEventArgs`, `PhotinoShutdownRequestReason` |
+| Notifications | `ShowNotification`, `NotificationsEnabled`, notification activation/dismissal/failure events |
 
 ```csharp
 var app = new PhotinoApplication();
@@ -140,7 +148,7 @@ Window event names are simplified to remove redundant `Window` prefixes and alig
 | `TemporaryFilesPath` | `UserDataFolder` |
 | `SetTemporaryFilesPath(...)` | `SetUserDataFolder(...)` |
 
-Notable lifecycle and API changes in PhotinoX:
+Notable window lifecycle and API changes in PhotinoX:
 
 | Area | API |
 |---|---|
@@ -191,7 +199,7 @@ These changes may require source-level updates for applications that use older P
 
 ### Native runtime foundation
 
-The managed API is built on the updated `PhotinoX.Native` runtime, including safer native memory ownership, clearer platform isolation, improved interop layout, an application-oriented native message-loop model, and unified native window state tracking.
+The managed API is built on the updated `PhotinoX.Native` runtime, including safer native memory ownership, clearer platform isolation, improved interop layout, an application-oriented message-loop and dispatch model, native notification integration, and unified native window state tracking.
 
 On Windows, fullscreen is handled as a native restore-aware state transition: the previous window style and placement are preserved before entering fullscreen and restored when leaving fullscreen. Startup state is synchronized without raising user callbacks before window creation completes.
 

@@ -1,4 +1,5 @@
-﻿using System.Diagnostics;
+﻿using System.ComponentModel;
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
 
 namespace Photino.NET;
@@ -23,7 +24,7 @@ partial class PhotinoApplication
     /// Occurs when application shutdown is requested.
     /// </summary>
     /// <remarks>
-    /// Set <see cref="ShutdownRequestedEventArgs.Cancel"/> to <see langword="true"/> to cancel the shutdown request.
+    /// Set <see cref="CancelEventArgs.Cancel"/> to <see langword="true"/> to cancel the shutdown request.
     /// On Windows, canceling a request with reason <see cref="PhotinoShutdownRequestReason.SessionLogoff"/>
     /// or <see cref="PhotinoShutdownRequestReason.SystemShutdown"/> may prevent the user session from ending.
     /// </remarks>

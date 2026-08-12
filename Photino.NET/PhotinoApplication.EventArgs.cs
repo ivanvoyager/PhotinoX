@@ -6,7 +6,7 @@ namespace Photino.NET;
 /// Provides data for the <see cref="PhotinoApplication.ShutdownRequested"/> event.
 /// </summary>
 /// <remarks>
-/// Set <see cref="ShutdownRequestedEventArgs.Cancel"/> to <see langword="true"/> to cancel the shutdown request.
+/// Set <see cref="CancelEventArgs.Cancel"/> to <see langword="true"/> to cancel the shutdown request.
 /// On Windows, canceling a request with reason <see cref="PhotinoShutdownRequestReason.SessionLogoff"/>
 /// or <see cref="PhotinoShutdownRequestReason.SystemShutdown"/> may prevent the user session from ending.
 /// </remarks>
