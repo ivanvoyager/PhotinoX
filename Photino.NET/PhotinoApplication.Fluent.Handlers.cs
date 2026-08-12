@@ -18,6 +18,21 @@ partial class PhotinoApplication
     }
 
     /// <summary>
+    /// Registers a handler for application shutdown requests.
+    /// </summary>
+    /// <param name="handler">The handler to register.</param>
+    /// <returns>The current <see cref="PhotinoApplication"/> instance.</returns>
+    /// <exception cref="ArgumentNullException">
+    /// Thrown when <paramref name="handler"/> is <see langword="null"/>.
+    /// </exception>
+    public PhotinoApplication RegisterShutdownRequestedHandler(EventHandler<ShutdownRequestedEventArgs> handler)
+    {
+        ArgumentNullException.ThrowIfNull(handler);
+        ShutdownRequested += handler;
+        return this;
+    }
+
+    /// <summary>
     /// Registers a handler for application exit.
     /// </summary>
     /// <param name="handler">The handler to register.</param>

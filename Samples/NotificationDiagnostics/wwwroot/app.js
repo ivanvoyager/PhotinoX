@@ -27,8 +27,16 @@ window.external.receiveMessage(message => {
         setText("notificationRegistrationId", payload.notificationRegistrationId);
         setText("notificationsEnabled", String(payload.notificationsEnabled));
         setText("isRunning", String(payload.isRunning));
+        document.getElementById("cancelShutdownRequested").checked = Boolean(payload.cancelShutdownRequested);
         return;
     }
+});
+
+document.getElementById("cancelShutdownRequested").addEventListener("change", event => {
+    send({
+        command: "setCancelShutdownRequested",
+        enabled: event.target.checked
+    });
 });
 
 document.getElementById("showNotification").addEventListener("click", () => {

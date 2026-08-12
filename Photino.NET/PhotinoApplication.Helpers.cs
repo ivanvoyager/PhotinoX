@@ -1,4 +1,5 @@
-﻿using System.Diagnostics.CodeAnalysis;
+﻿using System.ComponentModel;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 
 namespace Photino.NET;
@@ -10,6 +11,20 @@ partial class PhotinoApplication
     {
         if (IsRunning)
             ThrowApplicationAlreadyStarted(callerName);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static void ThrowIfInvalidShutdownMode(PhotinoShutdownMode shutdownMode, [CallerArgumentExpression(nameof(shutdownMode))] string? paramName = null)
+    {
+        if (!shutdownMode.IsValid())
+            ThrowInvalidShutdownMode(shutdownMode, paramName);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private void ThrowIfShuttingDown()
+    {
+        if (IsShuttingDown)
+            ThrowApplicationShuttingDown();
     }
 
     [DoesNotReturn]
@@ -45,5 +60,19 @@ partial class PhotinoApplication
     private static void ThrowApplicationNotRunning()
     {
         throw new InvalidOperationException("Application is not running.");
+    }
+
+    [DoesNotReturn]
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    private static void ThrowInvalidShutdownMode(PhotinoShutdownMode shutdownMode, string? paramName)
+    {
+        throw new InvalidEnumArgumentException(paramName, (int)shutdownMode, typeof(PhotinoShutdownMode));
+    }
+
+    [DoesNotReturn]
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    private static void ThrowApplicationShuttingDown()
+    {
+        throw new InvalidOperationException("Cannot change ShutdownMode while the application is shutting down.");
     }
 }

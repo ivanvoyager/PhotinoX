@@ -5,6 +5,7 @@ using Photino.NET;
 
 PhotinoWindow? window = null;
 var webReady = false;
+var cancelShutdownRequested = false;
 var pendingMessages = new Queue<string>();
 
 var application = new PhotinoApplication()
@@ -13,6 +14,11 @@ var application = new PhotinoApplication()
     .SetNotificationRegistrationId("PhotinoX.NotificationDiagnostics")
     .SetNotificationsEnabled(true)
     .RegisterStartupHandler((_, _) => AddLog("Application.Startup"))
+    .RegisterShutdownRequestedHandler((_, e) =>
+    {
+        e.Cancel = cancelShutdownRequested;
+        AddLog($"Application.ShutdownRequested: Cancel={e.Cancel}, Reason={e.Reason}");
+    })
     .RegisterExitHandler((_, e) => Console.WriteLine($"Application.Exit: {e.ApplicationExitCode}"))
     .RegisterNotificationActionActivatedHandler((_, e) =>
         AddLog($"NotificationActionActivated: NotificationId={e.NotificationId}, ActionIndex={e.ActionIndex}"))
@@ -25,7 +31,7 @@ var application = new PhotinoApplication()
 
 window = new PhotinoWindow()
     .SetTitle("Notification Diagnostics")
-    .SetSize(980, 720)
+    .SetSize(980, 760)
     .Center()
     .RegisterWebMessageReceivedHandler((_, e) =>
     {
@@ -51,6 +57,10 @@ void HandleWebMessage(string message)
             SendState();
             break;
 
+        case "setCancelShutdownRequested":
+            SetCancelShutdownRequested(root);
+            break;
+
         case "show":
             ShowNotification(root);
             break;
@@ -63,6 +73,13 @@ void HandleWebMessage(string message)
             application.Shutdown();
             break;
     }
+}
+
+void SetCancelShutdownRequested(JsonElement root)
+{
+    cancelShutdownRequested = root.GetProperty("enabled").GetBoolean();
+    AddLog($"CancelShutdownRequested changed: {cancelShutdownRequested}");
+    SendState();
 }
 
 void ShowNotification(JsonElement root)
@@ -112,7 +129,8 @@ void SendState()
             ApplicationName: application.Name,
             NotificationRegistrationId: application.NotificationRegistrationId,
             NotificationsEnabled: application.NotificationsEnabled,
-            IsRunning: application.IsRunning),
+            IsRunning: application.IsRunning,
+            CancelShutdownRequested: cancelShutdownRequested),
         NotificationDiagnosticsJsonContext.Default.StatePayload));
 }
 
@@ -174,7 +192,8 @@ internal readonly record struct StatePayload(
     [property: JsonPropertyName("applicationName")] string? ApplicationName,
     [property: JsonPropertyName("notificationRegistrationId")] string? NotificationRegistrationId,
     [property: JsonPropertyName("notificationsEnabled")] bool NotificationsEnabled,
-    [property: JsonPropertyName("isRunning")] bool IsRunning);
+    [property: JsonPropertyName("isRunning")] bool IsRunning,
+    [property: JsonPropertyName("cancelShutdownRequested")] bool CancelShutdownRequested);
 
 [JsonSerializable(typeof(LogPayload))]
 [JsonSerializable(typeof(StatePayload))]

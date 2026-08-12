@@ -65,6 +65,18 @@ label {
     font-size: 13px;
 }
 
+label.checkbox {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    margin-top: 12px;
+    margin-bottom: 0;
+}
+
+label.checkbox input {
+    width: auto;
+}
+
 input,
 textarea {
     width: 100%;

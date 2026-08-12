@@ -15,7 +15,37 @@ partial class PhotinoApplication
     /// </summary>
     internal void OnStartup()
     {
+        Debug.Assert(_notificationStates.IsEmpty);
         InvokeNativeEvent(Startup);
+    }
+
+    /// <summary>
+    /// Occurs when application shutdown is requested.
+    /// </summary>
+    /// <remarks>
+    /// Set <see cref="ShutdownRequestedEventArgs.Cancel"/> to <see langword="true"/> to cancel the shutdown request.
+    /// On Windows, canceling a request with reason <see cref="PhotinoShutdownRequestReason.SessionLogoff"/>
+    /// or <see cref="PhotinoShutdownRequestReason.SystemShutdown"/> may prevent the user session from ending.
+    /// </remarks>
+    public event EventHandler<ShutdownRequestedEventArgs>? ShutdownRequested;
+
+    /// <summary>
+    /// Invokes registered handlers when application shutdown is requested.
+    /// </summary>
+    /// <param name="reason">The reason for the shutdown request.</param>
+    /// <returns>
+    /// <c>1</c> to cancel shutdown; otherwise, <c>0</c>.
+    /// </returns>
+    internal byte OnShutdownRequested(PhotinoShutdownRequestReason reason)
+    {
+        var handler = ShutdownRequested;
+        if (handler is null)
+            return 0;
+
+        var args = new ShutdownRequestedEventArgs(reason);
+        InvokeNativeEvent(handler, args);
+        // C++ expects a single byte (0 = allow shutdown, 1 = cancel shutdown)
+        return args.Cancel ? (byte)1 : (byte)0;
     }
 
     /// <summary>
@@ -51,7 +81,7 @@ partial class PhotinoApplication
     /// <param name="state">The notification state.</param>
     internal void OnNotificationActivated(int notificationId, IntPtr state)
     {
-        InvokeNativeEvent(NotificationActivated, new PhotinoNotificationActivatedEventArgs(notificationId));
+        InvokeNativeEvent(NotificationActivated, new PhotinoNotificationActivatedEventArgs(notificationId, RemoveNotificationState(notificationId, state)));
     }
 
     /// <summary>
@@ -67,7 +97,7 @@ partial class PhotinoApplication
     /// <param name="state">The notification state.</param>
     internal void OnNotificationActionActivated(int notificationId, int actionIndex, IntPtr state)
     {
-        InvokeNativeEvent(NotificationActionActivated, new PhotinoNotificationActionActivatedEventArgs(notificationId, actionIndex));
+        InvokeNativeEvent(NotificationActionActivated, new PhotinoNotificationActionActivatedEventArgs(notificationId, actionIndex, RemoveNotificationState(notificationId, state)));
     }
 
     /// <summary>
@@ -83,7 +113,7 @@ partial class PhotinoApplication
     /// <param name="state">The notification state.</param>
     internal void OnNotificationInputActivated(int notificationId, string response, IntPtr state)
     {
-        InvokeNativeEvent(NotificationInputActivated, new PhotinoNotificationInputActivatedEventArgs(notificationId, response));
+        InvokeNativeEvent(NotificationInputActivated, new PhotinoNotificationInputActivatedEventArgs(notificationId, response, RemoveNotificationState(notificationId, state)));
     }
 
     /// <summary>
@@ -99,7 +129,7 @@ partial class PhotinoApplication
     /// <param name="state">The notification state.</param>
     internal void OnNotificationDismissed(int notificationId, PhotinoNotificationDismissalReason reason, IntPtr state)
     {
-        InvokeNativeEvent(NotificationDismissed, new PhotinoNotificationDismissedEventArgs(notificationId, reason));
+        InvokeNativeEvent(NotificationDismissed, new PhotinoNotificationDismissedEventArgs(notificationId, reason, RemoveNotificationState(notificationId, state)));
     }
 
     /// <summary>
@@ -114,7 +144,7 @@ partial class PhotinoApplication
     /// <param name="state">The notification state.</param>
     internal void OnNotificationFailed(int notificationId, IntPtr state)
     {
-        InvokeNativeEvent(NotificationFailed, new PhotinoNotificationFailedEventArgs(notificationId));
+        InvokeNativeEvent(NotificationFailed, new PhotinoNotificationFailedEventArgs(notificationId, RemoveNotificationState(notificationId, state)));
     }
 
     private void InvokeNativeEvent<TEventArgs>(EventHandler<TEventArgs>? handler, TEventArgs args, [CallerMemberName] string? caller = null)

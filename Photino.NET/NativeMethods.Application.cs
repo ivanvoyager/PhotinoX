@@ -50,7 +50,7 @@ internal static partial class NativeMethods
 
     [LibraryImport(DLL_NAME)]
     [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
-    internal static partial void PhotinoApplication_Shutdown(int exitCode);
+    internal static partial void PhotinoApplication_Shutdown(int exitCode, byte force);
 
     [LibraryImport(DLL_NAME)]
     [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]

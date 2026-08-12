@@ -23,6 +23,7 @@ internal static class NativeDelegates
     [UnmanagedFunctionPointer(CC)] internal delegate int MonitorCallback(in NativeMonitor monitor, IntPtr state);
 
     //Application callbacks
+    [UnmanagedFunctionPointer(CC)] internal delegate byte ShutdownRequestedCallback([MarshalAs(UnmanagedType.I4)] PhotinoShutdownRequestReason reason);
     [UnmanagedFunctionPointer(CC)] internal delegate int ExitCallback(int exitCode);
     [UnmanagedFunctionPointer(CC)] internal delegate void NotificationActivatedCallback(int notificationId, IntPtr state);
     [UnmanagedFunctionPointer(CC)] internal delegate void NotificationActionActivatedCallback(int notificationId, int actionIndex, IntPtr state);

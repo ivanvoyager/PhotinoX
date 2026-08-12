@@ -1,4 +1,5 @@
-﻿using System.Diagnostics;
+﻿using System.ComponentModel;
+using System.Diagnostics;
 using System.Reflection;
 using System.Runtime.ExceptionServices;
 using System.Runtime.InteropServices;
@@ -25,6 +26,7 @@ public sealed partial class PhotinoApplication
 
     private static PhotinoApplication? s_current;
     private int _isRunning;
+    private int _isInMainLoop;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="PhotinoApplication"/> class.
@@ -52,6 +54,7 @@ public sealed partial class PhotinoApplication
             _startupParameters.NotificationRegistrationId = GetDefaultApplicationName();
 
         _startupParameters.StartupHandler = OnStartup;
+        _startupParameters.ShutdownRequestedHandler = OnShutdownRequested;
         _startupParameters.ExitHandler = OnExit;
 
         _startupParameters.NotificationActivatedHandler = OnNotificationActivated;
@@ -166,9 +169,33 @@ public sealed partial class PhotinoApplication
     /// </summary>
     /// <remarks>
     /// The shutdown mode controls whether the application exits when the main window closes,
-    /// when the last window closes, or only when <see cref="Shutdown(int)"/> is called explicitly.
+    /// when the last window closes, or only when <see cref="Shutdown(int, bool)"/> is called explicitly.
     /// </remarks>
-    public PhotinoShutdownMode ShutdownMode { get; set; } = PhotinoShutdownMode.OnLastWindowClose;
+    /// <exception cref="InvalidEnumArgumentException">
+    /// Thrown when setting an undefined <see cref="PhotinoShutdownMode"/> value.
+    /// </exception>
+    /// <exception cref="InvalidOperationException">
+    /// Thrown when setting the value while the application is shutting down.
+    /// </exception>
+    public PhotinoShutdownMode ShutdownMode
+    {
+        get;
+        set
+        {
+            ThrowIfInvalidShutdownMode(value);
+            ThrowIfShuttingDown();
+            field = value;
+        }
+    } = PhotinoShutdownMode.OnLastWindowClose;
+
+    private static bool NativeIsRunning => PhotinoApplication_IsRunning();
+
+    private static bool NativeIsShuttingDown => PhotinoApplication_IsShuttingDown();
+
+    /// <summary>
+    /// Gets a value indicating whether the native application is shutting down.
+    /// </summary>
+    public bool IsShuttingDown => IsRunning && NativeIsShuttingDown;
 
     /// <summary>
     /// Runs the application message loop.
@@ -183,7 +210,7 @@ public sealed partial class PhotinoApplication
     /// <remarks>
     /// When <paramref name="mainWindow"/> is provided, it becomes the <see cref="MainWindow"/>.
     /// The application continues running until its shutdown conditions are met or
-    /// <see cref="Shutdown(int)"/> is called.
+    /// <see cref="Shutdown(int, bool)"/> is called.
     /// </remarks>
     public int Run(PhotinoWindow? mainWindow = null)
     {
@@ -255,9 +282,17 @@ public sealed partial class PhotinoApplication
             }
         }
 
-        Debug.Assert(_startupParameters.Size == 96);
-
-        return PhotinoApplication_Run(ref _startupParameters);
+        Debug.Assert(_startupParameters.Size == 104);
+        Volatile.Write(ref _isInMainLoop, 1);
+        try
+        {
+            return PhotinoApplication_Run(ref _startupParameters);
+        }
+        finally
+        {
+            Volatile.Write(ref _isInMainLoop, 0);
+            ClearNotificationStates();
+        }
     }
 
     /// <summary>
@@ -266,10 +301,18 @@ public sealed partial class PhotinoApplication
     /// <param name="exitCode">
     /// The exit code returned by <see cref="Run(PhotinoWindow?)"/>.
     /// </param>
-    public void Shutdown(int exitCode = 0)
+    /// <param name="force">
+    /// <see langword="true"/> to bypass <see cref="ShutdownRequested"/>; otherwise, <see langword="false"/>
+    /// to allow the shutdown request to be canceled.
+    /// </param>
+    /// <remarks>
+    /// Unless <paramref name="force"/> is <see langword="true"/>, the request can be canceled by
+    /// <see cref="ShutdownRequested"/> handlers.
+    /// </remarks>
+    public void Shutdown(int exitCode = 0, bool force = false)
     {
         _ = this;
-        PhotinoApplication_Shutdown(exitCode);
+        PhotinoApplication_Shutdown(exitCode, force ? (byte)1 : (byte)0);
     }
 
     internal void OnWindowCreated(PhotinoWindow window)
@@ -291,12 +334,12 @@ public sealed partial class PhotinoApplication
         if (ShutdownMode == PhotinoShutdownMode.OnMainWindowClose && isMainWindow)
         {
             CloseWindows();
-            Shutdown();
+            Shutdown(force: true);
             return;
         }
 
         if (ShutdownMode == PhotinoShutdownMode.OnLastWindowClose && Windows.Count == 0)
-            Shutdown();
+            Shutdown(force: true);
     }
 
     private void CloseWindows()
