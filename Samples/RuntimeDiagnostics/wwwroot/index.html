@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>PhotinoX Runtime Diagnostics</title>
+  <link rel="stylesheet" href="app.css">
+</head>
+<body>
+  <main class="shell">
+    <header class="header">
+      <p class="eyebrow">PhotinoX</p>
+      <h1>Runtime Diagnostics</h1>
+      <p class="subtitle">Native runtime, WebView backend, .NET runtime, and platform-specific runtime information.</p>
+    </header>
+
+    <section class="card" aria-label="Runtime diagnostics">
+      <section class="runtime-section">
+        <h2>Environment</h2>
+        <dl id="host-list">
+          <div>
+            <dt>Status</dt>
+            <dd>Loading...</dd>
+          </div>
+        </dl>
+      </section>
+
+      <section class="runtime-section">
+        <h2>PhotinoX</h2>
+        <dl id="photinox-list">
+          <div>
+            <dt>Status</dt>
+            <dd>Loading...</dd>
+          </div>
+        </dl>
+      </section>
+
+      <section class="runtime-section platform-section">
+        <h2>Platform Runtime</h2>
+        <dl id="platform-list">
+          <div>
+            <dt>Status</dt>
+            <dd>Loading...</dd>
+          </div>
+        </dl>
+      </section>
+    </section>
+  </main>
+
+  <script src="main.js"></script>
+</body>
+</html>

@@ -1,0 +1,126 @@
+:root {
+    color-scheme: dark;
+    --bg: #0b1120;
+    --border: #243044;
+    --text: #f8fafc;
+    --muted: #94a3b8;
+    --accent: #60a5fa;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+html,
+body {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+}
+
+body {
+    margin: 0;
+    background: radial-gradient(circle at top left, rgba(96, 165, 250, 0.12), transparent 30rem), radial-gradient(circle at bottom right, rgba(34, 197, 94, 0.10), transparent 28rem), var(--bg);
+    color: var(--text);
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+.shell {
+    width: 100%;
+    height: 100vh;
+    padding: 16px 30px;
+    overflow: hidden;
+}
+
+.header {
+    min-width: 0;
+    margin-bottom: 14px;
+}
+
+.eyebrow {
+    margin: 0 0 6px;
+    color: var(--accent);
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+}
+
+h1 {
+    margin: 0;
+    font-size: 32px;
+    line-height: 1;
+    letter-spacing: -0.04em;
+}
+
+.subtitle {
+    margin: 7px 0 0;
+    color: var(--muted);
+    font-size: 14px;
+    line-height: 1.3;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.card {
+    width: 100%;
+    padding: 16px 28px;
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    background: rgba(17, 24, 39, 0.84);
+    overflow: hidden;
+}
+
+.runtime-section + .runtime-section {
+    margin-top: 12px;
+}
+
+.runtime-section[hidden],
+.platform-section[hidden] {
+    display: none;
+}
+
+h2 {
+    margin: 0 0 7px;
+    font-size: 19px;
+    line-height: 1;
+    letter-spacing: -0.02em;
+}
+
+dl {
+    margin: 0;
+    display: grid;
+    gap: 0;
+}
+
+    dl div {
+        min-height: 28px;
+        display: grid;
+        grid-template-columns: 160px minmax(0, 1fr);
+        align-items: center;
+        gap: 12px;
+        border-bottom: 1px solid rgba(148, 163, 184, 0.14);
+    }
+
+        dl div:last-child {
+            border-bottom: 0;
+        }
+
+dt {
+    color: var(--muted);
+    font-size: 13px;
+    font-weight: 700;
+}
+
+dd {
+    min-width: 0;
+    margin: 0;
+    color: var(--text);
+    font-size: 13px;
+    font-weight: 750;
+    text-align: right;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}

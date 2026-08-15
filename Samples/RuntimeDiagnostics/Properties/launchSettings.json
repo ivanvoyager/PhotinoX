@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "RuntimeDiagnostics": {
+      "commandName": "Project",
+      "debugEngines": "managed,native"
+    }
+  }
+}
