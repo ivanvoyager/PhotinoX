@@ -13,7 +13,7 @@
   </PropertyGroup>
 
   <ItemGroup Condition="'$(PhotinoX_UseLocalProjects)' != 'true'">
-    <PackageReference Include="PhotinoX.Native" Version="5.0.0" />
+    <PackageReference Include="PhotinoX.Native" Version="5.0.1" />
   </ItemGroup>
 
   <PropertyGroup Condition="'$(PhotinoX_UseLocalProjects)' == 'true'">
