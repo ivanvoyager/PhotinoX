@@ -41,14 +41,14 @@ internal struct PhotinoNotificationShowNativeParameters
 {
     internal const int NativeAbiVersion = 1;
 
-    [MarshalAs(UnmanagedType.I4)] internal int Size;
-    [MarshalAs(UnmanagedType.I4)] internal int AbiVersion;
+    [MarshalAs(UnmanagedType.I4)] internal int Size; //#1
+    [MarshalAs(UnmanagedType.I4)] internal int AbiVersion; //#2
 
-    [MarshalAs(UnmanagedType.I4)] internal int NotificationId;
+    [MarshalAs(UnmanagedType.I4)] internal int NotificationId; //#3
 
-    [MarshalAs(UnmanagedType.LPUTF8Str)] internal string? Title;
-    [MarshalAs(UnmanagedType.LPUTF8Str)] internal string? Body;
-    [MarshalAs(UnmanagedType.LPUTF8Str)] internal string? IconPath;
+    [MarshalAs(UnmanagedType.LPUTF8Str)] internal string? Title; //#4
+    [MarshalAs(UnmanagedType.LPUTF8Str)] internal string? Body; //#5
+    [MarshalAs(UnmanagedType.LPUTF8Str)] internal string? IconPath; //#6
 
-    internal IntPtr CallbackState;
+    internal IntPtr CallbackState; //#7
 }

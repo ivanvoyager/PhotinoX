@@ -25,4 +25,24 @@ internal static partial class NativeMethods
     [DllImport(DLL_NAME, CallingConvention = CallingConvention.Cdecl)]
     internal static extern IntPtr Photino_ctor(ref PhotinoWindowNativeParameters parameters);
 #pragma warning restore SYSLIB1054
+
+    [LibraryImport(DLL_NAME)]
+    [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
+    internal static partial IntPtr Photino_GetNativeVersion();
+
+#pragma warning disable SYSLIB1054
+    [DllImport(DLL_NAME, CallingConvention = CallingConvention.Cdecl)]
+    internal static extern PhotinoNativeRuntimeInfo Photino_GetRuntimeInfo();
+#pragma warning restore SYSLIB1054
+
+    internal static string? GetNativeVersion()
+    {
+        var ptr = Photino_GetNativeVersion();
+        return ptr != IntPtr.Zero ? Marshal.PtrToStringUTF8(ptr) : null;
+    }
+
+    internal static string? PtrToStringUTF8(IntPtr value)
+    {
+        return Marshal.PtrToStringUTF8(value);
+    }
 }
