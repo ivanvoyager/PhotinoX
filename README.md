@@ -80,6 +80,8 @@ return app.Run(window);
 
 `ShowNotification(...)` returns a positive notification identifier when the request is accepted. It returns `0` when the notification is skipped by policy or application state, `-1` for invalid or untracked requests, `-2` when native notification backend initialization fails, and `-3` when native notification display fails synchronously.
 
+`PhotinoApplication.GetRuntimeInfo()` exposes runtime diagnostics for the current application process, including OS, .NET, PhotinoX native version, WebView engine, WebView runtime version, and platform-specific runtime details. See [Samples/RuntimeDiagnostics](https://github.com/ivanvoyager/PhotinoX/tree/master/Samples/RuntimeDiagnostics) for a minimal diagnostics sample.
+
 ### Window events
 
 Window event names are simplified to remove redundant `Window` prefixes and align better with common .NET event naming. Closing now uses standard `CancelEventArgs`, focus events are exposed as `Activated` and `Deactivated`, and window state events are driven by actual native state transitions instead of transient resize messages.
@@ -185,13 +187,15 @@ Startup content selection is explicit: `Load(...)` sets URL content and clears r
 | `Load(...)` | Sets startup URL content and clears raw string content. |
 | `LoadString(...)` | Sets raw string content and clears startup URL content. |
 
-### WebView2 user data folder
+### WebView runtime behavior
 
 On Windows, `UserDataFolder` specifies the WebView2 user data folder used by the WebView2 runtime. It is used for browser profile data such as cookies, permissions, cache, local storage, IndexedDB, and related WebView2 state.
 
 `TemporaryFilesPath` and `SetTemporaryFilesPath(...)` were renamed to `UserDataFolder` and `SetUserDataFolder(...)` to match the actual WebView2 behavior.
 
 PhotinoX reuses an existing WebView2 environment when the requested Windows WebView2 configuration is compatible with an environment that has already been created.
+
+`StatusBarEnabled` controls the embedded WebView status bar where supported. On Windows, it maps to WebView2 `IsStatusBarEnabled` and can disable the bottom-left link hover URL overlay. On macOS and Linux, the option is stored but currently has no native effect.
 
 ### Compatibility
 
