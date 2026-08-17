@@ -27,7 +27,7 @@ partial class PhotinoWindow
 
         if (_nativeInstance == IntPtr.Zero)
         {
-            _startupParameters.WindowState = PhotinoWindowState.Maximized;
+            _startupParameters.Geometry.WindowState = PhotinoWindowState.Maximized;
         }
         else
         {
@@ -56,7 +56,7 @@ partial class PhotinoWindow
 
         if (_nativeInstance == IntPtr.Zero)
         {
-            _startupParameters.WindowState = PhotinoWindowState.Minimized;
+            _startupParameters.Geometry.WindowState = PhotinoWindowState.Minimized;
         }
         else
         {
@@ -82,7 +82,7 @@ partial class PhotinoWindow
 
         if (_nativeInstance == IntPtr.Zero)
         {
-            _startupParameters.WindowState = PhotinoWindowState.Normal;
+            _startupParameters.Geometry.WindowState = PhotinoWindowState.Normal;
         }
         else
         {
@@ -560,8 +560,8 @@ partial class PhotinoWindow
 
         if (_nativeInstance == IntPtr.Zero)
         {
-            _startupParameters.CenterOnInitialize = true;
-            _startupParameters.UseOsDefaultLocation = false;
+            _startupParameters.Geometry.CenterOnInitialize = true;
+            _startupParameters.Geometry.UseOsDefaultLocation = false;
         }
         else
         {
@@ -621,9 +621,9 @@ partial class PhotinoWindow
         if (_nativeInstance == IntPtr.Zero)
         {
             if (fullScreen)
-                _startupParameters.WindowState = PhotinoWindowState.FullScreen;
-            else if (_startupParameters.WindowState == PhotinoWindowState.FullScreen)
-                _startupParameters.WindowState = PhotinoWindowState.Normal;
+                _startupParameters.Geometry.WindowState = PhotinoWindowState.FullScreen;
+            else if (_startupParameters.Geometry.WindowState == PhotinoWindowState.FullScreen)
+                _startupParameters.Geometry.WindowState = PhotinoWindowState.Normal;
         }
         else
         {
@@ -654,8 +654,8 @@ partial class PhotinoWindow
 
         if (_nativeInstance == IntPtr.Zero)
         {
-            if (_startupParameters.WindowState == PhotinoWindowState.Maximized)
-                _startupParameters.WindowState = PhotinoWindowState.Normal;
+            if (_startupParameters.Geometry.WindowState == PhotinoWindowState.Maximized)
+                _startupParameters.Geometry.WindowState = PhotinoWindowState.Normal;
         }
         else
         {
@@ -683,8 +683,8 @@ partial class PhotinoWindow
 
         if (_nativeInstance == IntPtr.Zero)
         {
-            if (_startupParameters.WindowState == PhotinoWindowState.Minimized)
-                _startupParameters.WindowState = PhotinoWindowState.Normal;
+            if (_startupParameters.Geometry.WindowState == PhotinoWindowState.Minimized)
+                _startupParameters.Geometry.WindowState = PhotinoWindowState.Normal;
         }
         else
         {
@@ -953,8 +953,8 @@ partial class PhotinoWindow
 
         if (_nativeInstance == IntPtr.Zero)
         {
-            _startupParameters.StartUrl = uri.ToString();
-            _startupParameters.StartString = null;
+            _startupParameters.Browser.StartUrl = uri.ToString();
+            _startupParameters.Browser.StartString = null;
         }
         else
         {
@@ -1048,8 +1048,8 @@ partial class PhotinoWindow
 
         if (_nativeInstance == IntPtr.Zero)
         {
-            _startupParameters.StartString = content;
-            _startupParameters.StartUrl = null;
+            _startupParameters.Browser.StartString = content;
+            _startupParameters.Browser.StartUrl = null;
         }
         else
         {
