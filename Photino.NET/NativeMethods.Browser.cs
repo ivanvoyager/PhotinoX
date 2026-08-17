@@ -63,6 +63,15 @@ internal static partial class NativeMethods
 
     [LibraryImport(DLL_NAME)]
     [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
+    internal static partial void Photino_GetStatusBarEnabled(IntPtr instance, out byte enabled);
+
+    [LibraryImport(DLL_NAME)]
+    [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
+    internal static partial void Photino_SetStatusBarEnabled(IntPtr instance, byte enabled);
+
+
+    [LibraryImport(DLL_NAME)]
+    [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
     internal static partial void Photino_GetZoom(IntPtr instance, out int zoom);
 
     [LibraryImport(DLL_NAME)]

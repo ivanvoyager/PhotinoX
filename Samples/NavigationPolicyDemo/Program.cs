@@ -17,6 +17,7 @@ internal static class Program
             .SetUseOsDefaultLocation(false)
             .SetSize(new Size(960, 700))
             .Center()
+            .SetStatusBarEnabled(false)
             .Load("wwwroot/navigation-policy.html")
             .RegisterContentLoadedHandler(WindowContentLoaded)
             .RegisterWebMessageReceivedHandler(WindowWebMessageReceived);
@@ -28,16 +29,16 @@ internal static class Program
 
     private static void ConfigureNavigationPolicy(PhotinoWindow window)
     {
-         window.RegisterNavigationStartingHandler((_, e) =>
-         {
-             Log(window, $"NavigationStarting: {e.Uri}");
-        
-             if (IsExternalUri(e.Uri))
-             {
-                 e.Cancel = true;
-                 OpenExternalBrowser(e.Uri);
-             }
-         });
+        window.RegisterNavigationStartingHandler((_, e) =>
+        {
+            Log(window, $"NavigationStarting: {e.Uri}");
+
+            if (IsExternalUri(e.Uri))
+            {
+                e.Cancel = true;
+                OpenExternalBrowser(e.Uri);
+            }
+        });
 
         window.RegisterNewWindowRequestedHandler((_, e) =>
         {

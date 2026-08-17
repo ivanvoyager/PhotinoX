@@ -1128,6 +1128,27 @@ partial class PhotinoWindow
     }
 
     /// <summary>
+    /// Sets whether the embedded WebView status bar is enabled.
+    /// </summary>
+    /// <remarks>
+    /// On Windows, this controls the WebView2 status bar shown for link hover URLs
+    /// and similar browser status text.
+    /// On macOS and Linux, this option is stored but currently has no native effect.
+    /// </remarks>
+    /// <param name="enabled">
+    /// <see langword="true"/> to enable the WebView status bar; otherwise, <see langword="false"/>.
+    /// </param>
+    /// <returns>
+    /// Returns the current <see cref="PhotinoWindow"/> instance.
+    /// </returns>
+    public PhotinoWindow SetStatusBarEnabled(bool enabled)
+    {
+        Log($".{nameof(SetStatusBarEnabled)}({enabled})");
+        StatusBarEnabled = enabled;
+        return this;
+    }
+
+    /// <summary>
     /// Sets the browser control user agent at initialization.
     /// </summary>
     /// <param name="userAgent">
