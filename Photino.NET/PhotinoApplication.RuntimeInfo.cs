@@ -71,6 +71,7 @@ public readonly record struct PhotinoRuntimeInfo(
                 break;
 
             case PhotinoRuntimePlatform.Linux:
+                Append("glibc", Linux.GlibcVersion);
                 Append("GTK", Linux.GtkVersion);
                 Append("WebKitGTK API", Linux.WebKitGtkApiTarget);
                 AppendDistinct("WebKitGTK runtime", Linux.WebKitGtkRuntimeVersion, WebViewRuntimeVersion);
@@ -136,6 +137,9 @@ public readonly record struct PhotinoWindowsRuntimeInfo(string? WebView2RuntimeV
 /// <summary>
 /// Contains Linux-specific PhotinoX runtime information.
 /// </summary>
+/// <param name="GlibcVersion">
+/// The detected GNU C Library runtime version, or <see langword="null"/> when it is unavailable.
+/// </param>
 /// <param name="GtkVersion">
 /// The detected GTK runtime version, or <see langword="null"/> when it is unavailable.
 /// </param>
@@ -145,7 +149,7 @@ public readonly record struct PhotinoWindowsRuntimeInfo(string? WebView2RuntimeV
 /// <param name="WebKitGtkRuntimeVersion">
 /// The detected WebKitGTK runtime version, or <see langword="null"/> when it is unavailable.
 /// </param>
-public readonly record struct PhotinoLinuxRuntimeInfo(string? GtkVersion, string? WebKitGtkApiTarget, string? WebKitGtkRuntimeVersion);
+public readonly record struct PhotinoLinuxRuntimeInfo(string? GlibcVersion, string? GtkVersion, string? WebKitGtkApiTarget, string? WebKitGtkRuntimeVersion);
 
 /// <summary>
 /// Contains macOS-specific PhotinoX runtime information.
@@ -155,10 +159,10 @@ public readonly record struct PhotinoLinuxRuntimeInfo(string? GtkVersion, string
 /// </param>
 public readonly record struct PhotinoMacOSRuntimeInfo(string? WebKitVersion);
 
-[StructLayout(LayoutKind.Explicit, Size = 56)]
+[StructLayout(LayoutKind.Explicit, Size = 64)]
 internal struct PhotinoNativeRuntimeInfo
 {
-    internal const int NativeAbiVersion = 1;
+    internal const int NativeAbiVersion = 2;
 
     [FieldOffset(0), MarshalAs(UnmanagedType.I4)] internal int Size; //#1
     [FieldOffset(4), MarshalAs(UnmanagedType.I4)] internal int AbiVersion; //#2
@@ -185,6 +189,7 @@ internal struct PhotinoNativeWindowsRuntimeInfo
 [StructLayout(LayoutKind.Sequential)]
 internal struct PhotinoNativeLinuxRuntimeInfo
 {
+    internal IntPtr GlibcVersion;
     internal IntPtr GtkVersion;
     internal IntPtr WebKitGtkApiTarget;
     internal IntPtr WebKitGtkRuntimeVersion;

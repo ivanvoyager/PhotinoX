@@ -54,6 +54,7 @@
             const linux = get(info, "Linux") || {};
 
             return [
+                ["glibc", get(linux, "GlibcVersion")],
                 ["GTK", get(linux, "GtkVersion")],
                 ["WebKitGTK API", get(linux, "WebKitGtkApiTarget")]
             ].filter(([, value]) => value !== null && value !== undefined && value !== "");

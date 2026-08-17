@@ -5,8 +5,8 @@ var app = new PhotinoApplication();
 
 var window = new PhotinoWindow()
     .SetTitle("PhotinoX Runtime Diagnostics")
-    .SetWidth(680)
-    .SetHeight(540)
+    .SetWidth(700)
+    .SetHeight(560)
     .Center()
     .Load(Path.Combine(AppContext.BaseDirectory, "wwwroot", "index.html"));
 
