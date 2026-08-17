@@ -18,33 +18,51 @@ public partial class PhotinoWindow
     {
         Size = Marshal.SizeOf<PhotinoWindowNativeParameters>(),
         AbiVersion = PhotinoWindowNativeParameters.NativeAbiVersion,
-        Resizable = true,   //These values can't be initialized within the struct itself. Set required defaults.
-        ContextMenuEnabled = true,
-        ZoomEnabled = true,
-        StatusBarEnabled = true,
-        CustomSchemeNames = new string[PhotinoWindowNativeParameters.MaxCustomSchemeNames],
-        DevToolsEnabled = true,
-        GrantBrowserPermissions = true,
-        UserAgent = "PhotinoX WebView",
-        MediaAutoplayEnabled = true,
-        FileSystemAccessEnabled = true,
-        WebSecurityEnabled = true,
-        JavascriptClipboardAccessEnabled = true,
-        MediaStreamEnabled = true,
-        SmoothScrollingEnabled = true,
-        IgnoreCertificateErrorsEnabled = false,
-        UserDataFolder = Platform.IsWindows
-            ? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "PhotinoX")
-            : null,
-        Title = DefaultTitle,
-        CenterOnInitialize = false,
-        UseOsDefaultLocation = true,
-        UseOsDefaultSize = true,
-        Zoom = 100,
-        MaxHeight = int.MaxValue,
-        MaxWidth = int.MaxValue,
-        WindowState = PhotinoWindowState.Normal,
-        ChromelessResizeBorderThickness = 8
+
+        Window = new()
+        {
+            Title = DefaultTitle
+        },
+
+        LinuxChromeless = new()
+        {
+            ResizeBorderThickness = 8
+        },
+
+        Geometry = new()
+        {
+            MaxHeight = int.MaxValue,
+            MaxWidth = int.MaxValue,
+            WindowState = PhotinoWindowState.Normal,
+
+            Resizable = true,
+            UseOsDefaultLocation = true,
+            UseOsDefaultSize = true
+        },
+
+        Browser = new()
+        {
+            UserDataFolder = Platform.IsWindows
+                ? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "PhotinoX")
+                : null,
+            UserAgent = "PhotinoX WebView",
+            CustomSchemeNames = new string[PhotinoWindowNativeParameters.MaxCustomSchemeNames],
+
+            Zoom = 100,
+            ZoomEnabled = true,
+            ContextMenuEnabled = true,
+            StatusBarEnabled = true,
+            DevToolsEnabled = true,
+
+            GrantBrowserPermissions = true,
+            MediaAutoplayEnabled = true,
+            FileSystemAccessEnabled = true,
+            WebSecurityEnabled = true,
+            JavascriptClipboardAccessEnabled = true,
+            MediaStreamEnabled = true,
+            SmoothScrollingEnabled = true,
+            IgnoreCertificateErrorsEnabled = false
+        }
     };
 
     private const string DefaultTitle = "PhotinoX";
@@ -71,23 +89,26 @@ public partial class PhotinoWindow
         PhotinoBootstrap.Initialize();
 
         //Wire up handlers from C++ to C#
-        _startupParameters.ClosingHandler = OnClosing;
-        _startupParameters.ResizedHandler = OnSizeChanged;
-        _startupParameters.MaximizedHandler = OnMaximized;
-        _startupParameters.RestoredHandler = OnRestored;
-        _startupParameters.MinimizedHandler = OnMinimized;
-        _startupParameters.MovedHandler = OnLocationChanged;
-        _startupParameters.FocusInHandler = OnActivated;
-        _startupParameters.FocusOutHandler = OnDeactivated;
-        _startupParameters.WebMessageReceivedHandler = OnWebMessageReceived;
-        _startupParameters.ContentLoadingHandler = OnContentLoading;
-        _startupParameters.ContentLoadedHandler = OnContentLoaded;
-        _startupParameters.NavigationStartingHandler = OnNavigationStarting;
-        _startupParameters.NewWindowRequestedHandler = OnNewWindowRequested;
-        _startupParameters.CustomSchemeHandler = OnCustomScheme;
-        _startupParameters.ClosedHandler = OnClosed;
-        _startupParameters.FullScreenChangedHandler = OnFullScreenChanged;
-        _startupParameters.StateChangedHandler = OnStateChanged;
+        _startupParameters.Callbacks = new()
+        {
+            ClosingHandler = OnClosing,
+            ResizedHandler = OnSizeChanged,
+            MaximizedHandler = OnMaximized,
+            RestoredHandler = OnRestored,
+            MinimizedHandler = OnMinimized,
+            MovedHandler = OnLocationChanged,
+            FocusInHandler = OnActivated,
+            FocusOutHandler = OnDeactivated,
+            WebMessageReceivedHandler = OnWebMessageReceived,
+            ContentLoadingHandler = OnContentLoading,
+            ContentLoadedHandler = OnContentLoaded,
+            NavigationStartingHandler = OnNavigationStarting,
+            NewWindowRequestedHandler = OnNewWindowRequested,
+            CustomSchemeHandler = OnCustomScheme,
+            ClosedHandler = OnClosed,
+            FullScreenChangedHandler = OnFullScreenChanged,
+            StateChangedHandler = OnStateChanged
+        };
     }
 
     /// <summary>
@@ -241,14 +262,14 @@ public partial class PhotinoWindow
     /// </exception>
     public bool CenterOnInitialize
     {
-        get => _startupParameters.CenterOnInitialize;
+        get => _startupParameters.Geometry.CenterOnInitialize;
         set
         {
             ThrowIfClosedOrInitialized();
 
-            _startupParameters.CenterOnInitialize = value;
+            _startupParameters.Geometry.CenterOnInitialize = value;
             if (value)
-                _startupParameters.UseOsDefaultLocation = false;
+                _startupParameters.Geometry.UseOsDefaultLocation = false;
         }
     }
 
@@ -267,13 +288,13 @@ public partial class PhotinoWindow
     {
         get
         {
-            return _startupParameters.Chromeless;
+            return _startupParameters.Window.Chromeless;
         }
         set
         {
             ThrowIfClosedOrInitialized();
 
-            _startupParameters.Chromeless = value;
+            _startupParameters.Window.Chromeless = value;
         }
     }
 
@@ -288,19 +309,19 @@ public partial class PhotinoWindow
         get
         {
             return new Platform.Linux.ChromelessSettings(
-                dragRegionHeight: _startupParameters.ChromelessDragRegionHeight,
-                dragRegionLeftInset: _startupParameters.ChromelessDragRegionLeftInset,
-                dragRegionRightInset: _startupParameters.ChromelessDragRegionRightInset,
-                resizeBorderThickness: _startupParameters.ChromelessResizeBorderThickness);
+                dragRegionHeight: _startupParameters.LinuxChromeless.DragRegionHeight,
+                dragRegionLeftInset: _startupParameters.LinuxChromeless.DragRegionLeftInset,
+                dragRegionRightInset: _startupParameters.LinuxChromeless.DragRegionRightInset,
+                resizeBorderThickness: _startupParameters.LinuxChromeless.ResizeBorderThickness);
         }
         set
         {
             ThrowIfClosedOrInitialized();
 
-            _startupParameters.ChromelessDragRegionHeight = value.DragRegionHeight;
-            _startupParameters.ChromelessDragRegionLeftInset = value.DragRegionLeftInset;
-            _startupParameters.ChromelessDragRegionRightInset = value.DragRegionRightInset;
-            _startupParameters.ChromelessResizeBorderThickness = value.ResizeBorderThickness;
+            _startupParameters.LinuxChromeless.DragRegionHeight = value.DragRegionHeight;
+            _startupParameters.LinuxChromeless.DragRegionLeftInset = value.DragRegionLeftInset;
+            _startupParameters.LinuxChromeless.DragRegionRightInset = value.DragRegionRightInset;
+            _startupParameters.LinuxChromeless.ResizeBorderThickness = value.ResizeBorderThickness;
         }
     }
 
@@ -318,7 +339,7 @@ public partial class PhotinoWindow
         get
         {
             if (_nativeInstance == IntPtr.Zero)
-                return _startupParameters.Transparent;
+                return _startupParameters.Window.Transparent;
 
             return Dispatcher.Invoke(static nativeInstance =>
             {
@@ -332,7 +353,7 @@ public partial class PhotinoWindow
 
             if (_nativeInstance == IntPtr.Zero)
             {
-                _startupParameters.Transparent = value;
+                _startupParameters.Window.Transparent = value;
                 return;
             }
 
@@ -354,12 +375,12 @@ public partial class PhotinoWindow
     /// </summary>
     public bool UseNativeWindowOwner
     {
-        get => _startupParameters.UseNativeWindowOwner;
+        get => _startupParameters.Window.UseNativeWindowOwner;
         set
         {
             ThrowIfClosedOrInitialized();
 
-            _startupParameters.UseNativeWindowOwner = value;
+            _startupParameters.Window.UseNativeWindowOwner = value;
         }
     }
 
@@ -371,7 +392,7 @@ public partial class PhotinoWindow
         get
         {
             if (_nativeInstance == IntPtr.Zero)
-                return _startupParameters.WindowState;
+                return _startupParameters.Geometry.WindowState;
 
             return Dispatcher.Invoke(static nativeInstance =>
             {
@@ -387,7 +408,7 @@ public partial class PhotinoWindow
 
             if (_nativeInstance == IntPtr.Zero)
             {
-                _startupParameters.WindowState = value;
+                _startupParameters.Geometry.WindowState = value;
                 return;
             }
 
@@ -437,7 +458,7 @@ public partial class PhotinoWindow
         get
         {
             if (_nativeInstance == IntPtr.Zero)
-                return _startupParameters.WindowIconFile;
+                return _startupParameters.Window.IconFile;
 
             return Dispatcher.Invoke(static nativeInstance =>
             {
@@ -463,7 +484,7 @@ public partial class PhotinoWindow
             {
                 if (_nativeInstance == IntPtr.Zero)
                 {
-                    _startupParameters.WindowIconFile = null;
+                    _startupParameters.Window.IconFile = null;
                     return;
                 }
 
@@ -482,7 +503,7 @@ public partial class PhotinoWindow
 
             if (_nativeInstance == IntPtr.Zero)
             {
-                _startupParameters.WindowIconFile = iconFile;
+                _startupParameters.Window.IconFile = iconFile;
                 return;
             }
 
@@ -503,7 +524,7 @@ public partial class PhotinoWindow
         get
         {
             if (_nativeInstance == IntPtr.Zero)
-                return new Point(_startupParameters.Left, _startupParameters.Top);
+                return new Point(_startupParameters.Geometry.Left, _startupParameters.Geometry.Top);
 
             return Dispatcher.Invoke(static nativeInstance =>
             {
@@ -517,10 +538,10 @@ public partial class PhotinoWindow
 
             if (_nativeInstance == IntPtr.Zero)
             {
-                _startupParameters.Left = value.X;
-                _startupParameters.Top = value.Y;
-                _startupParameters.UseOsDefaultLocation = false;
-                _startupParameters.CenterOnInitialize = false;
+                _startupParameters.Geometry.Left = value.X;
+                _startupParameters.Geometry.Top = value.Y;
+                _startupParameters.Geometry.UseOsDefaultLocation = false;
+                _startupParameters.Geometry.CenterOnInitialize = false;
                 return;
             }
 
@@ -565,8 +586,8 @@ public partial class PhotinoWindow
 
             if (_nativeInstance == IntPtr.Zero)
             {
-                _startupParameters.MaxWidth = value.X;
-                _startupParameters.MaxHeight = value.Y;
+                _startupParameters.Geometry.MaxWidth = value.X;
+                _startupParameters.Geometry.MaxHeight = value.Y;
             }
             else
             {
@@ -636,8 +657,8 @@ public partial class PhotinoWindow
 
             if (_nativeInstance == IntPtr.Zero)
             {
-                _startupParameters.MinWidth = value.X;
-                _startupParameters.MinHeight = value.Y;
+                _startupParameters.Geometry.MinWidth = value.X;
+                _startupParameters.Geometry.MinHeight = value.Y;
             }
             else
             {
@@ -707,7 +728,7 @@ public partial class PhotinoWindow
         get
         {
             if (_nativeInstance == IntPtr.Zero)
-                return _startupParameters.Resizable;
+                return _startupParameters.Geometry.Resizable;
 
             return Dispatcher.Invoke(static nativeInstance =>
             {
@@ -721,7 +742,7 @@ public partial class PhotinoWindow
 
             if (_nativeInstance == IntPtr.Zero)
             {
-                _startupParameters.Resizable = value;
+                _startupParameters.Geometry.Resizable = value;
                 return;
             }
 
@@ -742,7 +763,7 @@ public partial class PhotinoWindow
         get
         {
             if (_nativeInstance == IntPtr.Zero)
-                return new Size(_startupParameters.Width, _startupParameters.Height);
+                return new Size(_startupParameters.Geometry.Width, _startupParameters.Geometry.Height);
 
             return Dispatcher.Invoke(static nativeInstance =>
             {
@@ -756,9 +777,9 @@ public partial class PhotinoWindow
 
             if (_nativeInstance == IntPtr.Zero)
             {
-                _startupParameters.Width = value.Width;
-                _startupParameters.Height = value.Height;
-                _startupParameters.UseOsDefaultSize = false;
+                _startupParameters.Geometry.Width = value.Width;
+                _startupParameters.Geometry.Height = value.Height;
+                _startupParameters.Geometry.UseOsDefaultSize = false;
                 return;
             }
 
@@ -785,7 +806,7 @@ public partial class PhotinoWindow
 
             if (_nativeInstance == IntPtr.Zero)
             {
-                _startupParameters.Title = value;
+                _startupParameters.Window.Title = value;
                 _title = value;
                 return;
             }
@@ -837,7 +858,7 @@ public partial class PhotinoWindow
         get
         {
             if (_nativeInstance == IntPtr.Zero)
-                return _startupParameters.Topmost;
+                return _startupParameters.Geometry.Topmost;
 
             return Dispatcher.Invoke(static nativeInstance =>
             {
@@ -851,7 +872,7 @@ public partial class PhotinoWindow
 
             if (_nativeInstance == IntPtr.Zero)
             {
-                _startupParameters.Topmost = value;
+                _startupParameters.Geometry.Topmost = value;
                 return;
             }
 
@@ -876,15 +897,15 @@ public partial class PhotinoWindow
     {
         get
         {
-            return _startupParameters.UseOsDefaultLocation;
+            return _startupParameters.Geometry.UseOsDefaultLocation;
         }
         set
         {
             ThrowIfClosedOrInitialized();
 
-            _startupParameters.UseOsDefaultLocation = value;
+            _startupParameters.Geometry.UseOsDefaultLocation = value;
             if (value)
-                _startupParameters.CenterOnInitialize = false;
+                _startupParameters.Geometry.CenterOnInitialize = false;
         }
     }
 
@@ -902,13 +923,13 @@ public partial class PhotinoWindow
     {
         get
         {
-            return _startupParameters.UseOsDefaultSize;
+            return _startupParameters.Geometry.UseOsDefaultSize;
         }
         set
         {
             ThrowIfClosedOrInitialized();
 
-            _startupParameters.UseOsDefaultSize = value;
+            _startupParameters.Geometry.UseOsDefaultSize = value;
         }
     }
 
@@ -1063,19 +1084,19 @@ public partial class PhotinoWindow
     private void PrepareAndValidateStartupParameters()
     {
         // Fill fixed-size array of custom scheme names
-        Array.Clear(_startupParameters.CustomSchemeNames);
+        Array.Clear(_startupParameters.Browser.CustomSchemeNames);
         var i = 0;
         foreach (var pair in CustomSchemes)
         {
             var scheme = pair.Key;
             if (!IsValidSchemeName(scheme))
                 continue;
-            _startupParameters.CustomSchemeNames[i++] = scheme;
-            if (i == _startupParameters.CustomSchemeNames.Length)
+            _startupParameters.Browser.CustomSchemeNames[i++] = scheme;
+            if (i == _startupParameters.Browser.CustomSchemeNames.Length)
                 break;
         }
 
-        _startupParameters.Title = _title ?? DefaultTitle;
+        _startupParameters.Window.Title = _title ?? DefaultTitle;
         _startupParameters.NativeParent = Parent?._nativeInstance ?? IntPtr.Zero;
 
         Debug.Assert(_startupParameters.Size == PhotinoWindowNativeParameters.NativeSize);

@@ -21,13 +21,13 @@ partial class PhotinoWindow
     {
         get
         {
-            return _startupParameters.StartString;
+            return _startupParameters.Browser.StartString;
         }
         set
         {
             ThrowIfClosedOrInitialized();
 
-            _startupParameters.StartString = value;
+            _startupParameters.Browser.StartString = value;
         }
     }
 
@@ -46,13 +46,13 @@ partial class PhotinoWindow
     {
         get
         {
-            return _startupParameters.StartUrl;
+            return _startupParameters.Browser.StartUrl;
         }
         set
         {
             ThrowIfClosedOrInitialized();
 
-            _startupParameters.StartUrl = value;
+            _startupParameters.Browser.StartUrl = value;
         }
     }
 
@@ -65,7 +65,7 @@ partial class PhotinoWindow
         get
         {
             if (_nativeInstance == IntPtr.Zero)
-                return _startupParameters.ContextMenuEnabled;
+                return _startupParameters.Browser.ContextMenuEnabled;
 
             return Dispatcher.Invoke(static nativeInstance =>
             {
@@ -79,7 +79,7 @@ partial class PhotinoWindow
 
             if (_nativeInstance == IntPtr.Zero)
             {
-                _startupParameters.ContextMenuEnabled = value;
+                _startupParameters.Browser.ContextMenuEnabled = value;
                 return;
             }
 
@@ -99,7 +99,7 @@ partial class PhotinoWindow
         get
         {
             if (_nativeInstance == IntPtr.Zero)
-                return _startupParameters.ZoomEnabled;
+                return _startupParameters.Browser.ZoomEnabled;
 
             return Dispatcher.Invoke(static nativeInstance =>
             {
@@ -113,7 +113,7 @@ partial class PhotinoWindow
 
             if (_nativeInstance == IntPtr.Zero)
             {
-                _startupParameters.ZoomEnabled = value;
+                _startupParameters.Browser.ZoomEnabled = value;
                 return;
             }
 
@@ -136,7 +136,7 @@ partial class PhotinoWindow
         get
         {
             if (_nativeInstance == IntPtr.Zero)
-                return _startupParameters.StatusBarEnabled;
+                return _startupParameters.Browser.StatusBarEnabled;
 
             return Dispatcher.Invoke(static nativeInstance =>
             {
@@ -150,7 +150,7 @@ partial class PhotinoWindow
 
             if (_nativeInstance == IntPtr.Zero)
             {
-                _startupParameters.StatusBarEnabled = value;
+                _startupParameters.Browser.StatusBarEnabled = value;
                 return;
             }
 
@@ -170,7 +170,7 @@ partial class PhotinoWindow
         get
         {
             if (_nativeInstance == IntPtr.Zero)
-                return _startupParameters.DevToolsEnabled;
+                return _startupParameters.Browser.DevToolsEnabled;
 
             return Dispatcher.Invoke(static nativeInstance =>
             {
@@ -184,7 +184,7 @@ partial class PhotinoWindow
 
             if (_nativeInstance == IntPtr.Zero)
             {
-                _startupParameters.DevToolsEnabled = value;
+                _startupParameters.Browser.DevToolsEnabled = value;
                 return;
             }
 
@@ -205,7 +205,7 @@ partial class PhotinoWindow
         get
         {
             if (_nativeInstance == IntPtr.Zero)
-                return _startupParameters.Zoom;
+                return _startupParameters.Browser.Zoom;
 
             return Dispatcher.Invoke(static nativeInstance =>
             {
@@ -219,7 +219,7 @@ partial class PhotinoWindow
 
             if (_nativeInstance == IntPtr.Zero)
             {
-                _startupParameters.Zoom = value;
+                _startupParameters.Browser.Zoom = value;
                 return;
             }
 
@@ -235,7 +235,7 @@ partial class PhotinoWindow
         get
         {
             if (_nativeInstance == IntPtr.Zero)
-                return _startupParameters.UserAgent;
+                return _startupParameters.Browser.UserAgent;
 
             return Dispatcher.Invoke(static nativeInstance =>
             {
@@ -257,7 +257,7 @@ partial class PhotinoWindow
         {
             ThrowIfClosedOrInitialized();
 
-            _startupParameters.UserAgent = value;
+            _startupParameters.Browser.UserAgent = value;
         }
     }
 
@@ -287,13 +287,13 @@ partial class PhotinoWindow
     {
         get
         {
-            return _startupParameters.BrowserControlInitParameters;
+            return _startupParameters.Browser.ControlInitParameters;
         }
         set
         {
             ThrowIfClosedOrInitialized();
 
-            _startupParameters.BrowserControlInitParameters = value;
+            _startupParameters.Browser.ControlInitParameters = value;
         }
     }
 
@@ -309,7 +309,7 @@ partial class PhotinoWindow
         get
         {
             if (_nativeInstance == IntPtr.Zero)
-                return _startupParameters.GrantBrowserPermissions;
+                return _startupParameters.Browser.GrantBrowserPermissions;
 
             return Dispatcher.Invoke(static nativeInstance =>
             {
@@ -321,7 +321,7 @@ partial class PhotinoWindow
         {
             ThrowIfClosedOrInitialized();
 
-            _startupParameters.GrantBrowserPermissions = value;
+            _startupParameters.Browser.GrantBrowserPermissions = value;
         }
     }
 
@@ -330,7 +330,7 @@ partial class PhotinoWindow
         get
         {
             if (_nativeInstance == IntPtr.Zero)
-                return _startupParameters.MediaAutoplayEnabled;
+                return _startupParameters.Browser.MediaAutoplayEnabled;
 
             return Dispatcher.Invoke(static nativeInstance =>
             {
@@ -342,7 +342,7 @@ partial class PhotinoWindow
         {
             ThrowIfClosedOrInitialized();
 
-            _startupParameters.MediaAutoplayEnabled = value;
+            _startupParameters.Browser.MediaAutoplayEnabled = value;
         }
     }
 
@@ -351,7 +351,7 @@ partial class PhotinoWindow
         get
         {
             if (_nativeInstance == IntPtr.Zero)
-                return _startupParameters.FileSystemAccessEnabled;
+                return _startupParameters.Browser.FileSystemAccessEnabled;
 
             return Dispatcher.Invoke(static nativeInstance =>
             {
@@ -363,7 +363,7 @@ partial class PhotinoWindow
         {
             ThrowIfClosedOrInitialized();
 
-            _startupParameters.FileSystemAccessEnabled = value;
+            _startupParameters.Browser.FileSystemAccessEnabled = value;
         }
     }
 
@@ -372,7 +372,7 @@ partial class PhotinoWindow
         get
         {
             if (_nativeInstance == IntPtr.Zero)
-                return _startupParameters.WebSecurityEnabled;
+                return _startupParameters.Browser.WebSecurityEnabled;
 
             return Dispatcher.Invoke(static nativeInstance =>
             {
@@ -384,7 +384,7 @@ partial class PhotinoWindow
         {
             ThrowIfClosedOrInitialized();
 
-            _startupParameters.WebSecurityEnabled = value;
+            _startupParameters.Browser.WebSecurityEnabled = value;
         }
     }
 
@@ -393,7 +393,7 @@ partial class PhotinoWindow
         get
         {
             if (_nativeInstance == IntPtr.Zero)
-                return _startupParameters.JavascriptClipboardAccessEnabled;
+                return _startupParameters.Browser.JavascriptClipboardAccessEnabled;
 
             return Dispatcher.Invoke(static nativeInstance =>
             {
@@ -405,7 +405,7 @@ partial class PhotinoWindow
         {
             ThrowIfClosedOrInitialized();
 
-            _startupParameters.JavascriptClipboardAccessEnabled = value;
+            _startupParameters.Browser.JavascriptClipboardAccessEnabled = value;
         }
     }
 
@@ -414,7 +414,7 @@ partial class PhotinoWindow
         get
         {
             if (_nativeInstance == IntPtr.Zero)
-                return _startupParameters.MediaStreamEnabled;
+                return _startupParameters.Browser.MediaStreamEnabled;
 
             return Dispatcher.Invoke(static nativeInstance =>
             {
@@ -426,7 +426,7 @@ partial class PhotinoWindow
         {
             ThrowIfClosedOrInitialized();
 
-            _startupParameters.MediaStreamEnabled = value;
+            _startupParameters.Browser.MediaStreamEnabled = value;
         }
     }
 
@@ -435,7 +435,7 @@ partial class PhotinoWindow
         get
         {
             if (_nativeInstance == IntPtr.Zero)
-                return _startupParameters.IgnoreCertificateErrorsEnabled;
+                return _startupParameters.Browser.IgnoreCertificateErrorsEnabled;
 
             return Dispatcher.Invoke(static nativeInstance =>
             {
@@ -447,7 +447,7 @@ partial class PhotinoWindow
         {
             ThrowIfClosedOrInitialized();
 
-            _startupParameters.IgnoreCertificateErrorsEnabled = value;
+            _startupParameters.Browser.IgnoreCertificateErrorsEnabled = value;
         }
     }
 
@@ -456,7 +456,7 @@ partial class PhotinoWindow
         get
         {
             if (_nativeInstance == IntPtr.Zero)
-                return _startupParameters.SmoothScrollingEnabled;
+                return _startupParameters.Browser.SmoothScrollingEnabled;
 
             return Dispatcher.Invoke(static nativeInstance =>
             {
@@ -468,7 +468,7 @@ partial class PhotinoWindow
         {
             ThrowIfClosedOrInitialized();
 
-            _startupParameters.SmoothScrollingEnabled = value;
+            _startupParameters.Browser.SmoothScrollingEnabled = value;
         }
     }
 
@@ -482,13 +482,13 @@ partial class PhotinoWindow
     {
         get
         {
-            return _startupParameters.UserDataFolder;
+            return _startupParameters.Browser.UserDataFolder;
         }
         set
         {
             ThrowIfClosedOrInitialized();
 
-            _startupParameters.UserDataFolder = value;
+            _startupParameters.Browser.UserDataFolder = value;
         }
     }
 }
