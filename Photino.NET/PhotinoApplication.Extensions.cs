@@ -81,6 +81,7 @@ public static class PhotinoApplicationExtensions
             static PhotinoLinuxRuntimeInfo GetLinuxRuntimeInfo(PhotinoNativeRuntimeInfo nativeInfo)
             {
                 return new PhotinoLinuxRuntimeInfo(
+                    PtrToStringUTF8(nativeInfo.Linux.GlibcVersion),
                     PtrToStringUTF8(nativeInfo.Linux.GtkVersion),
                     PtrToStringUTF8(nativeInfo.Linux.WebKitGtkApiTarget),
                     PtrToStringUTF8(nativeInfo.Linux.WebKitGtkRuntimeVersion)
