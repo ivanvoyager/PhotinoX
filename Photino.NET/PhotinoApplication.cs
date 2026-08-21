@@ -363,4 +363,9 @@ public sealed partial class PhotinoApplication
 
         return "PhotinoX";
     }
+
+    internal void ResetCurrent()
+    {
+        Interlocked.CompareExchange(ref s_current, null, this);
+    }
 }

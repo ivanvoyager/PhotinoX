@@ -19,13 +19,8 @@ public static class PhotinoApplicationExtensions
         /// The native runtime version string, or <see langword="null"/> when the native runtime
         /// does not provide version information.
         /// </returns>
-        /// <exception cref="ArgumentNullException">
-        /// Thrown when <paramref name="application"/> is <see langword="null"/>.
-        /// </exception>
         public string? GetNativeVersion()
         {
-            ArgumentNullException.ThrowIfNull(application);
-
             return PtrToStringUTF8(Photino_GetNativeVersion());
         }
 
@@ -36,17 +31,12 @@ public static class PhotinoApplicationExtensions
         /// A <see cref="PhotinoRuntimeInfo"/> value containing operating system,
         /// process, native runtime, WebView engine, and platform-specific runtime details.
         /// </returns>
-        /// <exception cref="ArgumentNullException">
-        /// Thrown when <paramref name="application"/> is <see langword="null"/>.
-        /// </exception>
         /// <exception cref="InvalidOperationException">
         /// Thrown when the current operating system is not supported by PhotinoX,
         /// or when the native runtime information ABI does not match the managed ABI.
         /// </exception>
         public PhotinoRuntimeInfo GetRuntimeInfo()
         {
-            ArgumentNullException.ThrowIfNull(application);
-
             var nativeInfo = Photino_GetRuntimeInfo();
             var size = Marshal.SizeOf<PhotinoNativeRuntimeInfo>();
             Debug.Assert(size == nativeInfo.Size && nativeInfo.AbiVersion == PhotinoNativeRuntimeInfo.NativeAbiVersion);

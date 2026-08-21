@@ -17,7 +17,7 @@ PhotinoX is a maintained fork of Photino.NET positioned between Electron/Tauri-s
 ## What is PhotinoX?
 
 PhotinoX builds on the original Photino design: native desktop windows hosted by modern **Web UI technologies** (Blazor, React, Vue, Angular, etc.), without bundling a full Chromium runtime.  
-It relies entirely on **OS‑native WebView engines**, keeping apps small and efficient.
+It relies entirely on **OS-native WebView engines**, keeping apps small and efficient.
 
 The core model is native-first: `PhotinoX.Native` owns the platform windowing and WebView integration, while the .NET layer exposes that native runtime through `PhotinoApplication`, `PhotinoDispatcher`, and `PhotinoWindow`.
 
@@ -28,13 +28,13 @@ PhotinoApplication / PhotinoDispatcher / PhotinoWindow
     ↓
 PhotinoX.Native
     ↓
-OS-native WebView:
-    Windows: WebView2
-    macOS: WKWebView
-    Linux: WebKitGTK 4.1
+OS-native WebView
+    ├── Windows: WebView2
+    ├── macOS: WKWebView
+    └── Linux: WebKitGTK 4.1
 ```
 
-> **Note:** PhotinoX is an independent fork of [tryphotino/photino.NET](https://github.com/tryphotino/photino.NET) under the Apache‑2.0 license and is **not affiliated** with the original project or organization.
+> **Note:** PhotinoX is an independent fork of [tryphotino/photino.NET](https://github.com/tryphotino/photino.NET) under the Apache-2.0 license and is **not affiliated** with the original project or organization.
 
 ## How PhotinoX differs from Photino.NET
 
@@ -49,7 +49,7 @@ Compared with the original Photino.NET managed API, PhotinoX introduces an expli
 | `PhotinoWindow.WaitForClose()` creates the window and starts the message loop. | `PhotinoApplication.Run(window)` owns application lifetime and message-loop execution. |
 | Window creation and message-loop state are controlled from `PhotinoWindow`. | `PhotinoApplication.Run(window)` shows the main window; explicit window creation/showing is available through `PhotinoWindow.Show()`. |
 | Window lifetime is centered around individual `PhotinoWindow` instances. | `PhotinoApplication` tracks open windows through `MainWindow` and `Windows`. |
-| `PhotinoWindow.Invoke(...)` dispatches through window-level invoke helpers. | UI-thread dispatching is centralized through `PhotinoApplication.Current.Dispatcher`, including `CheckAccess`, `Invoke`, `TryInvoke`, `BeginInvoke`, and `InvokeAsync`. |
+| `PhotinoWindow.Invoke(...)` dispatches through window-level invoke helpers. | UI-thread dispatching is centralized through `PhotinoApplication.Dispatcher`, including `CheckAccess`, `Invoke`, `TryInvoke`, `BeginInvoke`, and `InvokeAsync`. |
 | Notification display is tied to window-level APIs. | Notifications are exposed through `PhotinoApplication`, with application-level enabled state and notification events. |
 | Shutdown behavior is implicit around the native message loop. | Shutdown behavior is controlled by `PhotinoShutdownMode`, `PhotinoApplication.Shutdown(...)`, and `ShutdownRequested`. |
 
@@ -71,6 +71,8 @@ var window = new PhotinoWindow()
 
 return app.Run(window);
 ```
+
+On Windows, `PhotinoApplication.Run()` performs native window initialization and runs the message loop on an STA thread when the calling thread is not an STA thread.
 
 `PhotinoDispatcher` provides application-level UI-thread dispatching. `Invoke(...)` executes work on the dispatcher thread and throws when scheduling fails, while `TryInvoke(...)` returns `false` for scheduling failures. `BeginInvoke(...)` reports scheduling success as `bool`, and `InvokeAsync(...)` returns a task that completes when the dispatched callback completes, is canceled, or faults if scheduling fails. Cancellation-aware overloads accept `CancellationToken`, and async callback overloads use `ValueTask` / `ValueTask<TResult>` for allocation-friendly completion paths. State-based overloads are available to avoid closure captures.
 
@@ -211,7 +213,7 @@ On Linux Wayland, top-level window position is compositor-controlled. Move notif
 
 ## Core (ecosystem)
 
-- [**PhotinoX.App**](https://github.com/ivanvoyager/PhotinoX.App) - Application composition layer for PhotinoX desktop applications.
+- [**PhotinoX.App**](https://github.com/ivanvoyager/PhotinoX.App) - application composition layer for PhotinoX desktop applications.
 - [**PhotinoX.Native**](https://github.com/ivanvoyager/PhotinoX.Native) - native binaries for Windows/macOS/Linux.
 - [**PhotinoX.Blazor**](https://github.com/ivanvoyager/PhotinoX.Blazor) - Blazor integration for native desktop apps.
 - [**PhotinoX.Server**](https://github.com/ivanvoyager/PhotinoX.Server) - optional local static-file server for SPA/static assets.
@@ -264,4 +266,4 @@ Issues and PRs are welcome. Keep PRs focused, minimal, and consistent with the r
 
 ## License
 
-PhotinoX is licensed under **Apache‑2.0**.
+PhotinoX is licensed under **Apache-2.0**.
