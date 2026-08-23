@@ -737,7 +737,7 @@ partial class PhotinoWindow
     /// Use <see cref="BeginWindowDrag()"/> and <see cref="BeginWindowResize(PhotinoWindowEdge)"/>
     /// to drive custom chrome interactions where supported.
     /// On Linux, native chromeless drag and resize are configured through
-    /// <see cref="SetLinuxChromelessDragRegion(int, int, int)"/>,
+    /// <see cref="SetLinuxChromelessDragRegion(int, int, int, int)"/>,
     /// <see cref="SetLinuxChromelessResizeBorderThickness(int)"/>, or
     /// <see cref="LinuxChromelessSettings"/>.
     /// </remarks>
@@ -861,7 +861,7 @@ partial class PhotinoWindow
     /// On Linux, this generic WebView-message entry point is a no-op because GTK and
     /// Wayland require the originating trusted native button event. For Linux
     /// chromeless windows, configure the native drag region through
-    /// <see cref="SetLinuxChromelessDragRegion(int, int, int)"/> or
+    /// <see cref="SetLinuxChromelessDragRegion(int, int, int, int)"/> or
     /// <see cref="LinuxChromelessSettings"/>.
     /// </remarks>
     /// <exception cref="InvalidOperationException">
@@ -872,7 +872,7 @@ partial class PhotinoWindow
     /// </returns>
     /// <seealso cref="BeginWindowResize(PhotinoWindowEdge)" />
     /// <seealso cref="SetChromeless(bool)" />
-    /// <seealso cref="SetLinuxChromelessDragRegion(int, int, int)" />
+    /// <seealso cref="SetLinuxChromelessDragRegion(int, int, int, int)" />
     public PhotinoWindow BeginWindowDrag()
     {
         Log($".{nameof(BeginWindowDrag)}()");
