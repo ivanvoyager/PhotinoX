@@ -161,7 +161,7 @@ Notable window lifecycle and API changes in PhotinoX:
 | Window state commands | `Maximize`, `Minimize`, `Restore`, `SetWindowState` |
 | Existing state helpers | `SetFullScreen`, `SetMaximized`, `SetMinimized` |
 | Chromeless window helpers | `BeginWindowDrag`, `BeginWindowResize` |
-| Linux chromeless native hit-test settings | `SetLinuxChromelessDragRegion`, `SetLinuxChromelessResizeBorderThickness`, `LinuxChromelessSettings` |
+| Linux chromeless native hit-test settings | `SetLinuxChromelessDragRegion`, `SetLinuxChromelessDragRegions`, `SetLinuxChromelessResizeBorderThickness`, `LinuxChromelessSettings` |
 | Window/platform state | `IsInitialized`, `IsClosed`, cross-platform `WindowHandle` |
 
 `WindowState` replaces the previous `FullScreen`, `Maximized`, and `Minimized` properties with a single state model. It supports `Normal`, `Minimized`, `Maximized`, and `FullScreen`, and is also used for startup state configuration.
@@ -172,7 +172,33 @@ Window state tracking is native-driven: `StateChanged`, `Maximized`, `Minimized`
 
 `Maximize()`, `Minimize()`, and `Restore()` are new command-style APIs. Existing helpers such as `SetFullScreen(...)`, `SetMaximized(...)`, and `SetMinimized(...)` remain available and update the same underlying native state.
 
-Chromeless windows can use `BeginWindowDrag()` and `BeginWindowResize(...)` for custom title bar and resize implementations on Windows and macOS. On Linux, native chromeless drag and resize hit-test regions are configured through `SetLinuxChromelessDragRegion(...)`, `SetLinuxChromelessResizeBorderThickness(...)`, or the `LinuxChromelessSettings` property. These Linux-specific settings are ignored on Windows and macOS.
+Chromeless windows can use `BeginWindowDrag()` and `BeginWindowResize(...)` for custom title bar and resize implementations on Windows and macOS. On Linux, native chromeless drag and resize use GTK hit testing because Wayland requires the originating native pointer event.
+
+Use `LinuxChromelessSettings` or `SetLinuxChromelessDragRegion(...)` to configure the initial drag region. `SetLinuxChromelessDragRegion(...)` can also replace the current drag region after native window initialization.
+
+For dynamic or complex title bars, use `SetLinuxChromelessDragRegions(...)` to replace all drag and no-drag regions:
+
+```csharp
+window.SetLinuxChromelessDragRegions(
+    dragRegions:
+    [
+        new LayoutRegion(
+            width: 0,
+            height: 44,
+            horizontalAlignment: HorizontalAlignment.Stretch)
+    ],
+    noDragRegions:
+    [
+        new LayoutRegion(
+            width: 120,
+            height: 32,
+            margin: new Thickness(left: 12, top: 6, right: 0, bottom: 0))
+    ]);
+```
+
+No-drag regions take precedence over drag regions. Alignment and margins are resolved against the current WebView client area, allowing regions to adapt when the window is resized. Each call replaces all previously configured drag and no-drag regions.
+
+Use `SetLinuxChromelessResizeBorderThickness(...)` to change the native resize border independently without replacing the current drag regions. These Linux-specific APIs are ignored on Windows and macOS.
 
 ### Custom schemes and startup content
 
