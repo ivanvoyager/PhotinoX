@@ -1,5 +1,4 @@
-﻿using System.Diagnostics;
-using System.Runtime.InteropServices;
+﻿using System.Runtime.InteropServices;
 using ClosedCallback = Photino.NET.NativeDelegates.VoidCallback;
 using ClosingCallback = Photino.NET.NativeDelegates.BoolCallback;
 using ContentLoadedCallback = Photino.NET.NativeDelegates.StringCallback;

@@ -299,11 +299,17 @@ public partial class PhotinoWindow
     }
 
     /// <summary>
-    /// Gets or sets Linux-only native hit-test settings for chromeless windows.
+    /// Gets or sets the initial Linux-only native hit-test settings for chromeless windows.
     /// </summary>
     /// <remarks>
-    /// These settings are ignored on Windows and macOS.
+    /// These settings are ignored on Windows and macOS and can only be changed before
+    /// native window initialization. Use <see cref="SetLinuxChromelessDragRegion(int, int, int, int)"/>,
+    /// <see cref="SetLinuxChromelessDragRegions(IReadOnlyList{LayoutRegion}, IReadOnlyList{LayoutRegion}?)"/>,
+    /// and <see cref="SetLinuxChromelessResizeBorderThickness(int)"/> for runtime updates.
     /// </remarks>
+    /// <exception cref="InvalidOperationException">
+    /// Thrown when setting the value after native window initialization or after the window has been closed.
+    /// </exception>
     public Platform.Linux.ChromelessSettings LinuxChromelessSettings
     {
         get
