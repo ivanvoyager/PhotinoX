@@ -13,11 +13,14 @@ partial class Platform
             /// Initializes Linux-only native hit-test settings for chromeless windows.
             /// </summary>
             /// <param name="dragRegionHeight">
-            /// Height, in logical pixels, of the native drag region measured from the WebView top edge.
+            /// Height, in logical pixels, of the native drag region.
             /// Set to 0 to disable native Linux chromeless drag.
             /// </param>
             /// <param name="dragRegionLeftInset">
             /// Left inset, in logical pixels, excluded from the native drag region.
+            /// </param>
+            /// <param name="dragRegionTopInset">
+            /// Top inset, in logical pixels, excluded from the native drag region.
             /// </param>
             /// <param name="dragRegionRightInset">
             /// Right inset, in logical pixels, excluded from the native drag region.
@@ -30,17 +33,19 @@ partial class Platform
             public ChromelessSettings(
                 int dragRegionHeight = 0,
                 int dragRegionLeftInset = 0,
+                int dragRegionTopInset = 0,
                 int dragRegionRightInset = 0,
                 int resizeBorderThickness = 8)
             {
                 DragRegionHeight = dragRegionHeight;
                 DragRegionLeftInset = dragRegionLeftInset;
+                DragRegionTopInset = dragRegionTopInset;
                 DragRegionRightInset = dragRegionRightInset;
                 ResizeBorderThickness = resizeBorderThickness;
             }
 
             /// <summary>
-            /// Height, in logical pixels, of the native drag region measured from the WebView top edge.
+            /// Height, in logical pixels, of the native drag region.
             /// Set to 0 to disable native Linux chromeless drag.
             /// </summary>
             public int DragRegionHeight { get; init; }
@@ -49,6 +54,11 @@ partial class Platform
             /// Left inset, in logical pixels, excluded from the native drag region.
             /// </summary>
             public int DragRegionLeftInset { get; init; }
+
+            /// <summary>
+            /// Top inset, in logical pixels, excluded from the native drag region.
+            /// </summary>
+            public int DragRegionTopInset { get; init; }
 
             /// <summary>
             /// Right inset, in logical pixels, excluded from the native drag region.

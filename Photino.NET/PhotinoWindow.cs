@@ -311,6 +311,7 @@ public partial class PhotinoWindow
             return new Platform.Linux.ChromelessSettings(
                 dragRegionHeight: _startupParameters.LinuxChromeless.DragRegionHeight,
                 dragRegionLeftInset: _startupParameters.LinuxChromeless.DragRegionLeftInset,
+                dragRegionTopInset: _startupParameters.LinuxChromeless.DragRegionTopInset,
                 dragRegionRightInset: _startupParameters.LinuxChromeless.DragRegionRightInset,
                 resizeBorderThickness: _startupParameters.LinuxChromeless.ResizeBorderThickness);
         }
@@ -320,6 +321,7 @@ public partial class PhotinoWindow
 
             _startupParameters.LinuxChromeless.DragRegionHeight = value.DragRegionHeight;
             _startupParameters.LinuxChromeless.DragRegionLeftInset = value.DragRegionLeftInset;
+            _startupParameters.LinuxChromeless.DragRegionTopInset = value.DragRegionTopInset;
             _startupParameters.LinuxChromeless.DragRegionRightInset = value.DragRegionRightInset;
             _startupParameters.LinuxChromeless.ResizeBorderThickness = value.ResizeBorderThickness;
         }
@@ -1098,8 +1100,6 @@ public partial class PhotinoWindow
 
         _startupParameters.Window.Title = _title ?? DefaultTitle;
         _startupParameters.NativeParent = Parent?._nativeInstance ?? IntPtr.Zero;
-
-        Debug.Assert(_startupParameters.Size == PhotinoWindowNativeParameters.NativeSize);
 
         // Validate startup parameters
         List<string>? errors = null;

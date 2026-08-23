@@ -756,7 +756,7 @@ partial class PhotinoWindow
     /// Sets the Linux-only native chromeless drag region.
     /// </summary>
     /// <param name="height">
-    /// Height, in logical pixels, of the native drag region measured from the WebView top edge.
+    /// Height, in logical pixels, of the native drag region.
     /// Set to 0 to disable native Linux chromeless drag.
     /// </param>
     /// <param name="rightInset">
@@ -766,26 +766,39 @@ partial class PhotinoWindow
     /// <param name="leftInset">
     /// Left inset, in logical pixels, excluded from the native drag region.
     /// </param>
+    /// <param name="topInset">
+    /// Top inset, in logical pixels, excluded from the native drag region.
+    /// </param>
     /// <remarks>
+    /// <para>
     /// Linux only. Ignored on Windows and macOS.
-    ///
+    /// </para>
+    /// <para>
     /// The native drag region is:
-    /// y &lt; height,
+    /// y &gt;= topInset,
+    /// y &lt; topInset + height,
     /// x &gt;= leftInset,
     /// x &lt; WebView width - rightInset.
-    ///
-    /// The parameter order is optimized for the common custom-title-bar layout where
-    /// window buttons are placed on the right side.
+    /// </para>
+    /// <para>
+    /// The parameter order preserves compatibility and is optimized for the common custom-title-bar
+    /// layout where window buttons are placed on the right side.
+    /// </para>
     /// </remarks>
-    public PhotinoWindow SetLinuxChromelessDragRegion(int height, int rightInset = 0, int leftInset = 0)
+    public PhotinoWindow SetLinuxChromelessDragRegion(
+        int height,
+        int rightInset = 0,
+        int leftInset = 0,
+        int topInset = 0)
     {
-        Log($".{nameof(SetLinuxChromelessDragRegion)}({height}, {rightInset}, {leftInset})");
+        Log($".{nameof(SetLinuxChromelessDragRegion)}({height}, {rightInset}, {leftInset}, {topInset})");
 
         LinuxChromelessSettings = LinuxChromelessSettings with
         {
             DragRegionHeight = height,
-            DragRegionRightInset = rightInset,
-            DragRegionLeftInset = leftInset
+            DragRegionLeftInset = leftInset,
+            DragRegionTopInset = topInset,
+            DragRegionRightInset = rightInset
         };
 
         return this;
