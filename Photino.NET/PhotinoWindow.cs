@@ -299,11 +299,17 @@ public partial class PhotinoWindow
     }
 
     /// <summary>
-    /// Gets or sets Linux-only native hit-test settings for chromeless windows.
+    /// Gets or sets the initial Linux-only native hit-test settings for chromeless windows.
     /// </summary>
     /// <remarks>
-    /// These settings are ignored on Windows and macOS.
+    /// These settings are ignored on Windows and macOS and can only be changed before
+    /// native window initialization. Use <see cref="SetLinuxChromelessDragRegion(int, int, int, int)"/>,
+    /// <see cref="SetLinuxChromelessDragRegions(IReadOnlyList{LayoutRegion}, IReadOnlyList{LayoutRegion}?)"/>,
+    /// and <see cref="SetLinuxChromelessResizeBorderThickness(int)"/> for runtime updates.
     /// </remarks>
+    /// <exception cref="InvalidOperationException">
+    /// Thrown when setting the value after native window initialization or after the window has been closed.
+    /// </exception>
     public Platform.Linux.ChromelessSettings LinuxChromelessSettings
     {
         get
@@ -311,6 +317,7 @@ public partial class PhotinoWindow
             return new Platform.Linux.ChromelessSettings(
                 dragRegionHeight: _startupParameters.LinuxChromeless.DragRegionHeight,
                 dragRegionLeftInset: _startupParameters.LinuxChromeless.DragRegionLeftInset,
+                dragRegionTopInset: _startupParameters.LinuxChromeless.DragRegionTopInset,
                 dragRegionRightInset: _startupParameters.LinuxChromeless.DragRegionRightInset,
                 resizeBorderThickness: _startupParameters.LinuxChromeless.ResizeBorderThickness);
         }
@@ -320,6 +327,7 @@ public partial class PhotinoWindow
 
             _startupParameters.LinuxChromeless.DragRegionHeight = value.DragRegionHeight;
             _startupParameters.LinuxChromeless.DragRegionLeftInset = value.DragRegionLeftInset;
+            _startupParameters.LinuxChromeless.DragRegionTopInset = value.DragRegionTopInset;
             _startupParameters.LinuxChromeless.DragRegionRightInset = value.DragRegionRightInset;
             _startupParameters.LinuxChromeless.ResizeBorderThickness = value.ResizeBorderThickness;
         }
@@ -1098,8 +1106,6 @@ public partial class PhotinoWindow
 
         _startupParameters.Window.Title = _title ?? DefaultTitle;
         _startupParameters.NativeParent = Parent?._nativeInstance ?? IntPtr.Zero;
-
-        Debug.Assert(_startupParameters.Size == PhotinoWindowNativeParameters.NativeSize);
 
         // Validate startup parameters
         List<string>? errors = null;

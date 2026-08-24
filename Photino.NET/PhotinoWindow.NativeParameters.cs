@@ -69,7 +69,7 @@ internal struct PhotinoNativeWindowParameters
 internal struct PhotinoNativeLinuxChromelessParameters
 {
     /// <summary>
-    /// LINUX: OPTIONAL: Height, in logical pixels, of the native chromeless drag region measured from the WebView top edge.
+    /// LINUX: OPTIONAL: Height, in logical pixels, of the native chromeless drag region.
     /// Set to 0 to disable native Linux chromeless drag. Default is 0.
     /// </summary>
     [MarshalAs(UnmanagedType.I4)] internal int DragRegionHeight; //#1
@@ -80,16 +80,21 @@ internal struct PhotinoNativeLinuxChromelessParameters
     [MarshalAs(UnmanagedType.I4)] internal int DragRegionLeftInset; //#2
 
     /// <summary>
+    /// LINUX: OPTIONAL: Top inset, in logical pixels, excluded from the native chromeless drag region. Default is 0.
+    /// </summary>
+    [MarshalAs(UnmanagedType.I4)] internal int DragRegionTopInset; //#3
+
+    /// <summary>
     /// LINUX: OPTIONAL: Right inset, in logical pixels, excluded from the native chromeless drag region.
     /// Use this to exclude custom title bar buttons from native drag. Default is 0.
     /// </summary>
-    [MarshalAs(UnmanagedType.I4)] internal int DragRegionRightInset; //#3
+    [MarshalAs(UnmanagedType.I4)] internal int DragRegionRightInset; //#4
 
     /// <summary>
     /// LINUX: OPTIONAL: Thickness, in logical pixels, of the native chromeless resize border measured from the WebView edges.
     /// Set to 0 to disable native Linux chromeless resize borders. Default is 8.
     /// </summary>
-    [MarshalAs(UnmanagedType.I4)] internal int ResizeBorderThickness; //#4
+    [MarshalAs(UnmanagedType.I4)] internal int ResizeBorderThickness; //#5
 }
 
 [StructLayout(LayoutKind.Sequential)]
@@ -219,8 +224,20 @@ internal struct PhotinoNativeBrowserParameters
 [StructLayout(LayoutKind.Sequential)]
 internal struct PhotinoWindowNativeParameters
 {
-    internal const int NativeSize = 424;
-    internal const int NativeAbiVersion = 5;
+    static PhotinoWindowNativeParameters()
+    {
+        if (Marshal.OffsetOf<PhotinoWindowNativeParameters>(nameof(Callbacks)).ToInt32() != 16 ||
+            Marshal.OffsetOf<PhotinoWindowNativeParameters>(nameof(Window)).ToInt32() != 152 ||
+            Marshal.OffsetOf<PhotinoWindowNativeParameters>(nameof(LinuxChromeless)).ToInt32() != 176 ||
+            Marshal.OffsetOf<PhotinoWindowNativeParameters>(nameof(Geometry)).ToInt32() != 196 ||
+            Marshal.OffsetOf<PhotinoWindowNativeParameters>(nameof(Browser)).ToInt32() != 240 ||
+            Marshal.SizeOf<PhotinoWindowNativeParameters>() != 424)
+        {
+            throw new TypeLoadException($"{typeof(PhotinoWindowNativeParameters).FullName} has an invalid native layout.");
+        }
+    }
+
+    internal const int NativeAbiVersion = 6;
     internal const int MaxCustomSchemeNames = 16;
 
     /// <summary>Set when GetParamErrors() is called, prior to initializing the native window. It is a check to make sure the struct matches what C++ is expecting.</summary>

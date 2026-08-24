@@ -1,4 +1,5 @@
-﻿using System.Drawing;
+﻿using System.Buffers;
+using System.Drawing;
 
 using static Photino.NET.NativeMethods;
 
@@ -737,7 +738,8 @@ partial class PhotinoWindow
     /// Use <see cref="BeginWindowDrag()"/> and <see cref="BeginWindowResize(PhotinoWindowEdge)"/>
     /// to drive custom chrome interactions where supported.
     /// On Linux, native chromeless drag and resize are configured through
-    /// <see cref="SetLinuxChromelessDragRegion(int, int, int)"/>,
+    /// <see cref="SetLinuxChromelessDragRegion(int, int, int, int)"/>,
+    /// <see cref="SetLinuxChromelessDragRegions(IReadOnlyList{LayoutRegion}, IReadOnlyList{LayoutRegion}?)"/>,
     /// <see cref="SetLinuxChromelessResizeBorderThickness(int)"/>, or
     /// <see cref="LinuxChromelessSettings"/>.
     /// </remarks>
@@ -756,7 +758,7 @@ partial class PhotinoWindow
     /// Sets the Linux-only native chromeless drag region.
     /// </summary>
     /// <param name="height">
-    /// Height, in logical pixels, of the native drag region measured from the WebView top edge.
+    /// Height, in logical pixels, of the native drag region.
     /// Set to 0 to disable native Linux chromeless drag.
     /// </param>
     /// <param name="rightInset">
@@ -766,27 +768,148 @@ partial class PhotinoWindow
     /// <param name="leftInset">
     /// Left inset, in logical pixels, excluded from the native drag region.
     /// </param>
+    /// <param name="topInset">
+    /// Top inset, in logical pixels, excluded from the native drag region.
+    /// </param>
     /// <remarks>
+    /// <para>
     /// Linux only. Ignored on Windows and macOS.
-    ///
+    /// </para>
+    /// <para>
+    /// Before native window initialization, the region is stored as startup configuration.
+    /// After initialization, the region replaces all currently configured drag and no-drag regions.
+    /// </para>
+    /// <para>
     /// The native drag region is:
-    /// y &lt; height,
+    /// y &gt;= topInset,
+    /// y &lt; topInset + height,
     /// x &gt;= leftInset,
     /// x &lt; WebView width - rightInset.
-    ///
-    /// The parameter order is optimized for the common custom-title-bar layout where
-    /// window buttons are placed on the right side.
+    /// </para>
+    /// <para>
+    /// The parameter order preserves compatibility and is optimized for the common custom-title-bar
+    /// layout where window buttons are placed on the right side.
+    /// </para>
     /// </remarks>
-    public PhotinoWindow SetLinuxChromelessDragRegion(int height, int rightInset = 0, int leftInset = 0)
+    public PhotinoWindow SetLinuxChromelessDragRegion(int height, int rightInset = 0, int leftInset = 0, int topInset = 0)
     {
-        Log($".{nameof(SetLinuxChromelessDragRegion)}({height}, {rightInset}, {leftInset})");
+        Log($".{nameof(SetLinuxChromelessDragRegion)}({height}, {rightInset}, {leftInset}, {topInset})");
+        ThrowIfClosed();
 
-        LinuxChromelessSettings = LinuxChromelessSettings with
+        if (_nativeInstance == IntPtr.Zero)
         {
-            DragRegionHeight = height,
-            DragRegionRightInset = rightInset,
-            DragRegionLeftInset = leftInset
-        };
+            LinuxChromelessSettings = LinuxChromelessSettings with
+            {
+                DragRegionHeight = height,
+                DragRegionLeftInset = leftInset,
+                DragRegionTopInset = topInset,
+                DragRegionRightInset = rightInset
+            };
+
+            return this;
+        }
+
+        if (!Platform.IsLinux)
+            return this;
+
+        var dragRegion = height > 0
+            ? new NativeLayoutRegion(
+                width: 0,
+                height: height,
+                margin: new NativeThickness(leftInset, topInset, rightInset, 0),
+                horizontalAlignment: HorizontalAlignment.Stretch,
+                verticalAlignment: VerticalAlignment.Top)
+            : default;
+
+        Dispatcher.Invoke(static state =>
+        {
+            unsafe
+            {
+                Photino_SetChromelessDragRegions_linux(state.NativeInstance,
+                    state.DragRegion.height > 0 ? &state.DragRegion : null, state.DragRegion.height > 0 ? 1 : 0,
+                    null, 0);
+            }
+        }, (NativeInstance: _nativeInstance, DragRegion: dragRegion));
+
+        return this;
+    }
+
+    /// <summary>
+    /// Replaces the Linux-only native chromeless drag and no-drag regions.
+    /// </summary>
+    /// <param name="dragRegions">
+    /// The regions that initiate native window dragging.
+    /// </param>
+    /// <param name="noDragRegions">
+    /// The optional regions excluded from native window dragging.
+    /// No-drag regions take precedence over drag regions.
+    /// </param>
+    /// <remarks>
+    /// <para>
+    /// Linux only. Ignored on Windows and macOS.
+    /// </para>
+    /// <para>
+    /// Each call replaces all previously configured drag and no-drag regions.
+    /// Region dimensions and margins are measured in logical pixels relative to the WebView client area.
+    /// </para>
+    /// </remarks>
+    /// <returns>
+    /// Returns the current <see cref="PhotinoWindow"/> instance.
+    /// </returns>
+    /// <exception cref="ArgumentNullException">
+    /// Thrown when <paramref name="dragRegions"/> is <see langword="null"/>.
+    /// </exception>
+    /// <exception cref="InvalidOperationException">
+    /// Thrown when the window is not initialized or has already been closed.
+    /// </exception>
+    public PhotinoWindow SetLinuxChromelessDragRegions(IReadOnlyList<LayoutRegion> dragRegions, IReadOnlyList<LayoutRegion>? noDragRegions = null)
+    {
+        ArgumentNullException.ThrowIfNull(dragRegions);
+
+        Log($".{nameof(SetLinuxChromelessDragRegions)}({dragRegions.Count}, {noDragRegions?.Count ?? 0})");
+        ThrowIfClosedOrNotInitialized();
+
+        if (!Platform.IsLinux)
+            return this;
+
+        var dragRegionCount = dragRegions.Count;
+        var noDragRegionCount = noDragRegions?.Count ?? 0;
+
+        var nativeDragRegions = ArrayPool<NativeLayoutRegion>.Shared.Rent(dragRegionCount);
+        var nativeNoDragRegions = ArrayPool<NativeLayoutRegion>.Shared.Rent(noDragRegionCount);
+
+        try
+        {
+            for (var i = 0; i < dragRegionCount; i++)
+                nativeDragRegions[i] = new NativeLayoutRegion(dragRegions[i]);
+
+            for (var i = 0; i < noDragRegionCount; i++)
+                nativeNoDragRegions[i] = new NativeLayoutRegion(noDragRegions![i]);
+
+            Dispatcher.Invoke(static state =>
+            {
+                unsafe
+                {
+                    fixed (NativeLayoutRegion* dragRegionsPointer = state.DragRegions)
+                    fixed (NativeLayoutRegion* noDragRegionsPointer = state.NoDragRegions)
+                    {
+                        Photino_SetChromelessDragRegions_linux(state.NativeInstance,
+                            dragRegionsPointer, state.DragRegionCount,
+                            noDragRegionsPointer, state.NoDragRegionCount);
+                    }
+                }
+            }, (
+                NativeInstance: _nativeInstance,
+                DragRegions: nativeDragRegions,
+                DragRegionCount: dragRegionCount,
+                NoDragRegions: nativeNoDragRegions,
+                NoDragRegionCount: noDragRegionCount));
+        }
+        finally
+        {
+            ArrayPool<NativeLayoutRegion>.Shared.Return(nativeDragRegions);
+            ArrayPool<NativeLayoutRegion>.Shared.Return(nativeNoDragRegions);
+        }
 
         return this;
     }
@@ -804,11 +927,24 @@ partial class PhotinoWindow
     public PhotinoWindow SetLinuxChromelessResizeBorderThickness(int thickness)
     {
         Log($".{nameof(SetLinuxChromelessResizeBorderThickness)}({thickness})");
+        ThrowIfClosed();
 
-        LinuxChromelessSettings = LinuxChromelessSettings with
+        if (_nativeInstance == IntPtr.Zero)
         {
-            ResizeBorderThickness = thickness
-        };
+            LinuxChromelessSettings = LinuxChromelessSettings with
+            {
+                ResizeBorderThickness = thickness
+            };
+
+            return this;
+        }
+
+        if (Platform.IsLinux)
+        {
+            Dispatcher.Invoke(
+                static state => Photino_SetChromelessResizeBorderThickness_linux(state.NativeInstance, state.Thickness),
+                (NativeInstance: _nativeInstance, Thickness: thickness));
+        }
 
         return this;
     }
@@ -848,7 +984,8 @@ partial class PhotinoWindow
     /// On Linux, this generic WebView-message entry point is a no-op because GTK and
     /// Wayland require the originating trusted native button event. For Linux
     /// chromeless windows, configure the native drag region through
-    /// <see cref="SetLinuxChromelessDragRegion(int, int, int)"/> or
+    /// <see cref="SetLinuxChromelessDragRegion(int, int, int, int)"/>,
+    /// <see cref="SetLinuxChromelessDragRegions(IReadOnlyList{LayoutRegion}, IReadOnlyList{LayoutRegion}?)"/>, or
     /// <see cref="LinuxChromelessSettings"/>.
     /// </remarks>
     /// <exception cref="InvalidOperationException">
@@ -859,7 +996,8 @@ partial class PhotinoWindow
     /// </returns>
     /// <seealso cref="BeginWindowResize(PhotinoWindowEdge)" />
     /// <seealso cref="SetChromeless(bool)" />
-    /// <seealso cref="SetLinuxChromelessDragRegion(int, int, int)" />
+    /// <seealso cref="SetLinuxChromelessDragRegion(int, int, int, int)" />
+    /// <seealso cref="SetLinuxChromelessDragRegions(IReadOnlyList{LayoutRegion}, IReadOnlyList{LayoutRegion}?)" />
     public PhotinoWindow BeginWindowDrag()
     {
         Log($".{nameof(BeginWindowDrag)}()");

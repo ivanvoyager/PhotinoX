@@ -88,3 +88,57 @@ public readonly struct Monitor
         return $"{nameof(MonitorArea)}={MonitorArea}, {nameof(WorkArea)}={WorkArea}, {nameof(Scale)}={Scale:0.###}";
     }
 }
+
+[StructLayout(LayoutKind.Sequential)]
+internal readonly struct NativeThickness
+{
+    internal readonly int left;
+    internal readonly int top;
+    internal readonly int right;
+    internal readonly int bottom;
+
+    internal NativeThickness(int left, int top, int right, int bottom)
+    {
+        this.left = left;
+        this.top = top;
+        this.right = right;
+        this.bottom = bottom;
+    }
+
+    internal NativeThickness(Thickness thickness)
+    {
+        left = thickness.Left;
+        top = thickness.Top;
+        right = thickness.Right;
+        bottom = thickness.Bottom;
+    }
+}
+
+[StructLayout(LayoutKind.Sequential)]
+internal readonly struct NativeLayoutRegion
+{
+    internal readonly int width;
+    internal readonly int height;
+    internal readonly NativeThickness margin;
+    internal readonly HorizontalAlignment horizontalAlignment;
+    internal readonly VerticalAlignment verticalAlignment;
+
+    internal NativeLayoutRegion(int width, int height, NativeThickness margin,
+        HorizontalAlignment horizontalAlignment, VerticalAlignment verticalAlignment)
+    {
+        this.width = width;
+        this.height = height;
+        this.margin = margin;
+        this.horizontalAlignment = horizontalAlignment;
+        this.verticalAlignment = verticalAlignment;
+    }
+
+    internal NativeLayoutRegion(LayoutRegion region)
+    {
+        width = region.Width;
+        height = region.Height;
+        margin = new NativeThickness(region.Margin);
+        horizontalAlignment = region.HorizontalAlignment;
+        verticalAlignment = region.VerticalAlignment;
+    }
+}
