@@ -15,7 +15,6 @@ internal static class Program
         DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
     };
 
-
     [STAThread]
     private static int Main()
     {

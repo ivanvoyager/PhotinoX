@@ -16,12 +16,19 @@ namespace Photino.NET;
 /// </remarks>
 public sealed partial class PhotinoApplication
 {
+    private static readonly string s_defaultApplicationName = GetDefaultApplicationName();
+
     private PhotinoApplicationNativeParameters _startupParameters = new()
     {
         Size = Marshal.SizeOf<PhotinoApplicationNativeParameters>(),
         AbiVersion = PhotinoApplicationNativeParameters.NativeAbiVersion,
 
-        NotificationsEnabled = true
+        Options = new()
+        {
+            ApplicationName = s_defaultApplicationName,
+            NotificationRegistrationId = s_defaultApplicationName,
+            NotificationsEnabled = true
+        }
     };
 
     private static PhotinoApplication? s_current;
@@ -50,18 +57,21 @@ public sealed partial class PhotinoApplication
             ThrowApplicationAlreadyCreated();
         }
 
-        _startupParameters.ApplicationName =
-            _startupParameters.NotificationRegistrationId = GetDefaultApplicationName();
+        _startupParameters.Callbacks = new()
+        {
+            StartupHandler = OnStartup,
+            ShutdownRequestedHandler = OnShutdownRequested,
+            ExitHandler = OnExit
+        };
 
-        _startupParameters.StartupHandler = OnStartup;
-        _startupParameters.ShutdownRequestedHandler = OnShutdownRequested;
-        _startupParameters.ExitHandler = OnExit;
-
-        _startupParameters.NotificationActivatedHandler = OnNotificationActivated;
-        _startupParameters.NotificationActionActivatedHandler = OnNotificationActionActivated;
-        _startupParameters.NotificationInputActivatedHandler = OnNotificationInputActivated;
-        _startupParameters.NotificationDismissedHandler = OnNotificationDismissed;
-        _startupParameters.NotificationFailedHandler = OnNotificationFailed;
+        _startupParameters.NotificationCallbacks = new()
+        {
+            NotificationActivatedHandler = OnNotificationActivated,
+            NotificationActionActivatedHandler = OnNotificationActionActivated,
+            NotificationInputActivatedHandler = OnNotificationInputActivated,
+            NotificationDismissedHandler = OnNotificationDismissed,
+            NotificationFailedHandler = OnNotificationFailed
+        };
     }
 
     /// <summary>
@@ -76,12 +86,12 @@ public sealed partial class PhotinoApplication
     /// </exception>
     public string? Name
     {
-        get => _startupParameters.ApplicationName;
+        get => _startupParameters.Options.ApplicationName;
         set
         {
             ThrowIfRunning();
 
-            _startupParameters.ApplicationName = value;
+            _startupParameters.Options.ApplicationName = value;
         }
     }
 
@@ -97,12 +107,12 @@ public sealed partial class PhotinoApplication
     /// </exception>
     public string? IconPath
     {
-        get => _startupParameters.ApplicationIconPath;
+        get => _startupParameters.Options.ApplicationIconPath;
         set
         {
             ThrowIfRunning();
 
-            _startupParameters.ApplicationIconPath = value;
+            _startupParameters.Options.ApplicationIconPath = value;
         }
     }
 
@@ -282,7 +292,6 @@ public sealed partial class PhotinoApplication
             }
         }
 
-        Debug.Assert(_startupParameters.Size == 104);
         Volatile.Write(ref _isInMainLoop, 1);
         try
         {

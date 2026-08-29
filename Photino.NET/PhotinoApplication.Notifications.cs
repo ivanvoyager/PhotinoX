@@ -41,7 +41,7 @@ partial class PhotinoApplication
         get
         {
             if (!IsRunning)
-                return _startupParameters.NotificationsEnabled;
+                return _startupParameters.Options.NotificationsEnabled;
 
             return Dispatcher.Invoke(static () =>
             {
@@ -51,7 +51,7 @@ partial class PhotinoApplication
         }
         set
         {
-            _startupParameters.NotificationsEnabled = value;
+            _startupParameters.Options.NotificationsEnabled = value;
 
             if (!IsRunning)
                 return;
@@ -77,12 +77,12 @@ partial class PhotinoApplication
     /// </exception>
     public string? NotificationRegistrationId
     {
-        get => _startupParameters.NotificationRegistrationId;
+        get => _startupParameters.Options.NotificationRegistrationId;
         set
         {
             ThrowIfRunning();
 
-            _startupParameters.NotificationRegistrationId = value;
+            _startupParameters.Options.NotificationRegistrationId = value;
         }
     }
 

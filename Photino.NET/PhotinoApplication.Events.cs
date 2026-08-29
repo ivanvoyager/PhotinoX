@@ -14,7 +14,8 @@ partial class PhotinoApplication
     /// <summary>
     /// Invokes registered handlers before the native application message loop starts.
     /// </summary>
-    internal void OnStartup()
+    /// <param name="state">The callback state.</param>
+    internal void OnStartup(IntPtr state)
     {
         Debug.Assert(_notificationStates.IsEmpty);
         InvokeNativeEvent(Startup);
@@ -34,10 +35,11 @@ partial class PhotinoApplication
     /// Invokes registered handlers when application shutdown is requested.
     /// </summary>
     /// <param name="reason">The reason for the shutdown request.</param>
+    /// <param name="state">The callback state.</param>
     /// <returns>
     /// <c>1</c> to cancel shutdown; otherwise, <c>0</c>.
     /// </returns>
-    internal byte OnShutdownRequested(PhotinoShutdownRequestReason reason)
+    internal byte OnShutdownRequested(PhotinoShutdownRequestReason reason, IntPtr state)
     {
         var handler = ShutdownRequested;
         if (handler is null)
@@ -62,8 +64,9 @@ partial class PhotinoApplication
     /// Invokes registered handlers after the native application message loop exits.
     /// </summary>
     /// <param name="exitCode">The native application exit code.</param>
+    /// <param name="state">The callback state.</param>
     /// <returns>The application exit code after registered handlers have run.</returns>
-    internal int OnExit(int exitCode)
+    internal int OnExit(int exitCode, IntPtr state)
     {
         var args = new ExitEventArgs(exitCode);
         InvokeNativeEvent(Exit, args);
