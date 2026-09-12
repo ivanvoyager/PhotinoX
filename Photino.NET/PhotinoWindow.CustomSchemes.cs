@@ -120,7 +120,7 @@ partial class PhotinoWindow
     /// <param name="numBytes">Number of bytes of the response</param>
     /// <param name="outContentType">Content type of the response</param>
     /// <returns><see cref="IntPtr"/></returns>
-    public IntPtr OnCustomScheme(string url, out int numBytes, out IntPtr outContentType)
+    internal IntPtr OnCustomScheme(string url, out int numBytes, out IntPtr outContentType)
     {
         numBytes = 0;
         outContentType = IntPtr.Zero;

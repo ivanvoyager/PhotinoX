@@ -92,48 +92,6 @@ partial class PhotinoWindow
     }
 
     /// <summary>
-    /// Registers user-defined handler methods to receive callbacks from the native window when its location changes.
-    /// </summary>
-    /// <returns>
-    /// Returns the current <see cref="PhotinoWindow"/> instance.
-    /// </returns>
-    /// <param name="handler">The handler to register.</param>
-    /// <exception cref="InvalidOperationException">
-    /// Thrown when the window has already been closed.
-    /// </exception>
-    /// <exception cref="ArgumentNullException">
-    /// Thrown when <paramref name="handler"/> is <see langword="null"/>.
-    /// </exception>
-    public PhotinoWindow RegisterLocationChangedHandler(EventHandler<LocationChangedEventArgs> handler)
-    {
-        ArgumentNullException.ThrowIfNull(handler);
-        ThrowIfClosed();
-        LocationChanged += handler;
-        return this;
-    }
-
-    /// <summary>
-    /// Registers user-defined handler methods to receive callbacks from the native window when its size changes.
-    /// </summary>
-    /// <returns>
-    /// Returns the current <see cref="PhotinoWindow"/> instance.
-    /// </returns>
-    /// <param name="handler">The handler to register.</param>
-    /// <exception cref="InvalidOperationException">
-    /// Thrown when the window has already been closed.
-    /// </exception>
-    /// <exception cref="ArgumentNullException">
-    /// Thrown when <paramref name="handler"/> is <see langword="null"/>.
-    /// </exception>
-    public PhotinoWindow RegisterSizeChangedHandler(EventHandler<SizeChangedEventArgs> handler)
-    {
-        ArgumentNullException.ThrowIfNull(handler);
-        ThrowIfClosed();
-        SizeChanged += handler;
-        return this;
-    }
-
-    /// <summary>
     /// Registers user-defined handler methods to receive callbacks when the native window is activated.
     /// </summary>
     /// <returns>
@@ -172,6 +130,48 @@ partial class PhotinoWindow
         ArgumentNullException.ThrowIfNull(handler);
         ThrowIfClosed();
         Deactivated += handler;
+        return this;
+    }
+
+    /// <summary>
+    /// Registers user-defined handler methods to receive callbacks from the native window when its size changes.
+    /// </summary>
+    /// <returns>
+    /// Returns the current <see cref="PhotinoWindow"/> instance.
+    /// </returns>
+    /// <param name="handler">The handler to register.</param>
+    /// <exception cref="InvalidOperationException">
+    /// Thrown when the window has already been closed.
+    /// </exception>
+    /// <exception cref="ArgumentNullException">
+    /// Thrown when <paramref name="handler"/> is <see langword="null"/>.
+    /// </exception>
+    public PhotinoWindow RegisterSizeChangedHandler(EventHandler<SizeChangedEventArgs> handler)
+    {
+        ArgumentNullException.ThrowIfNull(handler);
+        ThrowIfClosed();
+        SizeChanged += handler;
+        return this;
+    }
+
+    /// <summary>
+    /// Registers user-defined handler methods to receive callbacks from the native window when its location changes.
+    /// </summary>
+    /// <returns>
+    /// Returns the current <see cref="PhotinoWindow"/> instance.
+    /// </returns>
+    /// <param name="handler">The handler to register.</param>
+    /// <exception cref="InvalidOperationException">
+    /// Thrown when the window has already been closed.
+    /// </exception>
+    /// <exception cref="ArgumentNullException">
+    /// Thrown when <paramref name="handler"/> is <see langword="null"/>.
+    /// </exception>
+    public PhotinoWindow RegisterLocationChangedHandler(EventHandler<LocationChangedEventArgs> handler)
+    {
+        ArgumentNullException.ThrowIfNull(handler);
+        ThrowIfClosed();
+        LocationChanged += handler;
         return this;
     }
 

@@ -24,6 +24,29 @@ public partial class PhotinoWindow
             Title = DefaultTitle
         },
 
+        Callbacks = new()
+        {
+            CreatedHandler = static (instance, state) => GetWindowFromHandle(state).OnCreated(instance),                                        //#1
+            ClosingHandler = static state => GetWindowFromHandle(state).OnClosing(),                                                    //#2
+            ClosedHandler = static state => GetWindowFromHandle(state).OnClosed(),                                                      //#3
+            FocusInHandler = static state => GetWindowFromHandle(state).OnActivated(),                                                  //#4
+            FocusOutHandler = static state => GetWindowFromHandle(state).OnDeactivated(),                                               //#5
+            ResizedHandler = static (width, height, state) => GetWindowFromHandle(state).OnSizeChanged(width, height),                  //#6
+            MovedHandler = static (x, y, state) => GetWindowFromHandle(state).OnLocationChanged(x, y),                                  //#7
+            MaximizedHandler = static state => GetWindowFromHandle(state).OnMaximized(),                                                //#8
+            RestoredHandler = static state => GetWindowFromHandle(state).OnRestored(),                                                  //#9
+            MinimizedHandler = static state => GetWindowFromHandle(state).OnMinimized(),                                                //#10
+            FullScreenChangedHandler = static (value, state) => GetWindowFromHandle(state).OnFullScreenChanged(value),                  //#11
+            StateChangedHandler = static (oldState, newState, state) => GetWindowFromHandle(state).OnStateChanged(oldState, newState),  //#12
+            WebMessageReceivedHandler = static (message, uri, state) => GetWindowFromHandle(state).OnWebMessageReceived(message, uri),  //#13
+            CustomSchemeHandler = static (url, out outNumBytes, out outContentType, state) => GetWindowFromHandle(state)
+                                                                            .OnCustomScheme(url, out outNumBytes, out outContentType),  //#14
+            NavigationStartingHandler = static (uri, state) => GetWindowFromHandle(state).OnNavigationStarting(uri),                    //#15
+            NewWindowRequestedHandler = static (uri, state) => GetWindowFromHandle(state).OnNewWindowRequested(uri),                    //#16
+            ContentLoadingHandler = static (uri, state) => GetWindowFromHandle(state).OnContentLoading(uri),                            //#17
+            ContentLoadedHandler = static (uri, state) => GetWindowFromHandle(state).OnContentLoaded(uri)                               //#18
+        },
+
         LinuxChromeless = new()
         {
             ResizeBorderThickness = 8
@@ -87,28 +110,6 @@ public partial class PhotinoWindow
         Parent = parent;
 
         PhotinoBootstrap.Initialize();
-
-        //Wire up handlers from C++ to C#
-        _startupParameters.Callbacks = new()
-        {
-            ClosingHandler = OnClosing,
-            ResizedHandler = OnSizeChanged,
-            MaximizedHandler = OnMaximized,
-            RestoredHandler = OnRestored,
-            MinimizedHandler = OnMinimized,
-            MovedHandler = OnLocationChanged,
-            FocusInHandler = OnActivated,
-            FocusOutHandler = OnDeactivated,
-            WebMessageReceivedHandler = OnWebMessageReceived,
-            ContentLoadingHandler = OnContentLoading,
-            ContentLoadedHandler = OnContentLoaded,
-            NavigationStartingHandler = OnNavigationStarting,
-            NewWindowRequestedHandler = OnNewWindowRequested,
-            CustomSchemeHandler = OnCustomScheme,
-            ClosedHandler = OnClosed,
-            FullScreenChangedHandler = OnFullScreenChanged,
-            StateChangedHandler = OnStateChanged
-        };
     }
 
     /// <summary>
@@ -1045,14 +1046,21 @@ public partial class PhotinoWindow
         PrepareAndValidateStartupParameters();
         ThrowIfInitializedForCall();
 
+        var handle = GCHandle.Alloc(this);
+        _startupParameters.Callbacks.CallbackState = GCHandle.ToIntPtr(handle);
         try
         {
-            _nativeInstance = Photino_ctor(ref _startupParameters);
+            var nativeInstance = Photino_ctor(ref _startupParameters);
+            Debug.Assert(_nativeInstance == nativeInstance);
+            _nativeInstance = nativeInstance;
             if (_nativeInstance == IntPtr.Zero)
                 throw new ExternalException("Native window creation failed.");
         }
         catch (Exception ex)
         {
+            handle.Free();
+            _startupParameters.Callbacks.CallbackState = IntPtr.Zero;
+
             int lastError = 0;
             if (Platform.IsWindows)
                 lastError = Marshal.GetLastWin32Error();
@@ -1060,9 +1068,6 @@ public partial class PhotinoWindow
             Log($"Error #{lastError}{Environment.NewLine}{ex}");
             throw new ExternalException($"Native code exception. Error # {lastError}. See inner exception for details.", ex) { HResult = lastError };
         }
-
-        if (_nativeInstance != IntPtr.Zero)
-            OnCreated();
     }
 
     /// <summary>

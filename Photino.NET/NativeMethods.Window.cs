@@ -1,9 +1,9 @@
 ﻿using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
-namespace Photino.NET;
+using static Photino.NET.NativeDelegates;
 
-using GetAllMonitorsCallback = NativeDelegates.MonitorCallback;
+namespace Photino.NET;
 
 internal static partial class NativeMethods
 {

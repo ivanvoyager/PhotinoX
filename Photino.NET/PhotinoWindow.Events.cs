@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using System.Drawing;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 
 namespace Photino.NET;
 
@@ -28,8 +29,11 @@ partial class PhotinoWindow
     /// <summary>
     /// Invokes registered handlers after the native window is created.
     /// </summary>
-    internal void OnCreated()
+    /// <param name="instance">The native window instance pointer.</param>
+    internal void OnCreated(IntPtr instance)
     {
+        Debug.Assert(instance != IntPtr.Zero, "Instance pointer is zero.");
+        _nativeInstance = instance;
         PhotinoApplication.Current.OnWindowCreated(this);
         Created?.Invoke(this, EventArgs.Empty);
     }
@@ -85,6 +89,10 @@ partial class PhotinoWindow
         IsClosed = true;
         _nativeInstance = IntPtr.Zero;
 
+        var handle = GCHandle.FromIntPtr(_startupParameters.Callbacks.CallbackState);
+        _startupParameters.Callbacks.CallbackState = IntPtr.Zero;
+        handle.Free();
+
         try
         {
             InvokeNativeEvent(Closed);
@@ -93,36 +101,6 @@ partial class PhotinoWindow
         {
             PhotinoApplication.Current.OnWindowClosed(this);
         }
-    }
-
-    /// <summary>
-    /// Occurs when the native window location changes.
-    /// </summary>
-    public event EventHandler<LocationChangedEventArgs>? LocationChanged;
-
-    /// <summary>
-    /// Invokes registered handlers when the native window location changes.
-    /// </summary>
-    /// <param name="left">The window position from the left in pixels.</param>
-    /// <param name="top">The window position from the top in pixels.</param>
-    internal void OnLocationChanged(int left, int top)
-    {
-        InvokeNativeEvent(LocationChanged, new LocationChangedEventArgs(new Point(left, top)));
-    }
-
-    /// <summary>
-    /// Occurs when the native window size changes.
-    /// </summary>
-    public event EventHandler<SizeChangedEventArgs>? SizeChanged;
-
-    /// <summary>
-    /// Invokes registered handlers when the native window size changes.
-    /// </summary>
-    /// <param name="width">The window width in pixels.</param>
-    /// <param name="height">The window height in pixels.</param>
-    internal void OnSizeChanged(int width, int height)
-    {
-        InvokeNativeEvent(SizeChanged, new SizeChangedEventArgs(new Size(width, height)));
     }
 
     /// <summary>
@@ -149,6 +127,36 @@ partial class PhotinoWindow
     internal void OnDeactivated()
     {
         InvokeNativeEvent(Deactivated);
+    }
+
+    /// <summary>
+    /// Occurs when the native window size changes.
+    /// </summary>
+    public event EventHandler<SizeChangedEventArgs>? SizeChanged;
+
+    /// <summary>
+    /// Invokes registered handlers when the native window size changes.
+    /// </summary>
+    /// <param name="width">The window width in pixels.</param>
+    /// <param name="height">The window height in pixels.</param>
+    internal void OnSizeChanged(int width, int height)
+    {
+        InvokeNativeEvent(SizeChanged, new SizeChangedEventArgs(new Size(width, height)));
+    }
+
+    /// <summary>
+    /// Occurs when the native window location changes.
+    /// </summary>
+    public event EventHandler<LocationChangedEventArgs>? LocationChanged;
+
+    /// <summary>
+    /// Invokes registered handlers when the native window location changes.
+    /// </summary>
+    /// <param name="left">The window position from the left in pixels.</param>
+    /// <param name="top">The window position from the top in pixels.</param>
+    internal void OnLocationChanged(int left, int top)
+    {
+        InvokeNativeEvent(LocationChanged, new LocationChangedEventArgs(new Point(left, top)));
     }
 
     /// <summary>
@@ -241,9 +249,9 @@ partial class PhotinoWindow
     /// <param name="uri">The URI of the top-level WebView content at the time the message was received.</param>
     internal void OnWebMessageReceived(string message, string uri)
     {
-        if (message is null)
+        if (string.IsNullOrEmpty(message))
         {
-            Debug.Fail("Failed to receive message from WebView content: message is null");
+            Debug.Fail("Failed to receive message from WebView content: message is null or empty");
             return;
         }
 

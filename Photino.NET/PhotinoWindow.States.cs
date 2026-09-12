@@ -1,7 +1,7 @@
 ﻿using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
-using GetAllMonitorsCallback = Photino.NET.NativeDelegates.MonitorCallback;
+using static Photino.NET.NativeDelegates;
 
 namespace Photino.NET;
 
@@ -38,7 +38,7 @@ partial class PhotinoWindow
 
     private static readonly GetAllMonitorsCallback s_getAllMonitorsCallback = OnGetMonitor;
 
-    private static int OnGetMonitor(in NativeMonitor monitor, IntPtr value)
+    private static byte OnGetMonitor(in NativeMonitor monitor, IntPtr value)
     {
         var handle = GCHandle.FromIntPtr(value);
         var state = (GetMonitorsState)handle.Target!;

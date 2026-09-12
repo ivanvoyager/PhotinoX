@@ -1,44 +1,32 @@
 ﻿using System.Runtime.InteropServices;
-using ClosedCallback = Photino.NET.NativeDelegates.VoidCallback;
-using ClosingCallback = Photino.NET.NativeDelegates.BoolCallback;
-using ContentLoadedCallback = Photino.NET.NativeDelegates.StringCallback;
-using ContentLoadingCallback = Photino.NET.NativeDelegates.StringCallback;
-using FocusInCallback = Photino.NET.NativeDelegates.VoidCallback;
-using FocusOutCallback = Photino.NET.NativeDelegates.VoidCallback;
-using FullScreenChangedCallback = Photino.NET.NativeDelegates.VoidBoolCallback;
-using MaximizedCallback = Photino.NET.NativeDelegates.VoidCallback;
-using MinimizedCallback = Photino.NET.NativeDelegates.VoidCallback;
-using MovedCallback = Photino.NET.NativeDelegates.IntIntCallback;   //(int x, int y)
-using NavigationStartingCallback = Photino.NET.NativeDelegates.StringBoolCallback;
-using NewWindowRequestedCallback = Photino.NET.NativeDelegates.StringBoolCallback;
-using ResizedCallback = Photino.NET.NativeDelegates.IntIntCallback; //(int width, int height)
-using RestoredCallback = Photino.NET.NativeDelegates.VoidCallback;
-using StateChangedCallback = Photino.NET.NativeDelegates.StateChangedCallback;
-using WebMessageReceivedCallback = Photino.NET.NativeDelegates.StringStringCallback;
-using WebResourceRequestedCallback = Photino.NET.NativeDelegates.ResourceCallback;
+
+using static Photino.NET.NativeDelegates;
 
 namespace Photino.NET;
 
 [StructLayout(LayoutKind.Sequential)]
 internal struct PhotinoNativeCallbackParameters
 {
-    [MarshalAs(UnmanagedType.FunctionPtr)] internal ClosingCallback ClosingHandler;                         //#1
-    [MarshalAs(UnmanagedType.FunctionPtr)] internal FocusInCallback FocusInHandler;                         //#2
-    [MarshalAs(UnmanagedType.FunctionPtr)] internal FocusOutCallback FocusOutHandler;                       //#3
-    [MarshalAs(UnmanagedType.FunctionPtr)] internal ResizedCallback ResizedHandler;                         //#4
-    [MarshalAs(UnmanagedType.FunctionPtr)] internal MaximizedCallback MaximizedHandler;                     //#5
-    [MarshalAs(UnmanagedType.FunctionPtr)] internal RestoredCallback RestoredHandler;                       //#6
-    [MarshalAs(UnmanagedType.FunctionPtr)] internal MinimizedCallback MinimizedHandler;                     //#7
-    [MarshalAs(UnmanagedType.FunctionPtr)] internal MovedCallback MovedHandler;                             //#8
-    [MarshalAs(UnmanagedType.FunctionPtr)] internal WebMessageReceivedCallback WebMessageReceivedHandler;   //#9
-    [MarshalAs(UnmanagedType.FunctionPtr)] internal ContentLoadingCallback ContentLoadingHandler;           //#10
-    [MarshalAs(UnmanagedType.FunctionPtr)] internal ContentLoadedCallback ContentLoadedHandler;             //#11
-    [MarshalAs(UnmanagedType.FunctionPtr)] internal NavigationStartingCallback NavigationStartingHandler;   //#12
-    [MarshalAs(UnmanagedType.FunctionPtr)] internal NewWindowRequestedCallback NewWindowRequestedHandler;   //#13
-    [MarshalAs(UnmanagedType.FunctionPtr)] internal WebResourceRequestedCallback CustomSchemeHandler;       //#14
-    [MarshalAs(UnmanagedType.FunctionPtr)] internal ClosedCallback ClosedHandler;                           //#15
-    [MarshalAs(UnmanagedType.FunctionPtr)] internal FullScreenChangedCallback FullScreenChangedHandler;     //#16
-    [MarshalAs(UnmanagedType.FunctionPtr)] internal StateChangedCallback StateChangedHandler;               //#17
+    [MarshalAs(UnmanagedType.FunctionPtr)] internal CreatedCallback CreatedHandler;                         //#1
+    [MarshalAs(UnmanagedType.FunctionPtr)] internal ClosingCallback ClosingHandler;                         //#2
+    [MarshalAs(UnmanagedType.FunctionPtr)] internal ClosedCallback ClosedHandler;                           //#3
+    [MarshalAs(UnmanagedType.FunctionPtr)] internal FocusInCallback FocusInHandler;                         //#4
+    [MarshalAs(UnmanagedType.FunctionPtr)] internal FocusOutCallback FocusOutHandler;                       //#5
+    [MarshalAs(UnmanagedType.FunctionPtr)] internal ResizedCallback ResizedHandler;                         //#6
+    [MarshalAs(UnmanagedType.FunctionPtr)] internal MovedCallback MovedHandler;                             //#7
+    [MarshalAs(UnmanagedType.FunctionPtr)] internal MaximizedCallback MaximizedHandler;                     //#8
+    [MarshalAs(UnmanagedType.FunctionPtr)] internal RestoredCallback RestoredHandler;                       //#9
+    [MarshalAs(UnmanagedType.FunctionPtr)] internal MinimizedCallback MinimizedHandler;                     //#10
+    [MarshalAs(UnmanagedType.FunctionPtr)] internal FullScreenChangedCallback FullScreenChangedHandler;     //#11
+    [MarshalAs(UnmanagedType.FunctionPtr)] internal StateChangedCallback StateChangedHandler;               //#12
+    [MarshalAs(UnmanagedType.FunctionPtr)] internal WebMessageReceivedCallback WebMessageReceivedHandler;   //#13
+    [MarshalAs(UnmanagedType.FunctionPtr)] internal CustomSchemeCallback CustomSchemeHandler;               //#14
+    [MarshalAs(UnmanagedType.FunctionPtr)] internal NavigationStartingCallback NavigationStartingHandler;   //#15
+    [MarshalAs(UnmanagedType.FunctionPtr)] internal NewWindowRequestedCallback NewWindowRequestedHandler;   //#16
+    [MarshalAs(UnmanagedType.FunctionPtr)] internal ContentLoadingCallback ContentLoadingHandler;           //#17
+    [MarshalAs(UnmanagedType.FunctionPtr)] internal ContentLoadedCallback ContentLoadedHandler;             //#18
+
+    internal IntPtr CallbackState;                                                                          //#19
 }
 
 [StructLayout(LayoutKind.Sequential)]
@@ -227,17 +215,17 @@ internal struct PhotinoWindowNativeParameters
     static PhotinoWindowNativeParameters()
     {
         if (Marshal.OffsetOf<PhotinoWindowNativeParameters>(nameof(Callbacks)).ToInt32() != 16 ||
-            Marshal.OffsetOf<PhotinoWindowNativeParameters>(nameof(Window)).ToInt32() != 152 ||
-            Marshal.OffsetOf<PhotinoWindowNativeParameters>(nameof(LinuxChromeless)).ToInt32() != 176 ||
-            Marshal.OffsetOf<PhotinoWindowNativeParameters>(nameof(Geometry)).ToInt32() != 196 ||
-            Marshal.OffsetOf<PhotinoWindowNativeParameters>(nameof(Browser)).ToInt32() != 240 ||
-            Marshal.SizeOf<PhotinoWindowNativeParameters>() != 424)
+            Marshal.OffsetOf<PhotinoWindowNativeParameters>(nameof(Window)).ToInt32() != 168 ||
+            Marshal.OffsetOf<PhotinoWindowNativeParameters>(nameof(LinuxChromeless)).ToInt32() != 192 ||
+            Marshal.OffsetOf<PhotinoWindowNativeParameters>(nameof(Geometry)).ToInt32() != 212 ||
+            Marshal.OffsetOf<PhotinoWindowNativeParameters>(nameof(Browser)).ToInt32() != 256 ||
+            Marshal.SizeOf<PhotinoWindowNativeParameters>() != 440)
         {
             throw new TypeLoadException($"{typeof(PhotinoWindowNativeParameters).FullName} has an invalid native layout.");
         }
     }
 
-    internal const int NativeAbiVersion = 6;
+    internal const int NativeAbiVersion = 7;
     internal const int MaxCustomSchemeNames = 16;
 
     /// <summary>Set when GetParamErrors() is called, prior to initializing the native window. It is a check to make sure the struct matches what C++ is expecting.</summary>

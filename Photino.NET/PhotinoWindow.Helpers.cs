@@ -1,5 +1,7 @@
-﻿using System.Diagnostics.CodeAnalysis;
+﻿using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 
 namespace Photino.NET;
 
@@ -95,5 +97,14 @@ partial class PhotinoWindow
     private static void ThrowWindowAlreadyInitialized(string? memberName)
     {
         throw new InvalidOperationException($"{memberName} can only be set before the Photino window is initialized.");
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static PhotinoWindow GetWindowFromHandle(IntPtr handle)
+    {
+        Debug.Assert(handle != IntPtr.Zero, "The native window handle is invalid.");
+        var gcHandle = GCHandle.FromIntPtr(handle);
+        Debug.Assert(gcHandle.IsAllocated && gcHandle.Target is PhotinoWindow, "The native window handle does not reference a valid GCHandle instance.");
+        return (PhotinoWindow)gcHandle.Target!;
     }
 }
