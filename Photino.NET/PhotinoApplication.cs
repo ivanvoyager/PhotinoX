@@ -23,11 +23,27 @@ public sealed partial class PhotinoApplication
         Size = Marshal.SizeOf<PhotinoApplicationNativeParameters>(),
         AbiVersion = PhotinoApplicationNativeParameters.NativeAbiVersion,
 
+        Callbacks = new()
+        {
+            StartupHandler = static state => GetApplicationFromHandle(state).OnStartup(),
+            ShutdownRequestedHandler = static (reason, state) => GetApplicationFromHandle(state).OnShutdownRequested(reason),
+            ExitHandler = static (exitCode, state) => GetApplicationFromHandle(state).OnExit(exitCode)
+        },
+
         Options = new()
         {
             ApplicationName = s_defaultApplicationName,
             NotificationRegistrationId = s_defaultApplicationName,
             NotificationsEnabled = true
+        },
+
+        NotificationCallbacks = new()
+        {
+            NotificationActivatedHandler = static (notificationId, notificationState, state) => GetApplicationFromHandle(state).OnNotificationActivated(notificationId, notificationState),
+            NotificationActionActivatedHandler = static (notificationId, actionIndex, notificationState, state) => GetApplicationFromHandle(state).OnNotificationActionActivated(notificationId, actionIndex, notificationState),
+            NotificationInputActivatedHandler = static (notificationId, response, notificationState, state) => GetApplicationFromHandle(state).OnNotificationInputActivated(notificationId, response, notificationState),
+            NotificationDismissedHandler = static (notificationId, reason, notificationState, state) => GetApplicationFromHandle(state).OnNotificationDismissed(notificationId, reason, notificationState),
+            NotificationFailedHandler = static (notificationId, notificationState, state) => GetApplicationFromHandle(state).OnNotificationFailed(notificationId, notificationState)
         }
     };
 
@@ -56,22 +72,6 @@ public sealed partial class PhotinoApplication
         {
             ThrowApplicationAlreadyCreated();
         }
-
-        _startupParameters.Callbacks = new()
-        {
-            StartupHandler = OnStartup,
-            ShutdownRequestedHandler = OnShutdownRequested,
-            ExitHandler = OnExit
-        };
-
-        _startupParameters.NotificationCallbacks = new()
-        {
-            NotificationActivatedHandler = OnNotificationActivated,
-            NotificationActionActivatedHandler = OnNotificationActionActivated,
-            NotificationInputActivatedHandler = OnNotificationInputActivated,
-            NotificationDismissedHandler = OnNotificationDismissed,
-            NotificationFailedHandler = OnNotificationFailed
-        };
     }
 
     /// <summary>
@@ -293,6 +293,8 @@ public sealed partial class PhotinoApplication
         }
 
         Volatile.Write(ref _isInMainLoop, 1);
+        var handle = GCHandle.Alloc(this);
+        _startupParameters.Callbacks.CallbackState = GCHandle.ToIntPtr(handle);
         try
         {
             return PhotinoApplication_Run(ref _startupParameters);
@@ -301,6 +303,8 @@ public sealed partial class PhotinoApplication
         {
             Volatile.Write(ref _isInMainLoop, 0);
             ClearNotificationStates();
+            _startupParameters.Callbacks.CallbackState = IntPtr.Zero;
+            handle.Free();
         }
     }
 

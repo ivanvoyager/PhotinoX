@@ -1058,8 +1058,8 @@ public partial class PhotinoWindow
         }
         catch (Exception ex)
         {
-            handle.Free();
             _startupParameters.Callbacks.CallbackState = IntPtr.Zero;
+            handle.Free();
 
             int lastError = 0;
             if (Platform.IsWindows)

@@ -1,6 +1,8 @@
 ﻿using System.ComponentModel;
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 
 namespace Photino.NET;
 
@@ -74,5 +76,14 @@ partial class PhotinoApplication
     private static void ThrowApplicationShuttingDown()
     {
         throw new InvalidOperationException("Cannot change ShutdownMode while the application is shutting down.");
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static PhotinoApplication GetApplicationFromHandle(IntPtr handle)
+    {
+        Debug.Assert(handle != IntPtr.Zero, "The native application handle is invalid.");
+        var gcHandle = GCHandle.FromIntPtr(handle);
+        Debug.Assert(gcHandle.IsAllocated && gcHandle.Target is PhotinoApplication, "The native application handle does not reference a valid GCHandle instance.");
+        return (PhotinoApplication)gcHandle.Target!;
     }
 }

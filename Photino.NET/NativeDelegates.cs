@@ -34,9 +34,10 @@ internal static class NativeDelegates
     [UnmanagedFunctionPointer(CC)] internal delegate void StartupCallback(IntPtr state);
     [UnmanagedFunctionPointer(CC)] internal delegate byte ShutdownRequestedCallback([MarshalAs(UnmanagedType.I4)] PhotinoShutdownRequestReason reason, IntPtr state);
     [UnmanagedFunctionPointer(CC)] internal delegate int ExitCallback(int exitCode, IntPtr state);
-    [UnmanagedFunctionPointer(CC)] internal delegate void NotificationActivatedCallback(int notificationId, IntPtr state);
-    [UnmanagedFunctionPointer(CC)] internal delegate void NotificationActionActivatedCallback(int notificationId, int actionIndex, IntPtr state);
-    [UnmanagedFunctionPointer(CC)] internal delegate void NotificationInputActivatedCallback(int notificationId, [MarshalAs(UnmanagedType.LPUTF8Str)] string response, IntPtr state);
-    [UnmanagedFunctionPointer(CC)] internal delegate void NotificationDismissedCallback(int notificationId, [MarshalAs(UnmanagedType.I4)] NotificationDismissalReason reason, IntPtr state);
-    [UnmanagedFunctionPointer(CC)] internal delegate void NotificationFailedCallback(int notificationId, IntPtr state);
+
+    [UnmanagedFunctionPointer(CC)] internal delegate void NotificationActivatedCallback(int notificationId, IntPtr notificationState, IntPtr state);
+    [UnmanagedFunctionPointer(CC)] internal delegate void NotificationActionActivatedCallback(int notificationId, int actionIndex, IntPtr notificationState, IntPtr state);
+    [UnmanagedFunctionPointer(CC)] internal delegate void NotificationInputActivatedCallback(int notificationId, [MarshalAs(UnmanagedType.LPUTF8Str)] string response, IntPtr notificationState, IntPtr state);
+    [UnmanagedFunctionPointer(CC)] internal delegate void NotificationDismissedCallback(int notificationId, [MarshalAs(UnmanagedType.I4)] NotificationDismissalReason reason, IntPtr notificationState, IntPtr state);
+    [UnmanagedFunctionPointer(CC)] internal delegate void NotificationFailedCallback(int notificationId, IntPtr notificationState, IntPtr state);
 }
