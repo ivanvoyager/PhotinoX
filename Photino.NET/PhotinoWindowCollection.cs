@@ -136,6 +136,7 @@ public sealed class PhotinoWindowCollection(PhotinoApplication app) : IReadOnlyL
 
     private void OnCollectionChanged(NotifyCollectionChangedEventArgs e)
     {
+        Debug.Assert(app.Dispatcher.CheckAccess(), "CollectionChanged event must be raised on the PhotinoApplication dispatcher thread.");
         CollectionChanged?.Invoke(this, e);
     }
 

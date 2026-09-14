@@ -42,7 +42,7 @@ Compared with the original Photino.NET managed API, PhotinoX introduces an expli
 
 ### Application model
 
-`PhotinoApplication` is the explicit application lifetime object. Window creation, shutdown behavior, and UI-thread dispatching are coordinated through the application and its dispatcher instead of implicit global state. The application also tracks open windows and exposes `MainWindow` and `Windows`.
+`PhotinoApplication` is the explicit application lifetime object. Window creation, shutdown behavior, and UI-thread dispatching are coordinated through the application and its dispatcher instead of implicit global state. The native application tracks open windows as the source of truth, while `MainWindow` and the observable `Windows` collection expose the synchronized managed application state.
 
 | Previous model | New model |
 |---|---|
@@ -58,6 +58,7 @@ Notable application lifecycle APIs:
 | Area | API |
 |---|---|
 | Lifecycle | `Run`, `Shutdown`, `Startup`, `ShutdownRequested`, `Exit` |
+| Windows | `MainWindow`, observable `Windows` collection |
 | Shutdown behavior | `ShutdownMode`, `ShutdownRequestedEventArgs`, `PhotinoShutdownRequestReason` |
 | Notifications | `ShowNotification`, `NotificationsEnabled`, notification activation/dismissal/failure events |
 
@@ -231,7 +232,7 @@ These changes may require source-level updates for applications that use older P
 
 ### Native runtime foundation
 
-The managed API is built on the updated `PhotinoX.Native` runtime, including safer native memory ownership, clearer platform isolation, improved interop layout, an application-oriented message-loop and dispatch model, native notification integration, and unified native window state tracking.
+The managed API is built on the updated `PhotinoX.Native` runtime, including safer native memory ownership, clearer platform isolation, improved interop layout, an application-oriented message-loop and dispatch model, native notification integration, application window tracking, and unified window state handling.
 
 On Windows, fullscreen is handled as a native restore-aware state transition: the previous window style and placement are preserved before entering fullscreen and restored when leaving fullscreen. Startup state is synchronized without raising user callbacks before window creation completes.
 
