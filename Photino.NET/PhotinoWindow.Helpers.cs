@@ -100,7 +100,7 @@ partial class PhotinoWindow
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static PhotinoWindow GetWindowFromHandle(IntPtr handle)
+    internal static PhotinoWindow GetWindowFromHandle(IntPtr handle)
     {
         Debug.Assert(handle != IntPtr.Zero, "The native window handle is invalid.");
         var gcHandle = GCHandle.FromIntPtr(handle);

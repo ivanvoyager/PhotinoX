@@ -77,6 +77,11 @@ internal static partial class NativeMethods
     [return: MarshalAs(UnmanagedType.I1)]
     private static partial bool PhotinoApplication_BeginInvoke(InvokeStateCallback callback, IntPtr state);
 
+    [LibraryImport(DLL_NAME)]
+    [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
+    [return: MarshalAs(UnmanagedType.I1)]
+    private static partial bool PhotinoApplication_GetWindows(IntPtr states, out int count);
+
     #region Sync helpers
 
     internal static bool InvokeNative(Action callback)

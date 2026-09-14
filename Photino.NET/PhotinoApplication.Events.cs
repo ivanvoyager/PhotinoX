@@ -178,7 +178,7 @@ partial class PhotinoApplication
         }
     }
 
-    private void HandleNativeCallbackException(Exception exception, [CallerMemberName] string? caller = null)
+    internal void HandleNativeCallbackException(Exception exception, [CallerMemberName] string? caller = null)
     {
         try
         {

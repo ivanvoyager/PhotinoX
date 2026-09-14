@@ -30,11 +30,12 @@ partial class PhotinoWindow
     /// Invokes registered handlers after the native window is created.
     /// </summary>
     /// <param name="instance">The native window instance pointer.</param>
-    internal void OnCreated(IntPtr instance)
+    /// <param name="registered">Indicates whether the window was registered.</param>
+    internal void OnCreated(IntPtr instance, bool registered)
     {
         Debug.Assert(instance != IntPtr.Zero, "Instance pointer is zero.");
         _nativeInstance = instance;
-        PhotinoApplication.Current.OnWindowCreated(this);
+        PhotinoApplication.Current.OnWindowCreated(this, registered);
         Created?.Invoke(this, EventArgs.Empty);
     }
 

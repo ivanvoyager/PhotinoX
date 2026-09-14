@@ -26,7 +26,7 @@ public partial class PhotinoWindow
 
         Callbacks = new()
         {
-            CreatedHandler = static (instance, state) => GetWindowFromHandle(state).OnCreated(instance),                                        //#1
+            CreatedHandler = static (instance, registered, state) => GetWindowFromHandle(state).OnCreated(instance, registered),        //#1
             ClosingHandler = static state => GetWindowFromHandle(state).OnClosing(),                                                    //#2
             ClosedHandler = static state => GetWindowFromHandle(state).OnClosed(),                                                      //#3
             FocusInHandler = static state => GetWindowFromHandle(state).OnActivated(),                                                  //#4

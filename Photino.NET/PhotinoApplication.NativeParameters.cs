@@ -10,7 +10,8 @@ internal struct PhotinoNativeApplicationCallbackParameters
     [MarshalAs(UnmanagedType.FunctionPtr)] internal StartupCallback? StartupHandler; //1
     [MarshalAs(UnmanagedType.FunctionPtr)] internal ShutdownRequestedCallback? ShutdownRequestedHandler; //2
     [MarshalAs(UnmanagedType.FunctionPtr)] internal ExitCallback? ExitHandler; //3
-    internal IntPtr CallbackState; //#4
+    [MarshalAs(UnmanagedType.FunctionPtr)] internal WindowCollectionChangedCallback? WindowCollectionChangedHandler; //4
+    internal IntPtr CallbackState; //#5
 }
 
 [StructLayout(LayoutKind.Sequential)]
@@ -39,9 +40,9 @@ internal struct PhotinoApplicationNativeParameters
     static PhotinoApplicationNativeParameters()
     {
         if (Marshal.OffsetOf<PhotinoApplicationNativeParameters>(nameof(Callbacks)).ToInt32() != 8 ||
-            Marshal.OffsetOf<PhotinoApplicationNativeParameters>(nameof(Options)).ToInt32() != 40 ||
-            Marshal.OffsetOf<PhotinoApplicationNativeParameters>(nameof(NotificationCallbacks)).ToInt32() != 72 ||
-            Marshal.SizeOf<PhotinoApplicationNativeParameters>() != 112)
+            Marshal.OffsetOf<PhotinoApplicationNativeParameters>(nameof(Options)).ToInt32() != 48 ||
+            Marshal.OffsetOf<PhotinoApplicationNativeParameters>(nameof(NotificationCallbacks)).ToInt32() != 80 ||
+            Marshal.SizeOf<PhotinoApplicationNativeParameters>() != 120)
         {
             throw new TypeLoadException($"{typeof(PhotinoApplicationNativeParameters).FullName} has an invalid native layout.");
         }

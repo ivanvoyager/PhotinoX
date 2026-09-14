@@ -1,4 +1,5 @@
-﻿using System.Runtime.InteropServices;
+﻿using System.Collections.Specialized;
+using System.Runtime.InteropServices;
 
 namespace Photino.NET;
 
@@ -9,7 +10,7 @@ internal static class NativeDelegates
     [UnmanagedFunctionPointer(CC)] internal delegate void VoidStateCallback(IntPtr state);
 
     //Window callbacks
-    [UnmanagedFunctionPointer(CC)] internal delegate void CreatedCallback(IntPtr instance, IntPtr state);
+    [UnmanagedFunctionPointer(CC)] internal delegate void CreatedCallback(IntPtr instance, [MarshalAs(UnmanagedType.I1)] bool registered, IntPtr state);
     [UnmanagedFunctionPointer(CC)] internal delegate byte ClosingCallback(IntPtr state); //C++ uses 1 byte for bool, C# uses 4 bytes
     [UnmanagedFunctionPointer(CC)] internal delegate void ClosedCallback(IntPtr state);
     [UnmanagedFunctionPointer(CC)] internal delegate void FocusInCallback(IntPtr state);
@@ -34,6 +35,9 @@ internal static class NativeDelegates
     [UnmanagedFunctionPointer(CC)] internal delegate void StartupCallback(IntPtr state);
     [UnmanagedFunctionPointer(CC)] internal delegate byte ShutdownRequestedCallback([MarshalAs(UnmanagedType.I4)] PhotinoShutdownRequestReason reason, IntPtr state);
     [UnmanagedFunctionPointer(CC)] internal delegate int ExitCallback(int exitCode, IntPtr state);
+
+    [UnmanagedFunctionPointer(CC)] internal delegate void WindowCollectionChangedCallback([MarshalAs(UnmanagedType.I4)] NotifyCollectionChangedAction action,
+        IntPtr newItems, int newItemsCount, IntPtr oldItems, int oldItemsCount, IntPtr state);
 
     [UnmanagedFunctionPointer(CC)] internal delegate void NotificationActivatedCallback(int notificationId, IntPtr notificationState, IntPtr state);
     [UnmanagedFunctionPointer(CC)] internal delegate void NotificationActionActivatedCallback(int notificationId, int actionIndex, IntPtr notificationState, IntPtr state);

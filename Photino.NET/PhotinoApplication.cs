@@ -27,7 +27,8 @@ public sealed partial class PhotinoApplication
         {
             StartupHandler = static state => GetApplicationFromHandle(state).OnStartup(),
             ShutdownRequestedHandler = static (reason, state) => GetApplicationFromHandle(state).OnShutdownRequested(reason),
-            ExitHandler = static (exitCode, state) => GetApplicationFromHandle(state).OnExit(exitCode)
+            ExitHandler = static (exitCode, state) => GetApplicationFromHandle(state).OnExit(exitCode),
+            WindowCollectionChangedHandler = static (action, newItems, newItemsCount, oldItems, oldItemsCount, state) => GetApplicationFromHandle(state).Windows.OnCollectionChanged(action, newItems, newItemsCount, oldItems, oldItemsCount)
         },
 
         Options = new()
@@ -72,6 +73,8 @@ public sealed partial class PhotinoApplication
         {
             ThrowApplicationAlreadyCreated();
         }
+
+        Windows = new PhotinoWindowCollection(this);
     }
 
     /// <summary>
@@ -162,7 +165,7 @@ public sealed partial class PhotinoApplication
     /// <summary>
     /// Gets the windows currently owned by the application.
     /// </summary>
-    public PhotinoWindowCollection Windows { get; } = [];
+    public PhotinoWindowCollection Windows { get; }
 
     /// <summary>
     /// Gets the dispatcher associated with the application UI thread.
@@ -328,14 +331,20 @@ public sealed partial class PhotinoApplication
         PhotinoApplication_Shutdown(exitCode, force ? (byte)1 : (byte)0);
     }
 
-    internal void OnWindowCreated(PhotinoWindow window)
+    internal void OnWindowCreated(PhotinoWindow window, bool registered)
     {
-        Windows.Add(window);
+        Debug.Assert(Dispatcher.CheckAccess(), "OnWindowCreated must be called on the application dispatcher thread.");
+        Debug.Assert(Windows.Contains(window) || !registered, "The registered native window is missing from the managed snapshot.");
+        if (!registered)
+        {
+            Windows.Add(window);
+        }
     }
 
     internal void OnWindowClosed(PhotinoWindow window)
     {
-        Windows.Remove(window);
+        Debug.Assert(Dispatcher.CheckAccess(), "OnWindowClosed must be called on the application dispatcher thread.");
+        Debug.Assert(!Windows.Contains(window), "Window closed that is not tracked by the application.");
 
         bool isMainWindow = ReferenceEquals(window, MainWindow);
         if (isMainWindow)

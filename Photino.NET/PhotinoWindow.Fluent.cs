@@ -875,8 +875,10 @@ partial class PhotinoWindow
         var dragRegionCount = dragRegions.Count;
         var noDragRegionCount = noDragRegions?.Count ?? 0;
 
-        var nativeDragRegions = ArrayPool<NativeLayoutRegion>.Shared.Rent(dragRegionCount);
-        var nativeNoDragRegions = ArrayPool<NativeLayoutRegion>.Shared.Rent(noDragRegionCount);
+        var pool = ArrayPool<NativeLayoutRegion>.Shared;
+
+        var nativeDragRegions = pool.Rent(dragRegionCount);
+        var nativeNoDragRegions = pool.Rent(noDragRegionCount);
 
         try
         {
@@ -907,8 +909,8 @@ partial class PhotinoWindow
         }
         finally
         {
-            ArrayPool<NativeLayoutRegion>.Shared.Return(nativeDragRegions);
-            ArrayPool<NativeLayoutRegion>.Shared.Return(nativeNoDragRegions);
+            pool.Return(nativeDragRegions);
+            pool.Return(nativeNoDragRegions);
         }
 
         return this;
