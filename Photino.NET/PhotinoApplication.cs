@@ -66,7 +66,6 @@ public sealed partial class PhotinoApplication
             ThrowApplicationAlreadyCreated();
         }
 
-        PhotinoBootstrap.Initialize();
         Dispatcher = new PhotinoDispatcher();
 
         if (registerCurrent && Interlocked.CompareExchange(ref s_current, this, null) is not null)

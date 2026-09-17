@@ -108,8 +108,6 @@ public partial class PhotinoWindow
     public PhotinoWindow(PhotinoWindow? parent = null)
     {
         Parent = parent;
-
-        PhotinoBootstrap.Initialize();
     }
 
     /// <summary>
