@@ -307,6 +307,7 @@ public sealed partial class PhotinoApplication
             ClearNotificationStates();
             _startupParameters.Callbacks.CallbackState = IntPtr.Zero;
             handle.Free();
+            MainWindow = null;
         }
     }
 
@@ -333,11 +334,15 @@ public sealed partial class PhotinoApplication
     internal void OnWindowCreated(PhotinoWindow window, bool registered)
     {
         Debug.Assert(Dispatcher.CheckAccess(), "OnWindowCreated must be called on the application dispatcher thread.");
-        Debug.Assert(Windows.Contains(window) || !registered, "The registered native window is missing from the managed snapshot.");
-        if (!registered)
+
+        if (registered)
         {
-            Windows.Add(window);
+            Debug.Assert(Windows.Contains(window), "The registered native window is missing from the managed snapshot.");
+            return;
         }
+
+        Debug.Assert(!Windows.Contains(window), "The native window is already tracked by the managed snapshot.");
+        Windows.Add(window);
     }
 
     internal void OnWindowClosed(PhotinoWindow window)
@@ -354,7 +359,6 @@ public sealed partial class PhotinoApplication
 
         if (ShutdownMode == PhotinoShutdownMode.OnMainWindowClose && isMainWindow)
         {
-            CloseWindows();
             Shutdown(force: true);
             return;
         }
