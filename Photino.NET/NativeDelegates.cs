@@ -7,7 +7,8 @@ internal static class NativeDelegates
 {
     private const CallingConvention CC = CallingConvention.Cdecl;
 
-    [UnmanagedFunctionPointer(CC)] internal delegate void VoidStateCallback(IntPtr state);
+    [UnmanagedFunctionPointer(CC)] internal delegate void InvokeStateCallback(IntPtr state);
+    [UnmanagedFunctionPointer(CC)] internal delegate void ReleaseStateCallback(IntPtr state);
 
     //Window callbacks
     [UnmanagedFunctionPointer(CC)] internal delegate void CreatedCallback(IntPtr instance, [MarshalAs(UnmanagedType.I1)] bool registered, IntPtr state);

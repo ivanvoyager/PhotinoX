@@ -3,7 +3,7 @@ using System.Runtime.CompilerServices;
 using System.Runtime.ExceptionServices;
 using System.Runtime.InteropServices;
 
-using InvokeStateCallback = Photino.NET.NativeDelegates.VoidStateCallback;
+using static Photino.NET.NativeDelegates;
 
 namespace Photino.NET;
 
@@ -32,6 +32,7 @@ internal static partial class NativeMethods
     private static readonly InvokeStateCallback s_invokeStateCallback = OnInvokeState;
     private static readonly InvokeStateCallback s_postCallback = OnPost;
     private static readonly InvokeStateCallback s_postStateCallback = OnPostState;
+    private static readonly ReleaseStateCallback s_releaseCallback = OnRelease;
 
     private static int s_invokeCount;
     private static int s_beginInvokeCount;
@@ -75,7 +76,7 @@ internal static partial class NativeMethods
     [LibraryImport(DLL_NAME)]
     [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
     [return: MarshalAs(UnmanagedType.I1)]
-    private static partial bool PhotinoApplication_BeginInvoke(InvokeStateCallback callback, IntPtr state);
+    private static partial bool PhotinoApplication_BeginInvoke(InvokeStateCallback callback, ReleaseStateCallback release, IntPtr state);
 
     [LibraryImport(DLL_NAME)]
     [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
@@ -207,7 +208,7 @@ internal static partial class NativeMethods
         Interlocked.Increment(ref s_beginInvokeCount);
         try
         {
-            if (PhotinoApplication_BeginInvoke(s_postCallback, GCHandle.ToIntPtr(handle)))
+            if (PhotinoApplication_BeginInvoke(s_postCallback, s_releaseCallback, GCHandle.ToIntPtr(handle)))
             {
                 return true;
             }
@@ -270,7 +271,7 @@ internal static partial class NativeMethods
         Interlocked.Increment(ref s_beginInvokeCount);
         try
         {
-            if (PhotinoApplication_BeginInvoke(s_postStateCallback, GCHandle.ToIntPtr(handle)))
+            if (PhotinoApplication_BeginInvoke(s_postStateCallback, s_releaseCallback, GCHandle.ToIntPtr(handle)))
             {
                 return true;
             }
@@ -279,19 +280,13 @@ internal static partial class NativeMethods
         catch
         {
             Interlocked.Increment(ref s_beginInvokeFailureCount);
-            if (handle.IsAllocated)
-            {
-                Interlocked.Decrement(ref s_beginInvokeCount);
-                handle.Free();
-            }
+            Interlocked.Decrement(ref s_beginInvokeCount);
+            handle.Free();
             throw;
         }
 
-        if (handle.IsAllocated)
-        {
-            Interlocked.Decrement(ref s_beginInvokeCount);
-            handle.Free();
-        }
+        Interlocked.Decrement(ref s_beginInvokeCount);
+        handle.Free();
 
         return false;
     }
@@ -317,6 +312,16 @@ internal static partial class NativeMethods
             Interlocked.Decrement(ref s_beginInvokeCount);
             handle.Free();
         }
+    }
+
+    private static void OnRelease(IntPtr state)
+    {
+        Debug.Assert(state != IntPtr.Zero);
+        if (state == IntPtr.Zero)
+            return;
+
+        Interlocked.Decrement(ref s_beginInvokeCount);
+        GCHandle.FromIntPtr(state).Free();
     }
 
     internal static void OnDispatcherUnhandledException(Exception ex)
