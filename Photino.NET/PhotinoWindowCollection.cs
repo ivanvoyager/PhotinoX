@@ -130,7 +130,7 @@ public sealed class PhotinoWindowCollection(PhotinoApplication app) : IReadOnlyL
         }
         catch (Exception ex)
         {
-            app.HandleNativeCallbackException(ex);
+            app.HandleAsynchronousCallbackException(ex);
         }
     }
 

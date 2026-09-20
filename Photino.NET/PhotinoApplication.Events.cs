@@ -17,7 +17,16 @@ partial class PhotinoApplication
     internal void OnStartup()
     {
         Debug.Assert(_notificationStates.IsEmpty);
-        InvokeNativeEvent(Startup);
+
+        try
+        {
+            Startup?.Invoke(this, EventArgs.Empty);
+        }
+        catch (Exception ex)
+        {
+            HandleLifecycleCallbackException(ex);
+            Shutdown(-1, true);
+        }
     }
 
     /// <summary>
@@ -42,11 +51,18 @@ partial class PhotinoApplication
         var handler = ShutdownRequested;
         if (handler is null)
             return 0;
-
-        var args = new ShutdownRequestedEventArgs(reason);
-        InvokeNativeEvent(handler, args);
         // C++ expects a single byte (0 = allow shutdown, 1 = cancel shutdown)
-        return args.Cancel ? (byte)1 : (byte)0;
+        try
+        {
+            var args = new ShutdownRequestedEventArgs(reason);
+            handler(this, args);
+            return args.Cancel ? (byte)1 : (byte)0;
+        }
+        catch (Exception ex)
+        {
+            HandleLifecycleCallbackException(ex);
+            return 0;
+        }
     }
 
     /// <summary>
@@ -65,9 +81,21 @@ partial class PhotinoApplication
     /// <returns>The application exit code after registered handlers have run.</returns>
     internal int OnExit(int exitCode)
     {
-        var args = new ExitEventArgs(exitCode);
-        InvokeNativeEvent(Exit, args);
-        return args.ApplicationExitCode;
+        var handler = Exit;
+        if (handler is null)
+            return exitCode;
+
+        try
+        {
+            var args = new ExitEventArgs(exitCode);
+            handler(this, args);
+            return args.ApplicationExitCode;
+        }
+        catch (Exception ex)
+        {
+            HandleLifecycleCallbackException(ex);
+            return exitCode;
+        }
     }
 
     /// <summary>
@@ -159,7 +187,7 @@ partial class PhotinoApplication
         }
         catch (Exception ex)
         {
-            HandleNativeCallbackException(ex, caller);
+            HandleAsynchronousCallbackException(ex, caller);
         }
     }
 
@@ -174,11 +202,11 @@ partial class PhotinoApplication
         }
         catch (Exception ex)
         {
-            HandleNativeCallbackException(ex, caller);
+            HandleAsynchronousCallbackException(ex, caller);
         }
     }
 
-    internal void HandleNativeCallbackException(Exception exception, [CallerMemberName] string? caller = null)
+    internal void HandleAsynchronousCallbackException(Exception exception, [CallerMemberName] string? caller = null)
     {
         try
         {
@@ -191,5 +219,10 @@ partial class PhotinoApplication
             Trace.WriteLine(message);
             Debug.Fail(message);
         }
+    }
+
+    private void HandleLifecycleCallbackException(Exception exception)
+    {
+        Interlocked.CompareExchange(ref _callbackException, exception, null);
     }
 }

@@ -1020,7 +1020,10 @@ public partial class PhotinoWindow
 
         if (_nativeInstance != IntPtr.Zero)
         {
-            Dispatcher.Invoke(static nativeInstance => Photino_Show(nativeInstance), _nativeInstance);
+            bool shown = Dispatcher.Invoke(static nativeInstance => Photino_Show(nativeInstance), _nativeInstance);
+            Debug.Assert(shown, "Failed to show the native window.");
+            if (!shown)
+                throw new InvalidOperationException("Failed to show the native window.");
             return;
         }
 

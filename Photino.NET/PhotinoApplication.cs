@@ -50,7 +50,7 @@ public sealed partial class PhotinoApplication
 
     private static PhotinoApplication? s_current;
     private int _isRunning;
-    private int _isInMainLoop;
+    private Exception? _callbackException;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="PhotinoApplication"/> class.
@@ -62,18 +62,15 @@ public sealed partial class PhotinoApplication
     private PhotinoApplication(bool registerCurrent)
     {
         if (registerCurrent && Volatile.Read(ref s_current) is not null)
-        {
             ThrowApplicationAlreadyCreated();
-        }
 
         Dispatcher = new PhotinoDispatcher();
-
-        if (registerCurrent && Interlocked.CompareExchange(ref s_current, this, null) is not null)
-        {
-            ThrowApplicationAlreadyCreated();
-        }
-
         Windows = new PhotinoWindowCollection(this);
+
+        // Publish the fully initialized instance atomically. The earlier check is only a fast path;
+        // this check is required to handle concurrent application construction.
+        if (registerCurrent && Interlocked.CompareExchange(ref s_current, this, null) is not null)
+            ThrowApplicationAlreadyCreated();
     }
 
     /// <summary>
@@ -229,14 +226,25 @@ public sealed partial class PhotinoApplication
         if (Interlocked.CompareExchange(ref _isRunning, 1, 0) == 1)
             ThrowApplicationAlreadyRunning();
 
+        Interlocked.Exchange(ref _callbackException, null);
+        int exitCode = 0;
         try
         {
             if (Platform.IsWindows && Thread.CurrentThread.GetApartmentState() != ApartmentState.STA)
             {
-                return RunOnStaThread(mainWindow);
+                exitCode = RunOnStaThread(mainWindow);
+            }
+            else
+            {
+                exitCode = RunCore(mainWindow);
             }
 
-            return RunCore(mainWindow);
+            Exception? callbackException = Interlocked.Exchange(ref _callbackException, null);
+
+            if (callbackException is not null)
+                ExceptionDispatchInfo.Capture(callbackException).Throw();
+
+            return exitCode;
         }
         finally
         {
@@ -294,7 +302,6 @@ public sealed partial class PhotinoApplication
             }
         }
 
-        Volatile.Write(ref _isInMainLoop, 1);
         var handle = GCHandle.Alloc(this);
         _startupParameters.Callbacks.CallbackState = GCHandle.ToIntPtr(handle);
         try
@@ -303,7 +310,6 @@ public sealed partial class PhotinoApplication
         }
         finally
         {
-            Volatile.Write(ref _isInMainLoop, 0);
             ClearNotificationStates();
             _startupParameters.Callbacks.CallbackState = IntPtr.Zero;
             handle.Free();
