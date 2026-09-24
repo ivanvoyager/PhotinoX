@@ -1,0 +1,12 @@
+{
+  "profiles": {
+    "SplashScreen": {
+      "commandName": "Project",
+      "launchBrowser": false,
+      "debugEngines": "managed,native",
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      }
+    }
+  }
+}

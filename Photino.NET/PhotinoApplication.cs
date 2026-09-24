@@ -49,6 +49,7 @@ public sealed partial class PhotinoApplication
     };
 
     private static PhotinoApplication? s_current;
+    private PhotinoWindow? _mainWindow;
     private int _isRunning;
     private Exception? _callbackException;
 
@@ -150,13 +151,29 @@ public sealed partial class PhotinoApplication
     }
 
     /// <summary>
-    /// Gets the main application window.
+    /// Gets or sets the main application window.
     /// </summary>
     /// <remarks>
-    /// The main window is assigned when <see cref="Run(PhotinoWindow?)"/> is called with a window.
-    /// The value may be <c>null</c> when the application is started without a main window.
+    /// The main window can be assigned explicitly or by passing a window to
+    /// <see cref="Run(PhotinoWindow?)"/>. Assigning the property does not show the window.
+    /// The value may be <c>null</c> when the application runs without a main window.
     /// </remarks>
-    public PhotinoWindow? MainWindow { get; private set; }
+    /// <exception cref="InvalidOperationException">
+    /// Thrown when setting the value from a non-dispatcher thread while the application is running,
+    /// or while the application is shutting down.
+    /// </exception>
+    public PhotinoWindow? MainWindow
+    {
+        get => Volatile.Read(ref _mainWindow);
+        set
+        {
+            if (IsRunning)
+                Dispatcher.VerifyAccess();
+
+            ThrowIfShuttingDown();
+            Volatile.Write(ref _mainWindow, value);
+        }
+    }
 
     /// <summary>
     /// Gets the windows currently owned by the application.
@@ -210,14 +227,16 @@ public sealed partial class PhotinoApplication
     /// Runs the application message loop.
     /// </summary>
     /// <param name="mainWindow">
-    /// The main window to show and run with the application. If <c>null</c>, the application
-    /// runs without assigning a main window.
+    /// The main window to assign and show before the application starts.
+    /// If <c>null</c>, the current <see cref="MainWindow"/> is not changed or shown.
     /// </param>
     /// <returns>
     /// The application exit code.
     /// </returns>
     /// <remarks>
-    /// When <paramref name="mainWindow"/> is provided, it becomes the <see cref="MainWindow"/>.
+    /// When <paramref name="mainWindow"/> is provided, it replaces the current
+    /// <see cref="MainWindow"/> and is shown before the message loop starts.
+    /// When it is <c>null</c>, the current main window is not changed or shown.
     /// The application continues running until its shutdown conditions are met or
     /// <see cref="Shutdown(int, bool)"/> is called.
     /// </remarks>
@@ -290,6 +309,7 @@ public sealed partial class PhotinoApplication
 
         if (mainWindow is not null)
         {
+            var previousMainWindow = MainWindow;
             MainWindow = mainWindow;
             try
             {
@@ -297,7 +317,7 @@ public sealed partial class PhotinoApplication
             }
             catch
             {
-                MainWindow = null;
+                Volatile.Write(ref _mainWindow, previousMainWindow);
                 throw;
             }
         }
@@ -313,7 +333,7 @@ public sealed partial class PhotinoApplication
             ClearNotificationStates();
             _startupParameters.Callbacks.CallbackState = IntPtr.Zero;
             handle.Free();
-            MainWindow = null;
+            Volatile.Write(ref _mainWindow, null);
         }
     }
 
@@ -356,9 +376,9 @@ public sealed partial class PhotinoApplication
         Debug.Assert(Dispatcher.CheckAccess(), "OnWindowClosed must be called on the application dispatcher thread.");
         Debug.Assert(!Windows.Contains(window), "Window closed that is not tracked by the application.");
 
-        bool isMainWindow = ReferenceEquals(window, MainWindow);
+        bool isMainWindow = ReferenceEquals(window, Volatile.Read(ref _mainWindow));
         if (isMainWindow)
-            MainWindow = null;
+            Volatile.Write(ref _mainWindow, null);
 
         if (ShutdownMode == PhotinoShutdownMode.OnExplicitShutdown)
             return;

@@ -3,6 +3,7 @@
 # PhotinoX
 
 [![NuGet Version](https://img.shields.io/nuget/v/PhotinoX.svg)](https://www.nuget.org/packages/PhotinoX)
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/ivanvoyager/PhotinoX)
 [![Build](https://github.com/ivanvoyager/PhotinoX/actions/workflows/build.yml/badge.svg)](https://github.com/ivanvoyager/PhotinoX/actions/workflows/build.yml)
 [![License](https://img.shields.io/github/license/ivanvoyager/PhotinoX?label=license)](https://github.com/ivanvoyager/PhotinoX/blob/master/LICENSE)
 [![NuGet Downloads](https://img.shields.io/nuget/dt/PhotinoX.svg)](https://www.nuget.org/packages/PhotinoX)
@@ -44,23 +45,23 @@ Compared with the original Photino.NET managed API, PhotinoX introduces an expli
 
 `PhotinoApplication` is the explicit application lifetime object. Window creation, shutdown behavior, and UI-thread dispatching are coordinated through the application and its dispatcher instead of implicit global state. The native application tracks open windows as the source of truth, while `MainWindow` and the observable `Windows` collection expose the synchronized managed application state.
 
-| Previous model | New model |
-|---|---|
-| `PhotinoWindow.WaitForClose()` creates the window and starts the message loop. | `PhotinoApplication.Run(window)` owns application lifetime and message-loop execution. |
-| Window creation and message-loop state are controlled from `PhotinoWindow`. | `PhotinoApplication.Run(window)` shows the main window; explicit window creation/showing is available through `PhotinoWindow.Show()`. |
-| Window lifetime is centered around individual `PhotinoWindow` instances. | `PhotinoApplication` tracks open windows through `MainWindow` and `Windows`. |
-| `PhotinoWindow.Invoke(...)` dispatches through window-level invoke helpers. | UI-thread dispatching is centralized through `PhotinoApplication.Dispatcher`, including `CheckAccess`, `Invoke`, `TryInvoke`, `BeginInvoke`, and `InvokeAsync`. |
-| Notification display is tied to window-level APIs. | Notifications are exposed through `PhotinoApplication`, with application-level enabled state and notification events. |
-| Shutdown behavior is implicit around the native message loop. | Shutdown behavior is controlled by `PhotinoShutdownMode`, `PhotinoApplication.Shutdown(...)`, and `ShutdownRequested`. |
+| Previous model                                                                 | New model                                                                                                                                                       |
+|--------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `PhotinoWindow.WaitForClose()` creates the window and starts the message loop. | `PhotinoApplication.Run(window)` owns application lifetime and message-loop execution.                                                                          |
+| Window creation and message-loop state are controlled from `PhotinoWindow`.    | `PhotinoApplication.Run(window)` shows the main window; explicit window creation/showing is available through `PhotinoWindow.Show()`.                           |
+| Window lifetime is centered around individual `PhotinoWindow` instances.       | `PhotinoApplication` tracks open windows through `MainWindow` and `Windows`.                                                                                    |
+| `PhotinoWindow.Invoke(...)` dispatches through window-level invoke helpers.    | UI-thread dispatching is centralized through `PhotinoApplication.Dispatcher`, including `CheckAccess`, `Invoke`, `TryInvoke`, `BeginInvoke`, and `InvokeAsync`. |
+| Notification display is tied to window-level APIs.                             | Notifications are exposed through `PhotinoApplication`, with application-level enabled state and notification events.                                           |
+| Shutdown behavior is implicit around the native message loop.                  | Shutdown behavior is controlled by `PhotinoShutdownMode`, `PhotinoApplication.Shutdown(...)`, and `ShutdownRequested`.                                          |
 
 Notable application lifecycle APIs:
 
-| Area | API |
-|---|---|
-| Lifecycle | `Run`, `Shutdown`, `Startup`, `ShutdownRequested`, `Exit` |
-| Windows | `MainWindow`, observable `Windows` collection |
-| Shutdown behavior | `ShutdownMode`, `ShutdownRequestedEventArgs`, `PhotinoShutdownRequestReason` |
-| Notifications | `ShowNotification`, `NotificationsEnabled`, notification activation/dismissal/failure events |
+| Area              | API                                                                                          |
+|-------------------|----------------------------------------------------------------------------------------------|
+| Lifecycle         | `Run`, `Shutdown`, `Startup`, `ShutdownRequested`, `Exit`                                    |
+| Windows           | `MainWindow`, observable `Windows` collection                                                |
+| Shutdown behavior | `ShutdownMode`, `ShutdownRequestedEventArgs`, `PhotinoShutdownRequestReason`                 |
+| Notifications     | `ShowNotification`, `NotificationsEnabled`, notification activation/dismissal/failure events |
 
 ```csharp
 var app = new PhotinoApplication();
@@ -89,27 +90,27 @@ On Windows, `PhotinoApplication.Run()` performs native window initialization and
 
 Window event names are simplified to remove redundant `Window` prefixes and align better with common .NET event naming. Closing now uses standard `CancelEventArgs`, focus events are exposed as `Activated` and `Deactivated`, and window state events are driven by actual native state transitions instead of transient resize messages.
 
-| Photino.NET API | New API |
-|---|---|
-| `WindowCreating` | `Creating` |
-| `WindowCreated` | `Created` |
-| `WindowClosing` | `Closing` |
-| - | `Closed` |
-| `WindowLocationChanged` | `LocationChanged` |
-| `WindowSizeChanged` | `SizeChanged` |
-| `WindowFocusIn` | `Activated` |
-| `WindowFocusOut` | `Deactivated` |
-| `WindowMaximized` | `Maximized` |
-| `WindowRestored` | `Restored` |
-| `WindowMinimized` | `Minimized` |
-| - | `FullScreenEntered` |
-| - | `FullScreenExited` |
-| - | `StateChanged` |
-| - | `NavigationStarting` |
-| - | `NewWindowRequested` |
-| - | `ContentLoading` |
-| - | `ContentLoaded` |
-| - | `InitialContentLoaded` |
+| Photino.NET API         | New API                |
+|-------------------------|------------------------|
+| `WindowCreating`        | `Creating`             |
+| `WindowCreated`         | `Created`              |
+| `WindowClosing`         | `Closing`              |
+| -                       | `Closed`               |
+| `WindowLocationChanged` | `LocationChanged`      |
+| `WindowSizeChanged`     | `SizeChanged`          |
+| `WindowFocusIn`         | `Activated`            |
+| `WindowFocusOut`        | `Deactivated`          |
+| `WindowMaximized`       | `Maximized`            |
+| `WindowRestored`        | `Restored`             |
+| `WindowMinimized`       | `Minimized`            |
+| -                       | `FullScreenEntered`    |
+| -                       | `FullScreenExited`     |
+| -                       | `StateChanged`         |
+| -                       | `NavigationStarting`   |
+| -                       | `NewWindowRequested`   |
+| -                       | `ContentLoading`       |
+| -                       | `ContentLoaded`        |
+| -                       | `InitialContentLoaded` |
 
 `Closing` now uses `EventHandler<CancelEventArgs>`; set `CancelEventArgs.Cancel` to cancel the close operation.
 
@@ -121,49 +122,49 @@ Window event names are simplified to remove redundant `Window` prefixes and alig
 
 `ContentLoading`, `ContentLoaded`, and `InitialContentLoaded` are available for observing top-level WebView content loading. `ContentLoading` is raised when top-level content starts loading after navigation has committed. `ContentLoaded` is raised after each completed top-level content load, while `InitialContentLoaded` is raised once after the initial top-level content load completes. These events do not indicate that a JavaScript framework, SPA route, Blazor component tree, or all asynchronous page work has finished rendering.
 
-| Previous registration helper | New registration helper |
-|---|---|
-| `RegisterWindowCreatingHandler(...)` | `RegisterCreatingHandler(...)` |
-| `RegisterWindowCreatedHandler(...)` | `RegisterCreatedHandler(...)` |
-| `RegisterWindowClosingHandler(...)` | `RegisterClosingHandler(...)` |
-| `RegisterFocusInHandler(...)` | `RegisterActivatedHandler(...)` |
-| `RegisterFocusOutHandler(...)` | `RegisterDeactivatedHandler(...)` |
-| - | `RegisterClosedHandler(...)` |
-| - | `RegisterFullScreenEnteredHandler(...)` |
-| - | `RegisterFullScreenExitedHandler(...)` |
-| - | `RegisterStateChangedHandler(...)` |
-| - | `RegisterNavigationStartingHandler(...)` |
-| - | `RegisterNewWindowRequestedHandler(...)` |
-| - | `RegisterContentLoadingHandler(...)` |
-| - | `RegisterContentLoadedHandler(...)` |
-| - | `RegisterInitialContentLoadedHandler(...)` |
+| Previous registration helper         | New registration helper                    |
+|--------------------------------------|--------------------------------------------|
+| `RegisterWindowCreatingHandler(...)` | `RegisterCreatingHandler(...)`             |
+| `RegisterWindowCreatedHandler(...)`  | `RegisterCreatedHandler(...)`              |
+| `RegisterWindowClosingHandler(...)`  | `RegisterClosingHandler(...)`              |
+| `RegisterFocusInHandler(...)`        | `RegisterActivatedHandler(...)`            |
+| `RegisterFocusOutHandler(...)`       | `RegisterDeactivatedHandler(...)`          |
+| -                                    | `RegisterClosedHandler(...)`               |
+| -                                    | `RegisterFullScreenEnteredHandler(...)`    |
+| -                                    | `RegisterFullScreenExitedHandler(...)`     |
+| -                                    | `RegisterStateChangedHandler(...)`         |
+| -                                    | `RegisterNavigationStartingHandler(...)`   |
+| -                                    | `RegisterNewWindowRequestedHandler(...)`   |
+| -                                    | `RegisterContentLoadingHandler(...)`       |
+| -                                    | `RegisterContentLoadedHandler(...)`        |
+| -                                    | `RegisterInitialContentLoadedHandler(...)` |
 
 ### Window API
 
 `PhotinoWindow` now uses explicit `Show()`-based window creation, unified `WindowState` tracking, explicit lifecycle state, and simplified lifecycle events.
 
-| Previous API | New API / direction |
-|---|---|
-| `WaitForClose()` | `PhotinoApplication.Run(window)` for application startup; `PhotinoWindow.Show()` for explicit window creation/showing. |
-| `LoadRawString(...)` | `LoadString(...)` |
-| Windows-only `WindowHandle` | Platform-specific handle: `HWND`, `GtkWidget*`, or `NSWindow*` |
-| No explicit closed state | `IsClosed` |
-| No explicit initialization state | `IsInitialized` |
-| `FullScreen`, `Maximized`, and `Minimized` properties | Unified native-driven `WindowState` with `Normal`, `Minimized`, `Maximized`, and `FullScreen` |
-| `TemporaryFilesPath` | `UserDataFolder` |
-| `SetTemporaryFilesPath(...)` | `SetUserDataFolder(...)` |
+| Previous API                                          | New API / direction                                                                                                    |
+|-------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------|
+| `WaitForClose()`                                      | `PhotinoApplication.Run(window)` for application startup; `PhotinoWindow.Show()` for explicit window creation/showing. |
+| `LoadRawString(...)`                                  | `LoadString(...)`                                                                                                      |
+| Windows-only `WindowHandle`                           | Platform-specific handle: `HWND`, `GtkWidget*`, or `NSWindow*`                                                         |
+| No explicit closed state                              | `IsClosed`                                                                                                             |
+| No explicit initialization state                      | `IsInitialized`                                                                                                        |
+| `FullScreen`, `Maximized`, and `Minimized` properties | Unified native-driven `WindowState` with `Normal`, `Minimized`, `Maximized`, and `FullScreen`                          |
+| `TemporaryFilesPath`                                  | `UserDataFolder`                                                                                                       |
+| `SetTemporaryFilesPath(...)`                          | `SetUserDataFolder(...)`                                                                                               |
 
 Notable window lifecycle and API changes in PhotinoX:
 
-| Area | API |
-|---|---|
-| Window lifecycle | `Show`, `Activate`, `BringToFront` |
-| Window state model | `WindowState`, `StateChanged` |
-| Window state commands | `Maximize`, `Minimize`, `Restore`, `SetWindowState` |
-| Existing state helpers | `SetFullScreen`, `SetMaximized`, `SetMinimized` |
-| Chromeless window helpers | `BeginWindowDrag`, `BeginWindowResize` |
+| Area                                      | API                                                                                                                                   |
+|-------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------|
+| Window lifecycle                          | `Show`, `Activate`, `BringToFront`                                                                                                    |
+| Window state model                        | `WindowState`, `StateChanged`                                                                                                         |
+| Window state commands                     | `Maximize`, `Minimize`, `Restore`, `SetWindowState`                                                                                   |
+| Existing state helpers                    | `SetFullScreen`, `SetMaximized`, `SetMinimized`                                                                                       |
+| Chromeless window helpers                 | `BeginWindowDrag`, `BeginWindowResize`                                                                                                |
 | Linux chromeless native hit-test settings | `SetLinuxChromelessDragRegion`, `SetLinuxChromelessDragRegions`, `SetLinuxChromelessResizeBorderThickness`, `LinuxChromelessSettings` |
-| Window/platform state | `IsInitialized`, `IsClosed`, cross-platform `WindowHandle` |
+| Window/platform state                     | `IsInitialized`, `IsClosed`, cross-platform `WindowHandle`                                                                            |
 
 `WindowState` replaces the previous `FullScreen`, `Maximized`, and `Minimized` properties with a single state model. It supports `Normal`, `Minimized`, `Maximized`, and `FullScreen`, and is also used for startup state configuration.
 
