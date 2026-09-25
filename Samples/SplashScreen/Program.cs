@@ -13,7 +13,6 @@ var splashWindow = new PhotinoWindow()
     .SetTitle("PhotinoX")
     .SetChromeless(true)
     .SetResizable(false)
-    .SetUseOsDefaultSize(false)
     .SetSize(480, 300)
     .Center()
     .Load("wwwroot/splash.html");
@@ -25,6 +24,7 @@ app.Startup += (_, _) =>
 };
 
 WebApplication? webApplication = null;
+
 var exitCode = app.Run();
 
 if (webApplication is not null)
@@ -55,7 +55,6 @@ async Task StartApplicationAsync()
         {
             var mainWindow = new PhotinoWindow()
                 .SetTitle("PhotinoX Splash Screen Sample")
-                .SetUseOsDefaultSize(false)
                 .SetSize(1200, 820)
                 .Center()
                 .Load(address);

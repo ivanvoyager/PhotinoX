@@ -1124,59 +1124,6 @@ public partial class PhotinoWindow
     }
 
     /// <summary>
-    /// Sends a message to the native browser control's JavaScript context.
-    /// </summary>
-    /// <remarks>
-    /// In JavaScript, messages can be received via <code>window.external.receiveMessage(message)</code>
-    /// </remarks>
-    /// <exception cref="InvalidOperationException">
-    /// Thrown when the window is not initialized or has already been closed.
-    /// </exception>
-    /// <param name="message">Message as string</param>
-    public void SendWebMessage(string message)
-    {
-        Log($".{nameof(SendWebMessage)}({message})");
-        ThrowIfClosedOrNotInitialized();
-
-        Dispatcher.Invoke(static state =>
-        {
-            Photino_SendWebMessage(state.NativeInstance, state.Message);
-        }, (NativeInstance: _nativeInstance, Message: message));
-    }
-
-    /// <summary>
-    /// Sends a message asynchronously to the native browser control's JavaScript context.
-    /// </summary>
-    /// <remarks>
-    /// In JavaScript, messages can be received via <code>window.external.receiveMessage(message)</code>.
-    /// </remarks>
-    /// <param name="message">
-    /// The message to send.
-    /// </param>
-    /// <param name="cancellationToken">
-    /// A cancellation token to observe while waiting for the operation to complete.
-    /// </param>
-    /// <returns>
-    /// A task that represents the asynchronous send operation.
-    /// </returns>
-    /// <exception cref="InvalidOperationException">
-    /// Thrown when the window is not initialized or has already been closed.
-    /// </exception>
-    /// <exception cref="OperationCanceledException">
-    /// Thrown when <paramref name="cancellationToken"/> is canceled.
-    /// </exception>
-    public Task SendWebMessageAsync(string message, CancellationToken cancellationToken = default)
-    {
-        Log($".{nameof(SendWebMessageAsync)}({message})");
-        ThrowIfClosedOrNotInitialized();
-
-        return Dispatcher.InvokeAsync(static state =>
-        {
-            Photino_SendWebMessage(state.NativeInstance, state.Message);
-        }, (NativeInstance: _nativeInstance, Message: message), cancellationToken);
-    }
-
-    /// <summary>
     /// Logs a message.
     /// </summary>
     /// <param name="message">Log message</param>
