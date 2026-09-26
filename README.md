@@ -141,7 +141,7 @@ Window event names are simplified to remove redundant `Window` prefixes and alig
 
 ### Window API
 
-`PhotinoWindow` now uses explicit `Show()`-based window creation, unified `WindowState` tracking, explicit lifecycle state, and simplified lifecycle events.
+`PhotinoWindow` now provides explicit initialization, visibility, and lifecycle APIs, unified `WindowState` tracking, and simplified lifecycle events.
 
 | Previous API                                          | New API / direction                                                                                                    |
 |-------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------|
@@ -149,7 +149,7 @@ Window event names are simplified to remove redundant `Window` prefixes and alig
 | `LoadRawString(...)`                                  | `LoadString(...)`                                                                                                      |
 | Windows-only `WindowHandle`                           | Platform-specific handle: `HWND`, `GtkWidget*`, or `NSWindow*`                                                         |
 | No explicit closed state                              | `IsClosed`                                                                                                             |
-| No explicit initialization state                      | `IsInitialized`                                                                                                        |
+| No explicit initialization or visibility state        | `IsInitialized`, `IsVisible`                                                                                           |
 | `FullScreen`, `Maximized`, and `Minimized` properties | Unified native-driven `WindowState` with `Normal`, `Minimized`, `Maximized`, and `FullScreen`                          |
 | `TemporaryFilesPath`                                  | `UserDataFolder`                                                                                                       |
 | `SetTemporaryFilesPath(...)`                          | `SetUserDataFolder(...)`                                                                                               |
@@ -158,13 +158,33 @@ Notable window lifecycle and API changes in PhotinoX:
 
 | Area                                      | API                                                                                                                                   |
 |-------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------|
-| Window lifecycle                          | `Show`, `Activate`, `BringToFront`                                                                                                    |
+| Window lifecycle                          | `Initialize`, `Show`, `Hide`, `Activate`, `BringToFront`                                                                              |
 | Window state model                        | `WindowState`, `StateChanged`                                                                                                         |
 | Window state commands                     | `Maximize`, `Minimize`, `Restore`, `SetWindowState`                                                                                   |
 | Existing state helpers                    | `SetFullScreen`, `SetMaximized`, `SetMinimized`                                                                                       |
 | Chromeless window helpers                 | `BeginWindowDrag`, `BeginWindowResize`                                                                                                |
 | Linux chromeless native hit-test settings | `SetLinuxChromelessDragRegion`, `SetLinuxChromelessDragRegions`, `SetLinuxChromelessResizeBorderThickness`, `LinuxChromelessSettings` |
-| Window/platform state                     | `IsInitialized`, `IsClosed`, cross-platform `WindowHandle`                                                                            |
+| Window/platform state                     | `IsInitialized`, `IsVisible`, `IsClosed`, cross-platform `WindowHandle`                                                               |
+
+`Initialize()` creates the native window and WebView without showing the window, allowing initial content to load while the native window remains hidden. `Show()` initializes the window when necessary and makes it visible, while `Hide()` hides an initialized window without closing or destroying it. A hidden window can be shown again, but a closed window cannot be reinitialized or shown.
+
+```csharp
+var window = new PhotinoWindow()
+    .SetTitle("PhotinoX")
+    .SetSize(480, 300)
+    .Load("wwwroot/index.html");
+
+window.Initialize();
+
+// Show the initialized window when the application is ready.
+window.Show();
+
+// The window remains initialized and can be shown again.
+window.Hide();
+window.Show();
+```
+
+`Initialize()` is useful for splash screens and other deferred-visibility scenarios where WebView content should begin loading before the native window is shown.
 
 `WindowState` replaces the previous `FullScreen`, `Maximized`, and `Minimized` properties with a single state model. It supports `Normal`, `Minimized`, `Maximized`, and `FullScreen`, and is also used for startup state configuration.
 

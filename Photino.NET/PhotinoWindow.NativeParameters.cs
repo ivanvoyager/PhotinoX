@@ -51,6 +51,13 @@ internal struct PhotinoNativeWindowParameters
     /// between this window and its logical parent. Default is false.
     /// </summary>
     [MarshalAs(UnmanagedType.I1)] internal bool UseNativeWindowOwner; //#5
+
+    /// <summary>
+    /// OPTIONAL: If true, the native window is shown during initialization.
+    /// If false, the native window and WebView are initialized without showing the window.
+    /// Default is true.
+    /// </summary>
+    [MarshalAs(UnmanagedType.I1)] internal bool ShowOnInitialize; //#6
 }
 
 [StructLayout(LayoutKind.Sequential)]
@@ -225,7 +232,7 @@ internal struct PhotinoWindowNativeParameters
         }
     }
 
-    internal const int NativeAbiVersion = 7;
+    internal const int NativeAbiVersion = 8;
     internal const int MaxCustomSchemeNames = 16;
 
     /// <summary>Set when GetParamErrors() is called, prior to initializing the native window. It is a check to make sure the struct matches what C++ is expecting.</summary>

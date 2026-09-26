@@ -17,11 +17,28 @@ var splashWindow = new PhotinoWindow()
     .Center()
     .Load("wwwroot/splash.html");
 
-app.Startup += (_, _) =>
+splashWindow.RegisterWebMessageReceivedHandler((_, e) =>
 {
-    splashWindow.Show();
-    _ = StartApplicationAsync();
-};
+    if (e.Message == "splash-ready")
+        _ = ShowSplashAsync();
+});
+
+async Task ShowSplashAsync()
+{
+    if (Platform.IsWindows)
+        await Task.Delay(100); // Allow the WebView surface to be presented before showing the native window.
+
+    app.Dispatcher.BeginInvoke(() =>
+    {
+        splashWindow.Show();
+        _ = StartApplicationAsync();
+    });
+}
+
+app.RegisterStartupHandler((_, _) =>
+{
+    splashWindow.Initialize();
+});
 
 WebApplication? webApplication = null;
 

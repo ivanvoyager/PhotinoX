@@ -24,7 +24,6 @@ internal static class Program
 
         mainWindow.Window
             .SetTitle("PhotinoX Window Diagnostics")
-            .SetUseOsDefaultSize(false)
             .SetSize(1200, 820)
             .Center()
             .Load("wwwroot/main.html");
@@ -222,7 +221,7 @@ internal static class Program
                 return;
 
             var context = string.Equals(target, "child", StringComparison.OrdinalIgnoreCase)
-                ? GetOrCreateChild()
+                ? action == "hide" ? _child : GetOrCreateChild()
                 : this;
 
             if (context is null)
@@ -243,6 +242,10 @@ internal static class Program
                 {
                     case "show":
                         context.Window.Show();
+                        break;
+
+                    case "hide":
+                        context.Window.Hide();
                         break;
 
                     case "activate":
@@ -300,7 +303,6 @@ internal static class Program
 
             _child.Window
                 .SetTitle($"PhotinoX Window Diagnostics - Child of {Id}")
-                .SetUseOsDefaultSize(false)
                 .SetSize(1000, 720)
                 .Center()
                 .Load("wwwroot/main.html");
@@ -350,6 +352,7 @@ internal static class Program
                     id = Id,
                     parentId = ParentId,
                     isInitialized = Window.IsInitialized,
+                    isVisible = Window.IsVisible,
                     isClosed = Window.IsClosed,
                     hasChild = _child is { Window.IsClosed: false },
                     fullScreen = Window.WindowState == PhotinoWindowState.FullScreen,

@@ -100,7 +100,8 @@ partial class PhotinoWindow
     /// Returns the current <see cref="PhotinoWindow"/> instance.
     /// </returns>
     /// <remarks>
-    /// If the window has not been created yet, it is created first.
+    /// If the window has not been initialized yet, it is initialized and shown.
+    /// If the window is hidden, it is shown.
     /// If the window is minimized, it is restored before activation.
     /// </remarks>
     /// <exception cref="InvalidOperationException">

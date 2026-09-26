@@ -197,6 +197,7 @@ function renderState(state) {
     addStateRow("Window", state.id);
     addStateRow("Parent", state.parentId ?? "-");
     addStateRow("Initialized", state.isInitialized);
+    addStateRow("Visible", state.isVisible);
     addStateRow("Closed", state.isClosed);
     addStateRow("Fullscreen", state.fullScreen);
     addStateRow("WindowState", state.state);

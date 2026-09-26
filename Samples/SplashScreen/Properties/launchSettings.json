@@ -3,10 +3,11 @@
     "SplashScreen": {
       "commandName": "Project",
       "launchBrowser": false,
-      "debugEngines": "managed,native",
+      "nativeDebugging": true,
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
-      }
+      },
+      "debugEngines": "managed,native"
     }
   }
 }

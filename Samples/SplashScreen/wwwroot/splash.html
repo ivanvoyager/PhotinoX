@@ -15,5 +15,11 @@
             <div class="progress-indicator"></div>
         </div>
     </main>
+
+    <script>
+        requestAnimationFrame(() => {
+            window.external.sendMessage("splash-ready");
+        });
+    </script>
 </body>
 </html>
