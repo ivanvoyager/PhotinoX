@@ -262,10 +262,11 @@ On Linux Wayland, top-level window position is compositor-controlled. Move notif
 ## Core (ecosystem)
 
 - [**PhotinoX.App**](https://github.com/ivanvoyager/PhotinoX.App) - application composition layer for PhotinoX desktop applications.
+- [**PhotinoX.Cpp**](https://github.com/ivanvoyager/PhotinoX.Cpp) - a modern cross-platform C++20 desktop application framework built on native OS WebViews.
 - [**PhotinoX.Native**](https://github.com/ivanvoyager/PhotinoX.Native) - native binaries for Windows/macOS/Linux.
-- [**PhotinoX.Blazor**](https://github.com/ivanvoyager/PhotinoX.Blazor) - Blazor integration for native desktop apps.
-- [**PhotinoX.Server**](https://github.com/ivanvoyager/PhotinoX.Server) - optional local static-file server for SPA/static assets.
-- [**PhotinoX.Samples**](https://github.com/ivanvoyager/PhotinoX.Samples) - sample projects showcasing common scenarios.
+- [**PhotinoX.Blazor**](https://github.com/ivanvoyager/PhotinoX.Blazor) - Blazor integration for building native desktop applications with PhotinoX.
+- [**PhotinoX.Server**](https://github.com/ivanvoyager/PhotinoX.Server) - optional local static-file server for SPA and static web assets.
+- [**PhotinoX.Samples**](https://github.com/ivanvoyager/PhotinoX.Samples) - sample projects showcasing common PhotinoX scenarios.
 
 ---
 
