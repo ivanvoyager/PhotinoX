@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.Drawing;
+using System.Runtime.CompilerServices;
 using System.Runtime.ExceptionServices;
 using System.Runtime.InteropServices;
 
@@ -1033,6 +1034,9 @@ public partial class PhotinoWindow
     /// If the native window has already been initialized, this method has no effect.
     /// A closed window cannot be initialized again.
     /// </remarks>
+    /// <exception cref="PhotinoWebView2RuntimeNotFoundException">
+    /// Thrown on Windows when the WebView2 Runtime is unavailable and automatic installation is disabled or fails.
+    /// </exception>
     public void Initialize()
     {
         InitializeCore(showOnInitialize: false);
@@ -1047,8 +1051,7 @@ public partial class PhotinoWindow
 
         ThrowIfCreating();
 
-        if (Platform.IsWindows && Thread.CurrentThread.GetApartmentState() != ApartmentState.STA)
-            ThrowWindowMustBeCreatedOnStaThread();
+        VerifyWindowsInitialization();
 
         Dispatcher.VerifyAccessToCreateWindow();
 
@@ -1101,6 +1104,9 @@ public partial class PhotinoWindow
     /// If the window is hidden, this method shows the existing native window.
     /// A closed window cannot be shown again.
     /// </remarks>
+    /// <exception cref="PhotinoWebView2RuntimeNotFoundException">
+    /// Thrown on Windows when the WebView2 Runtime is unavailable and automatic installation is disabled or fails.
+    /// </exception>
     public void Show()
     {
         ThrowIfClosed();
@@ -1163,6 +1169,19 @@ public partial class PhotinoWindow
         _suppressClosing = true;
 
         Dispatcher.Invoke(static nativeInstance => Photino_Close(nativeInstance), _nativeInstance);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static void VerifyWindowsInitialization()
+    {
+        if (!Platform.IsWindows)
+            return;
+
+        if (Thread.CurrentThread.GetApartmentState() != ApartmentState.STA)
+            ThrowWindowMustBeCreatedOnStaThread();
+
+        if (!Photino_EnsureWebView2RuntimeAvailable())
+            ThrowWebView2RuntimeNotFound();
     }
 
     private void PrepareAndValidateStartupParameters()

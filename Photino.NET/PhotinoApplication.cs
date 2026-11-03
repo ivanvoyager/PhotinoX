@@ -240,15 +240,18 @@ public sealed partial class PhotinoApplication
     /// The application continues running until its shutdown conditions are met or
     /// <see cref="Shutdown(int, bool)"/> is called.
     /// </remarks>
+    /// <exception cref="PhotinoWebView2RuntimeNotFoundException">
+    /// Thrown on Windows when the WebView2 Runtime is unavailable and automatic installation is disabled or fails.
+    /// </exception>
     public int Run(PhotinoWindow? mainWindow = null)
     {
         if (Interlocked.CompareExchange(ref _isRunning, 1, 0) == 1)
             ThrowApplicationAlreadyRunning();
 
         Interlocked.Exchange(ref _callbackException, null);
-        int exitCode = 0;
         try
         {
+            int exitCode;
             if (Platform.IsWindows && Thread.CurrentThread.GetApartmentState() != ApartmentState.STA)
             {
                 exitCode = RunOnStaThread(mainWindow);

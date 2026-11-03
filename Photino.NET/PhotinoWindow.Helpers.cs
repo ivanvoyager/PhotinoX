@@ -28,6 +28,13 @@ partial class PhotinoWindow
         throw new InvalidOperationException("A Photino window must be created on an STA thread on Windows.");
     }
 
+    [DoesNotReturn]
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    private static void ThrowWebView2RuntimeNotFound()
+    {
+        throw new PhotinoWebView2RuntimeNotFoundException();
+    }
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void ThrowIfClosedOrNotInitialized([CallerMemberName] string? callerName = null)
     {
