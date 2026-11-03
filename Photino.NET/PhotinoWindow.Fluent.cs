@@ -1224,6 +1224,9 @@ partial class PhotinoWindow
     /// When true, the user can access the browser control's context menu.
     /// By default, this is set to true.
     /// </summary>
+    /// <remarks>
+    /// This only works on Windows and Linux.
+    /// </remarks>
     /// <returns>
     /// Returns the current <see cref="PhotinoWindow"/> instance.
     /// </returns>
@@ -1239,6 +1242,9 @@ partial class PhotinoWindow
     /// When true, the user can zoom.
     /// By default, this is set to true.
     /// </summary>
+    /// <remarks>
+    /// This only works on Windows.
+    /// </remarks>
     /// <returns>
     /// Returns the current <see cref="PhotinoWindow"/> instance.
     /// </returns>
@@ -1262,6 +1268,81 @@ partial class PhotinoWindow
     {
         Log($".{nameof(SetDevToolsEnabled)}({enabled})");
         DevToolsEnabled = enabled;
+        return this;
+    }
+
+    /// <summary>
+    /// Sets whether browser-specific accelerator keys are enabled.
+    /// By default, this is set to true.
+    /// </summary>
+    /// <remarks>
+    /// This only works on Windows. When disabled, WebView2 browser shortcuts such as Ctrl+F, Ctrl+P, Ctrl+R, F5, and F12 are disabled.
+    /// Standard text-editing shortcuts remain enabled. Changing this setting after initialization reloads the current page.
+    /// </remarks>
+    /// <param name="enabled">Whether browser-specific accelerator keys should be enabled.</param>
+    /// <returns>
+    /// Returns the current <see cref="PhotinoWindow"/> instance.
+    /// </returns>
+    public PhotinoWindow SetBrowserAcceleratorKeysEnabled(bool enabled)
+    {
+        Log($".{nameof(SetBrowserAcceleratorKeysEnabled)}({enabled})");
+        BrowserAcceleratorKeysEnabled = enabled;
+        return this;
+    }
+
+    /// <summary>
+    /// Sets whether general form autofill is enabled.
+    /// By default, this is set to true.
+    /// </summary>
+    /// <remarks>
+    /// This only works on Windows. This setting is shared by WebView2 instances that use the same browser profile. Changes take effect immediately.
+    /// </remarks>
+    /// <param name="enabled">Whether general form autofill should be enabled.</param>
+    /// <returns>
+    /// Returns the current <see cref="PhotinoWindow"/> instance.
+    /// </returns>
+    public PhotinoWindow SetGeneralAutofillEnabled(bool enabled)
+    {
+        Log($".{nameof(SetGeneralAutofillEnabled)}({enabled})");
+        GeneralAutofillEnabled = enabled;
+        return this;
+    }
+
+    /// <summary>
+    /// Sets whether password autosave is enabled.
+    /// By default, this is set to false.
+    /// </summary>
+    /// <remarks>
+    /// This only works on Windows. This setting is independent of <see cref="GeneralAutofillEnabled"/> and
+    /// is shared by WebView2 instances that use the same browser profile. Changes take effect immediately.
+    /// </remarks>
+    /// <param name="enabled">Whether password autosave should be enabled.</param>
+    /// <returns>
+    /// Returns the current <see cref="PhotinoWindow"/> instance.
+    /// </returns>
+    public PhotinoWindow SetPasswordAutosaveEnabled(bool enabled)
+    {
+        Log($".{nameof(SetPasswordAutosaveEnabled)}({enabled})");
+        PasswordAutosaveEnabled = enabled;
+        return this;
+    }
+
+    /// <summary>
+    /// Sets whether Microsoft Defender SmartScreen reputation checking is required.
+    /// By default, this is set to true.
+    /// </summary>
+    /// <remarks>
+    /// This only works on Windows. This setting affects WebView2 instances that use the same user data folder and
+    /// may be overridden by system policy. Changing this setting after initialization reloads the current page.
+    /// </remarks>
+    /// <param name="required">Whether Microsoft Defender SmartScreen reputation checking should be required.</param>
+    /// <returns>
+    /// Returns the current <see cref="PhotinoWindow"/> instance.
+    /// </returns>
+    public PhotinoWindow SetReputationCheckingRequired(bool required)
+    {
+        Log($".{nameof(SetReputationCheckingRequired)}({required})");
+        ReputationCheckingRequired = required;
         return this;
     }
 
@@ -1376,6 +1457,9 @@ partial class PhotinoWindow
     /// <summary>
     /// Enables or disables browser media autoplay at initialization.
     /// </summary>
+    /// <remarks>
+    /// This only works on Windows and Linux.
+    /// </remarks>
     /// <param name="enable">
     /// <see langword="true"/> to enable media autoplay; otherwise, <see langword="false"/>.
     /// </param>
@@ -1476,6 +1560,9 @@ partial class PhotinoWindow
     /// <summary>
     /// Enables or disables browser smooth scrolling at initialization.
     /// </summary>
+    /// <remarks>
+    /// This only works on Windows and Linux.
+    /// </remarks>
     /// <param name="enable">
     /// <see langword="true"/> to enable smooth scrolling; otherwise, <see langword="false"/>.
     /// </param>

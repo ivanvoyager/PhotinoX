@@ -214,6 +214,18 @@ internal struct PhotinoNativeBrowserParameters
 
     /// <summary>OPTIONAL: If true, certificate errors are ignored where supported. Default is false.</summary>
     [MarshalAs(UnmanagedType.I1)] internal bool IgnoreCertificateErrorsEnabled; //#19
+
+    /// <summary>WINDOWS: OPTIONAL: If true, browser-specific accelerator keys are enabled. Default is true.</summary>
+    [MarshalAs(UnmanagedType.I1)] internal bool BrowserAcceleratorKeysEnabled; //#20
+
+    /// <summary>WINDOWS: OPTIONAL: If true, general form autofill is enabled. Default is true.</summary>
+    [MarshalAs(UnmanagedType.I1)] internal bool GeneralAutofillEnabled; //#21
+
+    /// <summary>WINDOWS: OPTIONAL: If true, password autosave is enabled. Default is false.</summary>
+    [MarshalAs(UnmanagedType.I1)] internal bool PasswordAutosaveEnabled; //#22
+
+    /// <summary>WINDOWS: OPTIONAL: If true, WebView2 SmartScreen reputation checking is required. Default is true.</summary>
+    [MarshalAs(UnmanagedType.I1)] internal bool ReputationCheckingRequired; //#23
 }
 
 [StructLayout(LayoutKind.Sequential)]
@@ -226,13 +238,13 @@ internal struct PhotinoWindowNativeParameters
             Marshal.OffsetOf<PhotinoWindowNativeParameters>(nameof(LinuxChromeless)).ToInt32() != 192 ||
             Marshal.OffsetOf<PhotinoWindowNativeParameters>(nameof(Geometry)).ToInt32() != 212 ||
             Marshal.OffsetOf<PhotinoWindowNativeParameters>(nameof(Browser)).ToInt32() != 256 ||
-            Marshal.SizeOf<PhotinoWindowNativeParameters>() != 440)
+            Marshal.SizeOf<PhotinoWindowNativeParameters>() != 448)
         {
             throw new TypeLoadException($"{typeof(PhotinoWindowNativeParameters).FullName} has an invalid native layout.");
         }
     }
 
-    internal const int NativeAbiVersion = 8;
+    internal const int NativeAbiVersion = 9;
     internal const int MaxCustomSchemeNames = 16;
 
     /// <summary>Set when GetParamErrors() is called, prior to initializing the native window. It is a check to make sure the struct matches what C++ is expecting.</summary>

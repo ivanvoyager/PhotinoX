@@ -86,7 +86,12 @@ public partial class PhotinoWindow
             JavascriptClipboardAccessEnabled = true,
             MediaStreamEnabled = true,
             SmoothScrollingEnabled = true,
-            IgnoreCertificateErrorsEnabled = false
+            IgnoreCertificateErrorsEnabled = false,
+
+            BrowserAcceleratorKeysEnabled = true,
+            GeneralAutofillEnabled = true,
+            PasswordAutosaveEnabled = false,
+            ReputationCheckingRequired = true,
         }
     };
 

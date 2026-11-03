@@ -245,6 +245,10 @@ On Windows, `UserDataFolder` specifies the WebView2 user data folder used by the
 
 PhotinoX reuses an existing WebView2 environment when the requested Windows WebView2 configuration is compatible with an environment that has already been created.
 
+On Windows, `PhotinoApplication.IsWebView2RuntimeAvailable()` checks whether a WebView2 Runtime is available. Automatic runtime installation is disabled by default and can be explicitly enabled before creating the first window through `PhotinoApplication.SetWebView2RuntimeAutoInstallEnabled(...)`.
+
+`BrowserAcceleratorKeysEnabled`, `GeneralAutofillEnabled`, `PasswordAutosaveEnabled`, and `ReputationCheckingRequired` expose the corresponding WebView2 settings on Windows. General autofill and password autosave changes take effect immediately. Changing browser accelerator keys or reputation checking settings after initialization reloads the current page.
+
 `StatusBarEnabled` controls the embedded WebView status bar where supported. On Windows, it maps to WebView2 `IsStatusBarEnabled` and can disable the bottom-left link hover URL overlay. On macOS and Linux, the option is stored but currently has no native effect.
 
 ### Compatibility

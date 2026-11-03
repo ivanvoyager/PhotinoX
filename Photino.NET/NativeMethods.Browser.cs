@@ -5,11 +5,6 @@ namespace Photino.NET;
 
 internal static partial class NativeMethods
 {
-    [LibraryImport(DLL_NAME, StringMarshalling = StringMarshalling.Utf8)]
-    [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
-    [return: MarshalAs(UnmanagedType.I1)]
-    internal static partial bool Photino_SetWebView2RuntimePath(string? webView2RuntimePath);
-
     [LibraryImport(DLL_NAME)]
     [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
     internal static partial void Photino_GetTransparentEnabled(IntPtr instance, out byte enabled);
@@ -91,6 +86,42 @@ internal static partial class NativeMethods
 
     [LibraryImport(DLL_NAME)]
     [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
+    internal static partial void Photino_GetBrowserAcceleratorKeysEnabled(IntPtr instance, out byte enabled);
+
+    [LibraryImport(DLL_NAME)]
+    [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
+    internal static partial void Photino_SetBrowserAcceleratorKeysEnabled(IntPtr instance, byte enabled);
+
+
+    [LibraryImport(DLL_NAME)]
+    [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
+    internal static partial void Photino_GetGeneralAutofillEnabled(IntPtr instance, out byte enabled);
+
+    [LibraryImport(DLL_NAME)]
+    [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
+    internal static partial void Photino_SetGeneralAutofillEnabled(IntPtr instance, byte enabled);
+
+
+    [LibraryImport(DLL_NAME)]
+    [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
+    internal static partial void Photino_GetPasswordAutosaveEnabled(IntPtr instance, out byte enabled);
+
+    [LibraryImport(DLL_NAME)]
+    [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
+    internal static partial void Photino_SetPasswordAutosaveEnabled(IntPtr instance, byte enabled);
+
+
+    [LibraryImport(DLL_NAME)]
+    [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
+    internal static partial void Photino_GetReputationCheckingRequired(IntPtr instance, out byte required);
+
+    [LibraryImport(DLL_NAME)]
+    [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
+    internal static partial void Photino_SetReputationCheckingRequired(IntPtr instance, byte required);
+
+
+    [LibraryImport(DLL_NAME)]
+    [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
     internal static partial void Photino_GetGrantBrowserPermissions(IntPtr instance, out byte grant);
 
     [LibraryImport(DLL_NAME)]
@@ -124,4 +155,20 @@ internal static partial class NativeMethods
     [LibraryImport(DLL_NAME)]
     [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
     internal static partial void Photino_GetIgnoreCertificateErrorsEnabled(IntPtr instance, out byte enabled);
+
+    // WebView2 Runtime Management
+
+    [LibraryImport(DLL_NAME, StringMarshalling = StringMarshalling.Utf8)]
+    [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
+    [return: MarshalAs(UnmanagedType.I1)]
+    internal static partial bool Photino_SetWebView2RuntimePath(string? webView2RuntimePath);
+
+    [LibraryImport(DLL_NAME)]
+    [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
+    internal static partial void Photino_SetWebView2RuntimeInstallAllowed(byte allowed);
+
+    [LibraryImport(DLL_NAME)]
+    [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
+    [return: MarshalAs(UnmanagedType.I1)]
+    internal static partial bool Photino_IsWebView2RuntimeAvailable();
 }

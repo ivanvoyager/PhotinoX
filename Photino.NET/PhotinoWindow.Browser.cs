@@ -60,6 +60,9 @@ partial class PhotinoWindow
     /// When true, the user can access the browser control's context menu.
     /// By default, this is set to true.
     /// </summary>
+    /// <remarks>
+    /// This only works on Windows and Linux.
+    /// </remarks>
     public bool ContextMenuEnabled
     {
         get
@@ -94,6 +97,9 @@ partial class PhotinoWindow
     /// When true, the user can zoom.
     /// By default, this is set to true.
     /// </summary>
+    /// <remarks>
+    /// This only works on Windows.
+    /// </remarks>
     public bool ZoomEnabled
     {
         get
@@ -196,6 +202,157 @@ partial class PhotinoWindow
     }
 
     /// <summary>
+    /// Gets or sets whether browser-specific accelerator keys are enabled.
+    /// By default, this is set to true.
+    /// </summary>
+    /// <remarks>
+    /// This only works on Windows. When disabled, WebView2 browser shortcuts such as Ctrl+F, Ctrl+P, Ctrl+R, F5, and F12 are disabled.
+    /// Standard text-editing shortcuts remain enabled. Changing this setting after initialization reloads the current page.
+    /// </remarks>
+    public bool BrowserAcceleratorKeysEnabled
+    {
+        get
+        {
+            if (_nativeInstance == IntPtr.Zero)
+                return _startupParameters.Browser.BrowserAcceleratorKeysEnabled;
+
+            return Dispatcher.Invoke(static nativeInstance =>
+            {
+                Photino_GetBrowserAcceleratorKeysEnabled(nativeInstance, out byte enabled);
+                return enabled != 0;
+            }, _nativeInstance);
+        }
+        set
+        {
+            ThrowIfClosed();
+
+            if (_nativeInstance == IntPtr.Zero)
+            {
+                _startupParameters.Browser.BrowserAcceleratorKeysEnabled = value;
+                return;
+            }
+
+            Dispatcher.Invoke(static state =>
+            {
+                Photino_SetBrowserAcceleratorKeysEnabled(state.NativeInstance, (byte)(state.Value ? 1 : 0));
+            }, (NativeInstance: _nativeInstance, Value: value));
+        }
+    }
+
+    /// <summary>
+    /// Gets or sets whether general form autofill is enabled.
+    /// By default, this is set to true.
+    /// </summary>
+    /// <remarks>
+    /// This only works on Windows. This setting is shared by WebView2 instances that use the same browser profile. Changes take effect immediately.
+    /// </remarks>
+    public bool GeneralAutofillEnabled
+    {
+        get
+        {
+            if (_nativeInstance == IntPtr.Zero)
+                return _startupParameters.Browser.GeneralAutofillEnabled;
+
+            return Dispatcher.Invoke(static nativeInstance =>
+            {
+                Photino_GetGeneralAutofillEnabled(nativeInstance, out byte enabled);
+                return enabled != 0;
+            }, _nativeInstance);
+        }
+        set
+        {
+            ThrowIfClosed();
+
+            if (_nativeInstance == IntPtr.Zero)
+            {
+                _startupParameters.Browser.GeneralAutofillEnabled = value;
+                return;
+            }
+
+            Dispatcher.Invoke(static state =>
+            {
+                Photino_SetGeneralAutofillEnabled(state.NativeInstance, (byte)(state.Value ? 1 : 0));
+            }, (NativeInstance: _nativeInstance, Value: value));
+        }
+    }
+
+    /// <summary>
+    /// Gets or sets whether password autosave is enabled.
+    /// By default, this is set to false.
+    /// </summary>
+    /// <remarks>
+    /// This only works on Windows. This setting is independent of <see cref="GeneralAutofillEnabled"/> and
+    /// is shared by WebView2 instances that use the same browser profile. Changes take effect immediately.
+    /// </remarks>
+    public bool PasswordAutosaveEnabled
+    {
+        get
+        {
+            if (_nativeInstance == IntPtr.Zero)
+                return _startupParameters.Browser.PasswordAutosaveEnabled;
+
+            return Dispatcher.Invoke(static nativeInstance =>
+            {
+                Photino_GetPasswordAutosaveEnabled(nativeInstance, out byte enabled);
+                return enabled != 0;
+            }, _nativeInstance);
+        }
+        set
+        {
+            ThrowIfClosed();
+
+            if (_nativeInstance == IntPtr.Zero)
+            {
+                _startupParameters.Browser.PasswordAutosaveEnabled = value;
+                return;
+            }
+
+            Dispatcher.Invoke(static state =>
+            {
+                Photino_SetPasswordAutosaveEnabled(state.NativeInstance, (byte)(state.Value ? 1 : 0));
+            }, (NativeInstance: _nativeInstance, Value: value));
+        }
+    }
+
+    /// <summary>
+    /// Gets or sets whether Microsoft Defender SmartScreen reputation checking is required.
+    /// By default, this is set to true.
+    /// </summary>
+    /// <remarks>
+    /// This only works on Windows. This setting affects WebView2 instances that use the same user data folder and
+    /// may be overridden by system policy. Changing this setting after initialization reloads the current page.
+    /// </remarks>
+    public bool ReputationCheckingRequired
+    {
+        get
+        {
+            if (_nativeInstance == IntPtr.Zero)
+                return _startupParameters.Browser.ReputationCheckingRequired;
+
+            return Dispatcher.Invoke(static nativeInstance =>
+            {
+                Photino_GetReputationCheckingRequired(nativeInstance, out byte required);
+                return required != 0;
+            }, _nativeInstance);
+        }
+        set
+        {
+            ThrowIfClosed();
+
+            if (_nativeInstance == IntPtr.Zero)
+            {
+                _startupParameters.Browser.ReputationCheckingRequired = value;
+                return;
+            }
+
+            Dispatcher.Invoke(static state =>
+            {
+                Photino_SetReputationCheckingRequired(state.NativeInstance, (byte)(state.Value ? 1 : 0));
+            }, (NativeInstance: _nativeInstance, Value: value));
+        }
+    }
+
+    /// <summary>
     /// Gets or sets the native browser control <see cref="PhotinoWindow.Zoom"/>.
     /// Default is 100.
     /// </summary>
@@ -230,6 +387,10 @@ partial class PhotinoWindow
         }
     }
 
+    /// <summary>
+    /// Gets or sets the user agent used by the native browser control.
+    /// Default is none.
+    /// </summary>
     public string? UserAgent
     {
         get
@@ -301,9 +462,6 @@ partial class PhotinoWindow
     /// Gets or Sets whether the native browser control grants all requests for access to local resources
     /// such as the users camera and microphone. By default, this is set to true.
     /// </summary>
-    /// <remarks>
-    /// This only works on Windows.
-    /// </remarks>
     public bool GrantBrowserPermissions
     {
         get
@@ -325,6 +483,13 @@ partial class PhotinoWindow
         }
     }
 
+    /// <summary>
+    /// Gets or sets whether media autoplay is enabled.
+    /// By default, this is set to true.
+    /// </summary>
+    /// <remarks>
+    /// This only works on Windows and Linux.
+    /// </remarks>
     public bool MediaAutoplayEnabled
     {
         get
@@ -346,6 +511,10 @@ partial class PhotinoWindow
         }
     }
 
+    /// <summary>
+    /// Gets or sets whether local file system access is enabled.
+    /// By default, this is set to true.
+    /// </summary>
     public bool FileSystemAccessEnabled
     {
         get
@@ -367,6 +536,10 @@ partial class PhotinoWindow
         }
     }
 
+    /// <summary>
+    /// Gets or sets whether browser web security restrictions are enabled.
+    /// By default, this is set to true.
+    /// </summary>
     public bool WebSecurityEnabled
     {
         get
@@ -388,6 +561,10 @@ partial class PhotinoWindow
         }
     }
 
+    /// <summary>
+    /// Gets or sets whether JavaScript clipboard access is enabled.
+    /// By default, this is set to true.
+    /// </summary>
     public bool JavascriptClipboardAccessEnabled
     {
         get
@@ -409,6 +586,10 @@ partial class PhotinoWindow
         }
     }
 
+    /// <summary>
+    /// Gets or sets whether web content can access media streams.
+    /// By default, this is set to true.
+    /// </summary>
     public bool MediaStreamEnabled
     {
         get
@@ -430,6 +611,10 @@ partial class PhotinoWindow
         }
     }
 
+    /// <summary>
+    /// Gets or sets whether browser certificate errors are ignored.
+    /// By default, this is set to false.
+    /// </summary>
     public bool IgnoreCertificateErrorsEnabled
     {
         get
@@ -451,6 +636,13 @@ partial class PhotinoWindow
         }
     }
 
+    /// <summary>
+    /// Gets or sets whether smooth scrolling is enabled.
+    /// By default, this is set to true.
+    /// </summary>
+    /// <remarks>
+    /// This only works on Windows and Linux.
+    /// </remarks>
     public bool SmoothScrollingEnabled
     {
         get
