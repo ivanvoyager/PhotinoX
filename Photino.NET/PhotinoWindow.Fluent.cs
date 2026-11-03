@@ -136,7 +136,11 @@ partial class PhotinoWindow
     /// <param name="title">Window title</param>
     public PhotinoWindow SetTitle(string title)
     {
-        Log($".{nameof(SetTitle)}({title})");
+        if (LogVerbosity > 1)
+            Log($".{nameof(SetTitle)}({title})");
+        else if (LogVerbosity == 1)
+            Log($".{nameof(SetTitle)}()");
+
         Title = title;
         return this;
     }
@@ -157,7 +161,11 @@ partial class PhotinoWindow
     /// <param name="iconFile">The file path to the icon.</param>
     public PhotinoWindow SetIconFile(string iconFile)
     {
-        Log($".{nameof(SetIconFile)}({iconFile})");
+        if (LogVerbosity > 1)
+            Log($".{nameof(SetIconFile)}({iconFile})");
+        else if (LogVerbosity == 1)
+            Log($".{nameof(SetIconFile)}()");
+
         IconFile = iconFile;
         return this;
     }
@@ -224,8 +232,9 @@ partial class PhotinoWindow
     #region Geometry
 
     /// <summary>
-    /// Sets the native window Size. This represents the <see cref="PhotinoWindow.Width"/> and the <see cref="PhotinoWindow.Height"/> of the window in pixels.
-    /// The default Size is 0,0.
+    /// Sets the native window size. This represents the <see cref="PhotinoWindow.Width"/> and the <see cref="PhotinoWindow.Height"/> of the window.
+    /// On Windows, the size uses 96-DPI logical units.
+    /// The default size is 0,0.
     /// </summary>
     /// <seealso cref="UseOsDefaultSize"/>
     /// <returns>
@@ -240,15 +249,16 @@ partial class PhotinoWindow
     }
 
     /// <summary>
-    /// Sets the native window Size. This represents the <see cref="PhotinoWindow.Width"/> and the <see cref="PhotinoWindow.Height"/> of the window in pixels.
-    /// The default Size is 0,0.
+    /// Sets the native window size. This represents the <see cref="PhotinoWindow.Width"/> and the <see cref="PhotinoWindow.Height"/> of the window.
+    /// On Windows, the size uses 96-DPI logical units.
+    /// The default size is 0,0.
     /// </summary>
     /// <seealso cref="UseOsDefaultSize"/>
     /// <returns>
     /// Returns the current <see cref="PhotinoWindow"/> instance.
     /// </returns>
-    /// <param name="width">Width in pixels</param>
-    /// <param name="height">Height in pixels</param>
+    /// <param name="width">The window width.</param>
+    /// <param name="height">The window height.</param>
     public PhotinoWindow SetSize(int width, int height)
     {
         Log($".{nameof(SetSize)}({width}, {height})");
@@ -257,14 +267,15 @@ partial class PhotinoWindow
     }
 
     /// <summary>
-    /// Sets the native window width in pixels.
+    /// Sets the native window <see cref="PhotinoWindow.Width"/>.
+    /// On Windows, the width uses 96-DPI logical units.
     /// Default is 0.
     /// </summary>
     /// <returns>
     /// Returns the current <see cref="PhotinoWindow"/> instance.
     /// </returns>
     /// <seealso cref="UseOsDefaultSize"/>
-    /// <param name="width">Width in pixels</param>
+    /// <param name="width">The window width.</param>
     public PhotinoWindow SetWidth(int width)
     {
         Log($".{nameof(SetWidth)}({width})");
@@ -273,14 +284,15 @@ partial class PhotinoWindow
     }
 
     /// <summary>
-    /// Sets the native window <see cref="PhotinoWindow.Height"/> in pixels.
+    /// Sets the native window <see cref="PhotinoWindow.Height"/>.
+    /// On Windows, the height uses 96-DPI logical units.
     /// Default is 0.
     /// </summary>
     /// <returns>
     /// Returns the current <see cref="PhotinoWindow"/> instance.
     /// </returns>
     /// <seealso cref="UseOsDefaultSize"/>
-    /// <param name="height">Height in pixels</param>
+    /// <param name="height">The window height.</param>
     public PhotinoWindow SetHeight(int height)
     {
         Log($".{nameof(SetHeight)}({height})");
@@ -346,13 +358,16 @@ partial class PhotinoWindow
     /// <param name="allowOutsideWorkArea">Whether the window can go off-screen (work area)</param>
     public PhotinoWindow MoveTo(Point location, bool allowOutsideWorkArea = false)
     {
-        Log($".{nameof(MoveTo)}({location}, {allowOutsideWorkArea})");
-
         if (LogVerbosity > 2)
         {
-            Log($"  Current location: {Location}");
-            Log($"  New location: {location}");
+            Log($".{nameof(MoveTo)}({location}, {allowOutsideWorkArea}), Current location: {Location}");
         }
+        else
+        {
+            Log($".{nameof(MoveTo)}({location}, {allowOutsideWorkArea})");
+        }
+
+        ThrowIfClosed();
 
         Rectangle? workArea = null;
 
@@ -443,14 +458,11 @@ partial class PhotinoWindow
     }
 
     /// <summary>
-    /// Sets the native window minimum size in pixels.
+    /// Sets the native window minimum size.
+    /// On Windows, the size uses 96-DPI logical units.
     /// </summary>
-    /// <param name="minWidth">
-    /// The minimum window width in pixels.
-    /// </param>
-    /// <param name="minHeight">
-    /// The minimum window height in pixels.
-    /// </param>
+    /// <param name="minWidth">The minimum window width.</param>
+    /// <param name="minHeight">The minimum window height.</param>
     /// <returns>
     /// Returns the current <see cref="PhotinoWindow"/> instance.
     /// </returns>
@@ -462,11 +474,10 @@ partial class PhotinoWindow
     }
 
     /// <summary>
-    /// Sets the native window minimum width in pixels.
+    /// Sets the native window minimum width.
+    /// On Windows, the size uses 96-DPI logical units.
     /// </summary>
-    /// <param name="minWidth">
-    /// The minimum window width in pixels.
-    /// </param>
+    /// <param name="minWidth">The minimum window width.</param>
     /// <returns>
     /// Returns the current <see cref="PhotinoWindow"/> instance.
     /// </returns>
@@ -478,11 +489,10 @@ partial class PhotinoWindow
     }
 
     /// <summary>
-    /// Sets the native window minimum height in pixels.
+    /// Sets the native window minimum height.
+    /// On Windows, the size uses 96-DPI logical units.
     /// </summary>
-    /// <param name="minHeight">
-    /// The minimum window height in pixels.
-    /// </param>
+    /// <param name="minHeight">The minimum window height.</param>
     /// <returns>
     /// Returns the current <see cref="PhotinoWindow"/> instance.
     /// </returns>
@@ -494,14 +504,11 @@ partial class PhotinoWindow
     }
 
     /// <summary>
-    /// Sets the native window maximum size in pixels.
+    /// Sets the native window maximum size.
+    /// On Windows, the size uses 96-DPI logical units.
     /// </summary>
-    /// <param name="maxWidth">
-    /// The maximum window width in pixels.
-    /// </param>
-    /// <param name="maxHeight">
-    /// The maximum window height in pixels.
-    /// </param>
+    /// <param name="maxWidth">The maximum window width.</param>
+    /// <param name="maxHeight">The maximum window height.</param>
     /// <returns>
     /// Returns the current <see cref="PhotinoWindow"/> instance.
     /// </returns>
@@ -513,11 +520,10 @@ partial class PhotinoWindow
     }
 
     /// <summary>
-    /// Sets the native window maximum width in pixels.
+    /// Sets the native window maximum width.
+    /// On Windows, the size uses 96-DPI logical units.
     /// </summary>
-    /// <param name="maxWidth">
-    /// The maximum window width in pixels.
-    /// </param>
+    /// <param name="maxWidth">The maximum window width.</param>
     /// <returns>
     /// Returns the current <see cref="PhotinoWindow"/> instance.
     /// </returns>
@@ -529,11 +535,10 @@ partial class PhotinoWindow
     }
 
     /// <summary>
-    /// Sets the native window maximum height in pixels.
+    /// Sets the native window maximum height.
+    /// On Windows, the size uses 96-DPI logical units.
     /// </summary>
-    /// <param name="maxHeight">
-    /// The maximum window height in pixels.
-    /// </param>
+    /// <param name="maxHeight">The maximum window height.</param>
     /// <returns>
     /// Returns the current <see cref="PhotinoWindow"/> instance.
     /// </returns>
@@ -1101,7 +1106,10 @@ partial class PhotinoWindow
     {
         ArgumentNullException.ThrowIfNull(uri);
 
-        Log($".{nameof(Load)}({uri})");
+        if (LogVerbosity > 1)
+            Log($".{nameof(Load)}({uri})");
+        else if (LogVerbosity == 1)
+            Log($".{nameof(Load)}()");
 
         ThrowIfClosed();
 
@@ -1144,7 +1152,11 @@ partial class PhotinoWindow
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(path);
 
-        Log($".{nameof(Load)}({path})");
+        if (LogVerbosity > 1)
+            Log($".{nameof(Load)}({path})");
+        else if (LogVerbosity == 1)
+            Log($".{nameof(Load)}()");
+
         ThrowIfClosed();
 
         // ––––––––––––––––––––––
@@ -1173,7 +1185,11 @@ partial class PhotinoWindow
 
             if (File.Exists(absolutePath) == false)
             {
-                Log($" ** File \"{path}\" could not be found.");
+                if (LogVerbosity > 1)
+                    Log($" ** File \"{path}\" could not be found.");
+                else if (LogVerbosity == 1)
+                    Log(" ** File could not be found.");
+
                 return this;
             }
         }
@@ -1196,8 +1212,22 @@ partial class PhotinoWindow
     {
         ArgumentNullException.ThrowIfNull(content);
 
-        var shortContent = content.Length > 50 ? string.Concat(content.AsSpan(0, 50), "...") : content;
-        Log($".{nameof(LoadString)}({shortContent})");
+        switch (LogVerbosity)
+        {
+            case > 2:
+            {
+                var shortContent = content.Length > 50 ? string.Concat(content.AsSpan(0, 50), "...") : content;
+                Log($".{nameof(LoadString)}({shortContent})");
+                break;
+            }
+            case 2:
+                Log($".{nameof(LoadString)}({content.Length} chars)");
+                break;
+            case 1:
+                Log($".{nameof(LoadString)}()");
+                break;
+        }
+
         ThrowIfClosed();
 
         if (_nativeInstance == IntPtr.Zero)
@@ -1394,7 +1424,11 @@ partial class PhotinoWindow
     /// </returns>
     public PhotinoWindow SetUserAgent(string userAgent)
     {
-        Log($".{nameof(SetUserAgent)}({userAgent})");
+        if (LogVerbosity > 1)
+            Log($".{nameof(SetUserAgent)}({userAgent})");
+        else if (LogVerbosity == 1)
+            Log($".{nameof(SetUserAgent)}()");
+
         UserAgent = userAgent;
         return this;
     }
@@ -1429,7 +1463,11 @@ partial class PhotinoWindow
     /// <returns>The current <see cref="PhotinoWindow"/> instance.</returns>
     public PhotinoWindow SetBrowserControlInitParameters(string parameters)
     {
-        Log($".{nameof(SetBrowserControlInitParameters)}({parameters})");
+        if (LogVerbosity > 1)
+            Log($".{nameof(SetBrowserControlInitParameters)}({parameters})");
+        else if (LogVerbosity == 1)
+            Log($".{nameof(SetBrowserControlInitParameters)}()");
+
         BrowserControlInitParameters = parameters;
         return this;
     }
@@ -1589,7 +1627,11 @@ partial class PhotinoWindow
     /// <param name="userDataFolder">Path to the WebView user data folder, or <see langword="null"/>.</param>
     public PhotinoWindow SetUserDataFolder(string? userDataFolder)
     {
-        Log($".{nameof(SetUserDataFolder)}({userDataFolder})");
+        if (LogVerbosity > 1)
+            Log($".{nameof(SetUserDataFolder)}({userDataFolder})");
+        else if (LogVerbosity == 1)
+            Log($".{nameof(SetUserDataFolder)}()");
+
         UserDataFolder = userDataFolder;
         return this;
     }

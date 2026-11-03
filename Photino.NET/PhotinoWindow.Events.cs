@@ -155,8 +155,8 @@ partial class PhotinoWindow
     /// <summary>
     /// Invokes registered handlers when the native window size changes.
     /// </summary>
-    /// <param name="width">The window width in pixels.</param>
-    /// <param name="height">The window height in pixels.</param>
+    /// <param name="width">The window width. On Windows, the value uses 96-DPI logical units.</param>
+    /// <param name="height">The window height. On Windows, the value uses 96-DPI logical units.</param>
     internal void OnSizeChanged(int width, int height)
     {
         InvokeNativeEvent(SizeChanged, new SizeChangedEventArgs(new Size(width, height)));

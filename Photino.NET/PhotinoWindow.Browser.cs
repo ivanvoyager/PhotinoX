@@ -697,12 +697,12 @@ partial class PhotinoWindow
     /// <param name="message">Message as string</param>
     public void SendWebMessage(string message)
     {
-        ThrowIfClosedOrNotInitialized();
-
         if (LogVerbosity > 2)
             Log($".{nameof(SendWebMessage)}({message})");
         else if (LogVerbosity == 2)
             Log($".{nameof(SendWebMessage)}({message.Length} chars)");
+
+        ThrowIfClosedOrNotInitialized();
 
         Dispatcher.Invoke(static state =>
         {
@@ -733,12 +733,12 @@ partial class PhotinoWindow
     /// </exception>
     public Task SendWebMessageAsync(string message, CancellationToken cancellationToken = default)
     {
-        ThrowIfClosedOrNotInitialized();
-
         if (LogVerbosity > 2)
             Log($".{nameof(SendWebMessageAsync)}({message})");
         else if (LogVerbosity == 2)
             Log($".{nameof(SendWebMessageAsync)}({message.Length} chars)");
+
+        ThrowIfClosedOrNotInitialized();
 
         return Dispatcher.InvokeAsync(static state =>
         {

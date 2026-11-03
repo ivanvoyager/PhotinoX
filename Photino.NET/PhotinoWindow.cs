@@ -448,7 +448,8 @@ public partial class PhotinoWindow
     }
 
     /// <summary>
-    /// Gets or sets the native window height in pixels.
+    /// Gets or sets the native window height.
+    /// On Windows, the value uses 96-DPI logical units.
     /// Default value is 0.
     /// </summary>
     /// <seealso cref="UseOsDefaultSize" />
@@ -600,7 +601,8 @@ public partial class PhotinoWindow
     }
 
     /// <summary>
-    /// Gets or sets the maximum size of the native window in pixels.
+    /// Gets or sets the maximum size of the native window.
+    /// On Windows, the value uses 96-DPI logical units.
     /// </summary>
     public Point MaxSize
     {
@@ -633,7 +635,8 @@ public partial class PhotinoWindow
     private int _maxHeight = int.MaxValue;
 
     /// <summary>
-    /// Gets or sets the native window maximum height in pixels.
+    /// Gets or sets the native window maximum height.
+    /// On Windows, the value uses 96-DPI logical units.
     /// </summary>
     public int MaxHeight
     {
@@ -653,7 +656,8 @@ public partial class PhotinoWindow
     private int _maxWidth = int.MaxValue;
 
     /// <summary>
-    /// Gets or sets the native window maximum width in pixels.
+    /// Gets or sets the native window maximum width.
+    /// On Windows, the value uses 96-DPI logical units.
     /// </summary>
     public int MaxWidth
     {
@@ -671,7 +675,8 @@ public partial class PhotinoWindow
     }
 
     /// <summary>
-    /// Gets or sets the minimum size of the native window in pixels.
+    /// Gets or sets the minimum size of the native window.
+    /// On Windows, the value uses 96-DPI logical units.
     /// </summary>
     public Point MinSize
     {
@@ -704,7 +709,8 @@ public partial class PhotinoWindow
     private int _minHeight;
 
     /// <summary>
-    /// Gets or sets the native window minimum height in pixels.
+    /// Gets or sets the native window minimum height.
+    /// On Windows, the value uses 96-DPI logical units.
     /// </summary>
     public int MinHeight
     {
@@ -724,7 +730,8 @@ public partial class PhotinoWindow
     private int _minWidth;
 
     /// <summary>
-    /// Gets or sets the native window minimum width in pixels.
+    /// Gets or sets the native window minimum width.
+    /// On Windows, the value uses 96-DPI logical units.
     /// </summary>
     public int MinWidth
     {
@@ -782,7 +789,8 @@ public partial class PhotinoWindow
     }
 
     /// <summary>
-    /// Gets or sets the native window Size. This represents the width and the height of the window in pixels.
+    /// Gets or sets the native window Size. This represents the width and the height of the window.
+    /// On Windows, the value uses 96-DPI logical units.
     /// The default Size is 0,0.
     /// </summary>
     /// <seealso cref="UseOsDefaultSize"/>
@@ -962,7 +970,8 @@ public partial class PhotinoWindow
     }
 
     /// <summary>
-    /// Gets or Sets the native window width in pixels.
+    /// Gets or Sets the native window width.
+    /// On Windows, the value uses 96-DPI logical units.
     /// Default is 0.
     /// </summary>
     /// <seealso cref="UseOsDefaultSize"/>
@@ -1207,6 +1216,53 @@ public partial class PhotinoWindow
             throw new ArgumentException($"Startup parameters are not valid:{Environment.NewLine}" +
                                         string.Join(Environment.NewLine, errors.Select(e => $" - {e}")));
         }
+    }
+
+    [InterpolatedStringHandler]
+    private ref struct LogInterpolatedStringHandler
+    {
+        private DefaultInterpolatedStringHandler _handler;
+
+        public LogInterpolatedStringHandler(int literalLength, int formattedCount, PhotinoWindow window, out bool shouldAppend)
+        {
+            shouldAppend = window.LogVerbosity > 0;
+            _handler = shouldAppend ? new DefaultInterpolatedStringHandler(literalLength, formattedCount) : default;
+        }
+
+        public void AppendLiteral(string value)
+        {
+            _handler.AppendLiteral(value);
+        }
+
+        public void AppendFormatted<T>(T value)
+        {
+            _handler.AppendFormatted(value);
+        }
+
+        public void AppendFormatted<T>(T value, string? format)
+        {
+            _handler.AppendFormatted(value, format);
+        }
+
+        public void AppendFormatted<T>(T value, int alignment)
+        {
+            _handler.AppendFormatted(value, alignment);
+        }
+
+        public void AppendFormatted<T>(T value, int alignment, string? format)
+        {
+            _handler.AppendFormatted(value, alignment, format);
+        }
+
+        public string GetFormattedText()
+        {
+            return _handler.ToStringAndClear();
+        }
+    }
+
+    private void Log([InterpolatedStringHandlerArgument("")] ref LogInterpolatedStringHandler handler)
+    {
+        Log(handler.GetFormattedText());
     }
 
     /// <summary>
