@@ -1626,16 +1626,16 @@ partial class PhotinoWindow
 
     /// <summary>
     /// Sets the logging verbosity to standard output (Console/Terminal).
-    /// 0 = Critical Only
-    /// 1 = Critical and Warning
+    /// 0 = Disabled
+    /// 1 = Standard
     /// 2 = Verbose
     /// >2 = All Details
-    /// Default is 2.
+    /// Default is 1.
     /// </summary>
     /// <returns>
     /// Returns the current <see cref="PhotinoWindow"/> instance.
     /// </returns>
-    /// <param name="verbosity">Verbosity as integer</param>
+    /// <param name="verbosity">The logging verbosity level.</param>
     public PhotinoWindow SetLogVerbosity(int verbosity)
     {
         LogVerbosity = verbosity;

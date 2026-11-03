@@ -980,13 +980,13 @@ public partial class PhotinoWindow
 
     /// <summary>
     /// Gets or sets the logging verbosity to standard output (Console/Terminal).
-    /// 0 = Critical Only
-    /// 1 = Critical and Warning
+    /// 0 = Disabled
+    /// 1 = Standard
     /// 2 = Verbose
     /// >2 = All Details
-    /// Default is 2.
+    /// Default is 1.
     /// </summary>
-    public int LogVerbosity { get; set; } = 2;
+    public int LogVerbosity { get; set; } = 1;
 
     /// <summary>
     /// Gets the dispatcher associated with the current Photino application.
