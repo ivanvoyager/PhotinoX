@@ -186,6 +186,8 @@ window.Show();
 
 `Initialize()` is useful for splash screens and other deferred-visibility scenarios where WebView content should begin loading before the native window is shown.
 
+On Windows, window sizes and constraints use 96-DPI logical units and are converted to physical pixels using the window DPI for consistent sizing across scaling levels.
+
 `WindowState` replaces the previous `FullScreen`, `Maximized`, and `Minimized` properties with a single state model. It supports `Normal`, `Minimized`, `Maximized`, and `FullScreen`, and is also used for startup state configuration.
 
 `MainMonitor` represents the monitor that currently contains the native window. `Monitors` enumerates all available monitors and does not define which monitor is considered current.
