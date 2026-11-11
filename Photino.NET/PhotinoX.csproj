@@ -1,7 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>net8.0;net9.0;net10.0</TargetFrameworks>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
@@ -13,7 +12,7 @@
   </PropertyGroup>
 
   <ItemGroup Condition="'$(PhotinoX_UseLocalProjects)' != 'true'">
-    <PackageReference Include="PhotinoX.Native" Version="5.4.1" />
+    <PackageReference Include="PhotinoX.Native" Version="5.5.0" />
   </ItemGroup>
 
   <PropertyGroup Condition="'$(PhotinoX_UseLocalProjects)' == 'true'">

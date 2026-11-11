@@ -283,7 +283,7 @@ dotnet add package PhotinoX
 ```
 
 `PhotinoX.Native` provides the native WebView host binaries and must be available for the target runtime identifier.
-> Package targets **net8.0; net9.0; net10.0**.
+> Package targets **net8.0; net9.0; net10.0; net11.0**.
 
 ## Samples
 
@@ -296,8 +296,8 @@ Original Photino concept docs: https://docs.tryphotino.io/
 
 ## Requirements
 
-- **.NET 10 SDK** (build)
-- **Target frameworks:** `net8.0; net9.0; net10.0` (package supports all three)
+- **.NET 10 & 11 SDK** (build)
+- **Target frameworks:** `net8.0; net9.0; net10.0; net11.0`
 - Runtime deps: see [**PhotinoX.Native**](https://www.nuget.org/packages/PhotinoX.Native) (`runtimes/<rid>/native/`)
 - **Windows:** Microsoft Edge WebView2 Runtime  
   https://learn.microsoft.com/microsoft-edge/webview2/
