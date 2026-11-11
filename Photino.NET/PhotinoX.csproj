@@ -8,7 +8,7 @@
     <RootNamespace>Photino.NET</RootNamespace>
     <GenerateDocumentationFile>True</GenerateDocumentationFile>
     <NoWarn>$(NoWarn);1591;NETSDK1233</NoWarn>
-    <VersionPrefix>5.4.1</VersionPrefix>
+    <VersionPrefix>5.5.0</VersionPrefix>
   </PropertyGroup>
 
   <ItemGroup Condition="'$(PhotinoX_UseLocalProjects)' != 'true'">
